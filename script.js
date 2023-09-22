@@ -1,3 +1,3 @@
 function EvolveRamis() {
-	document.getElementById("ramisImage").backgroundImage = "url(goober.png)";
+	document.getElementById("ramisImage").src = "goober.png";
 }
