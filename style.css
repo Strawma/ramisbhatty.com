@@ -1,11 +1,17 @@
 h1 {
-  color: #FFFFFF;   
+	color: #FFFFFF;   
 }
 
 p {
-  color: #FFFFFF;
+	color: #FFFFFF;
 }
 
 body {
-  background-color: #D2691E;
+	background-color: #D2691E;
+}
+
+#ramisImage {
+	cursor: pointer;
+	width: 500;
+	height: 240;
 }
