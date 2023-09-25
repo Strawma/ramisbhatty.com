@@ -30,6 +30,7 @@ function DevolveRamis() {
 //Moving ramis
 async function MoveRamis() {
 	const RAMIS = document.getElementById("ramisImage");
+	const BLIP = new Audio('blip.mp3');
 	RAMIS.removeAttribute("onload");
 	const WIDTH = RAMIS.clientWidth;
 	const HEIGHT = RAMIS.clientHeight
@@ -44,19 +45,23 @@ async function MoveRamis() {
 		if (pos[0] < 0) {
 			pos[0] = 0;
 			velocity[0] = -velocity[0];
+			BLIP.play();
 		}
 		else if (pos[0] > window.innerWidth - WIDTH) {
 			pos[0] = window.innerWidth - WIDTH;
 			velocity[0] = -velocity[0];
+			BLIP.play();
 		}
 
 		if (pos[1] < 0) {
 			pos[1] = 0;
 			velocity[1] = -velocity[1];
+			BLIP.play();
 		}
 		else if (pos[1] > window.innerHeight - HEIGHT) {
 			pos[1] = window.innerHeight - HEIGHT;
 			velocity[1] = -velocity[1];
+			BLIP.play();
 		}
 
 		RAMIS.style.left = pos[0] + "px";
