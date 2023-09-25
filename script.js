@@ -83,6 +83,7 @@ async function StartJumpscare() {
 	audio.play();
 	await pause(2000);
 	FOXY.style.visibility = "hidden";
+	FOXY.src="foxy-jumpscare.gif";
 }
 
 //Background Stuff-------------------------------------------------------------------------
