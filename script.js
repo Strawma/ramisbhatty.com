@@ -27,7 +27,7 @@ function DevolveRamis() {
 	audio.play();
 }
 
-//Moving ramis
+//Moving ramis--------------------------------------------------------------------------------
 async function MoveRamis() {
 	const RAMIS = document.getElementById("ramisImage");
 	const BLIP = new Audio('blip.mp3');
@@ -75,6 +75,16 @@ function LoadRamis(){
 	MoveRamis();
 }
 
+//jumpscare--------------------------------------------------------------------------------
+async function StartJumpscare() {
+	const FOXY = document.getElementById("foxyJumpscare");
+	FOXY.style.visibility = "visible";
+	var audio = new Audio('jumpscare.mp3');
+	audio.play();
+	await pause(2000);
+	FOXY.style.visibility = "hidden";
+}
+
 //Background Stuff-------------------------------------------------------------------------
 
 function GetDifference(start, end, interval) {
@@ -105,4 +115,5 @@ function InitialiseBackground() {
 	RandomBackground(startColor);
 }
 
+//jumpscare--------------------------------------------------------------------------------------------------------------------
 
