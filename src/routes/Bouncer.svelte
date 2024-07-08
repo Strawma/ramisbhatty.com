@@ -4,8 +4,8 @@
 
   const width = 150;
   let height = 150;
-  const minSpeed = 1;
-  const maxSpeed = 3;
+  const minSpeed = 2;
+  const maxSpeed = 15;
   export let name = "Bouncer";
   export let src = null;
 
@@ -14,18 +14,21 @@
   let dx = Math.floor(Math.random() * maxSpeed) + minSpeed;
   let dy = Math.floor(Math.random() * maxSpeed) + minSpeed;
   let animationFrame;
+  let lastTime = performance.now();
 
   // Function to update the position
-  function moveBouncer() {
+  function moveBouncer(timestamp) {
     function bounceSound() {
       let bounceSound = new Audio(bounceSrc);
       bounceSound.play();
     }
+    const deltaTime = (timestamp - lastTime) / 16.6667;
+    lastTime = timestamp;
 
     height = 150;
 
-    x += dx;
-    y += dy;
+    x += dx * deltaTime;
+    y += dy * deltaTime;
 
     // Check bounds and reverse direction if collision detected
     if (x + width >= window.innerWidth) {
