@@ -2,8 +2,10 @@
   import { onMount } from 'svelte';
   import bounceSrc from '$lib/assets/sounds/blip.mp3';
 
-  let width = 150;
-  let height = 150;
+  const maxWidth = 150;
+  const maxHeight = 150;
+  let width;
+  let height;
   const minSpeed = 2;
   const maxSpeed = 15;
   export let name = "Bouncer";
@@ -16,56 +18,51 @@
   let animationFrame;
   let lastTime = performance.now();
 
+  function adjustSize() {
+    width = Math.min(maxWidth, window.innerWidth);
+    height = Math.min(maxHeight, window.innerHeight);
+  }
+
   // Function to update the position
   function moveBouncer(timestamp) {
     function bounceSound() {
       let bounceSound = new Audio(bounceSrc);
       bounceSound.play();
     }
+
+    // adjust size of bouncer if window size changes
+    adjustSize();
+
+    // Calculate the time delta
     const deltaTime = (timestamp - lastTime) / 16.6667;
     lastTime = timestamp;
 
-    width = 150;
-    height = 150;
-
-    x += dx * deltaTime;
-    y += dy * deltaTime;
-
+    // Get the container's boundaries
     const containerRect = document.documentElement.getBoundingClientRect();
-    // Considering viewport positions with scroll offsets
     let leftBoundary = containerRect.left;
     let topBoundary = containerRect.top;
     let rightBoundary = containerRect.right;
     let bottomBoundary = containerRect.bottom;
 
-    // Check bounds and reverse direction if collision detected
-    if (x + width >= rightBoundary) {
-      if (width >= rightBoundary - leftBoundary) {
-        x = leftBoundary;
-        width = rightBoundary - leftBoundary;
-      } else {
-        x = window.innerWidth - width;
-        dx = -dx;
-        bounceSound();
-      }
-    } else if (x <= leftBoundary) {
-      x = leftBoundary;
-      dx = -dx;
-      bounceSound();
+    // Update the position
+    x += dx * deltaTime;
+    y += dy * deltaTime;
+
+    // Check for collisions with the container's boundaries
+    if (x + window.scrollX <= leftBoundary) {
+      dx = Math.abs(dx);
+      x = 0;
+    } else if (x + width + window.scrollX >= rightBoundary) {
+      dx = -Math.abs(dx);
+      x = window.innerWidth - width;
     }
-    if (y + height >= bottomBoundary) {
-      if (height >= bottomBoundary - topBoundary) {
-        y = topBoundary;
-        height = bottomBoundary - topBoundary;
-      } else {
-        y = window.innerHeight - height;
-        dy = -dy;
-        bounceSound();
-      }
-    } else if (y <= topBoundary) {
-      y = topBoundary;
-      dy = -dy;
-      bounceSound();
+
+    if (y + window.scrollY <= topBoundary) {
+      dy = Math.abs(dy);
+      y = 0;
+    } else if (y + height + window.scrollY >= bottomBoundary) {
+      dy = -Math.abs(dy);
+      y = window.innerHeight - height;
     }
     // Request the next frame
     animationFrame = requestAnimationFrame(moveBouncer);
