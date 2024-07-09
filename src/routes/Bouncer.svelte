@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import bounceSrc from '$lib/assets/sounds/blip.mp3';
 
-  const width = 150;
+  let width = 150;
   let height = 150;
   const minSpeed = 2;
   const maxSpeed = 15;
@@ -25,32 +25,45 @@
     const deltaTime = (timestamp - lastTime) / 16.6667;
     lastTime = timestamp;
 
+    width = 150;
     height = 150;
 
     x += dx * deltaTime;
     y += dy * deltaTime;
 
+    const containerRect = document.documentElement.getBoundingClientRect();
+    // Considering viewport positions with scroll offsets
+    let leftBoundary = containerRect.left;
+    let topBoundary = containerRect.top;
+    let rightBoundary = containerRect.right;
+    let bottomBoundary = containerRect.bottom;
+
     // Check bounds and reverse direction if collision detected
-    if (x + width >= window.innerWidth) {
-      x = window.innerWidth - width;
-      dx = -dx;
-      bounceSound();
-    } else if (x <= 0) {
-      x = 0;
+    if (x + width >= rightBoundary) {
+      if (width >= rightBoundary - leftBoundary) {
+        x = leftBoundary;
+        width = rightBoundary - leftBoundary;
+      } else {
+        x = window.innerWidth - width;
+        dx = -dx;
+        bounceSound();
+      }
+    } else if (x <= leftBoundary) {
+      x = leftBoundary;
       dx = -dx;
       bounceSound();
     }
-    if (y + height >= window.innerHeight) {
-      if (height > window.innerHeight) {
-        y = 0;
-        height = window.innerHeight;
+    if (y + height >= bottomBoundary) {
+      if (height >= bottomBoundary - topBoundary) {
+        y = topBoundary;
+        height = bottomBoundary - topBoundary;
       } else {
         y = window.innerHeight - height;
         dy = -dy;
         bounceSound();
       }
-    } else if (y <= 0) {
-      y = 0;
+    } else if (y <= topBoundary) {
+      y = topBoundary;
       dy = -dy;
       bounceSound();
     }
