@@ -48,22 +48,33 @@
     x += dx * deltaTime;
     y += dy * deltaTime;
 
+    let bounced = false;
     // Check for collisions with the container's boundaries
     if (x + window.scrollX <= leftBoundary) {
       dx = Math.abs(dx);
       x = 0;
+      bounced = true;
     } else if (x + width + window.scrollX >= rightBoundary) {
       dx = -Math.abs(dx);
       x = window.innerWidth - width;
+      bounced = true;
     }
 
     if (y + window.scrollY <= topBoundary) {
       dy = Math.abs(dy);
       y = 0;
+      bounced = true;
     } else if (y + height + window.scrollY >= bottomBoundary) {
       dy = -Math.abs(dy);
       y = window.innerHeight - height;
+      bounced = true;
     }
+
+    // play bounce sound if bouncer hits a wall
+    if (bounced) {
+      bounceSound();
+    }
+
     // Request the next frame
     animationFrame = requestAnimationFrame(moveBouncer);
   }
