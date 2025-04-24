@@ -1,22 +1,19 @@
-# sv
+# My personal website for super important stuff 
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+## Development Info
 
-## Creating a project
+SvelteKit app created using sv create. 
+Installed addons:
+- Typescript
+- Prettier
+- Eslint
+- Tailwindcss (typography, forms)
 
-If you're seeing this, you've probably already done this step. Congrats!
+Uses pnpm package manager
 
-```bash
-# create a new project in the current directory
-npx sv create
+### Developing
 
-# create a new project in my-app
-npx sv create my-app
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+start a development server:
 
 ```bash
 npm run dev
@@ -25,7 +22,7 @@ npm run dev
 npm run dev -- --open
 ```
 
-## Building
+### Building
 
 To create a production version of your app:
 
