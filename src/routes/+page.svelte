@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import RamisSrc from '$lib/assets/images/ramis.jpg';
   import GooberSrc from '$lib/assets/images/goober.jpg';
   import SplatSource from '$lib/assets/sounds/splat.mp3';
@@ -19,18 +19,8 @@
   }
 </script>
 
-<main>
-  <h1>This is a {bouncerName}</h1>
-  <Bouncer name={bouncerName} bind:src={bouncerSrc} on:click={handleClick} />
+<main class="flex flex-col items-center justify-center h-screen">
+  <h1 class="font-[Comic_Sans_MS]">This is a {bouncerName}</h1>
+  <Bouncer name={bouncerName} src={bouncerSrc} on:click={handleClick} />
 </main>
-
-<style>
-  main {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-  }
-</style>
 

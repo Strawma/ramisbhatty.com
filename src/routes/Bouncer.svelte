@@ -1,21 +1,21 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
   import bounceSrc from '$lib/assets/sounds/blip.mp3';
 
   const maxWidth = 150;
   const maxHeight = 150;
-  let width;
-  let height;
+  let width: number;
+  let height: number;
   const minSpeed = 2;
   const maxSpeed = 15;
   export let name = "Bouncer";
-  export let src = null;
+  export let src = "";
 
   let x = 0;
   let y = 0;
   let dx = Math.floor(Math.random() * maxSpeed) + minSpeed;
   let dy = Math.floor(Math.random() * maxSpeed) + minSpeed;
-  let animationFrame;
+  let animationFrame: number;
   let lastTime = performance.now();
 
   function adjustSize() {
@@ -24,7 +24,7 @@
   }
 
   // Function to update the position
-  function moveBouncer(timestamp) {
+  function moveBouncer(timestamp: number) {
     function bounceSound() {
       let bounceSound = new Audio(bounceSrc);
       bounceSound.play();
@@ -89,22 +89,10 @@
   });
 </script>
 
-<style>
-  .invisible-button {
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    position: absolute;
-  }
-  .invisible-button:focus {
-    outline: 2px solid #000; /* Provide a visual indicator for keyboard focus */
-  }
-  .invisible-button img {
-    display: block;
-  }
-</style>
-
-<button class="invisible-button" style="left: {x}px; top: {y}px;" on:click>
-  <img src={src} alt={name} width={width} height={height}/>
+<button class="bg-transparent border-0 p-0 cursor-pointer absolute focus:outline-none focus:ring-2 focus:ring-black block"
+               style="left: {x}px; top: {y}px;"
+               on:click>
+  <img class="block object-fill"
+       style="width: {width}px; height: {height}px;"
+       src={src} alt={name}/>
 </button>
