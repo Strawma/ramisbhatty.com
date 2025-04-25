@@ -89,10 +89,10 @@
   });
 </script>
 
-<button class="bg-transparent border-0 p-0 cursor-pointer absolute focus:outline-none focus:ring-2 focus:ring-black block"
+<button class="bg-transparent border-0 p-0 cursor-pointer absolute focus:outline-none focus:ring-2 focus:ring-black block rounded-full"
                style="left: {x}px; top: {y}px;"
                on:click>
-  <img class="block object-fill"
+  <img class="block object-fill rounded-full"
        style="width: {width}px; height: {height}px;"
        src={src} alt={name}/>
 </button>
