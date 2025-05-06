@@ -2,10 +2,12 @@
 
 </script>
 
-<div class="top-bar fixed top-0 left-0 w-full h-16 bg-black bg-opacity-30 backdrop-blur-sm z-50 flex items-center justify-between px-4 shadow-md">
+<div class="w-full h-screen">
+	<iframe
+		src="/horseracetests/index.html"
+		title="Horse Race Blazor Game"
+		class="w-full h-full border-none"
+	>
+		Your browser does not support iframes.
+	</iframe>
 </div>
-
-<main class="flex flex-col items-center justify-center h-screen bg-black">
-  <a href="/" class="font-[Comic_Sans_MS] text-white">Please Leave</a>
-</main>
-

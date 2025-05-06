@@ -23,7 +23,7 @@
   <div class="logo font-[Comic_Sans_MS] text-xl font-bold">Bouncy Friends</div>
   <nav class="flex gap-4">
     <a href="/" class="font-[Comic_Sans_MS] hover:underline">Home</a>
-    <a href="horse" class="font-[Comic_Sans_MS] hover:underline">Do Not Click</a>
+    <a href="/horse" class="font-[Comic_Sans_MS] hover:underline">Do Not Click</a>
   </nav>
 </div>
 
