@@ -83,7 +83,7 @@
 	<img
 		src={JimSRC}
 		alt="Jim"
-		class="absolute h-[90%] min-h-[100px] top-1/2 left-3/4 -translate-y-1/2 -translate-x-1/2 object-contain z-10 rotating-image"
+		class="absolute h-[90%] min-h-[100px] top-44/100 left-3/4 -translate-y-1/2 -translate-x-1/2 object-contain z-10 rotating-image"
 	/>
 	<img src={WindowsBottomSRC} alt="Windows XP Bottom" class="absolute w-full h-full object-cover z-20 hue-shift-bottom" />
 </div>
