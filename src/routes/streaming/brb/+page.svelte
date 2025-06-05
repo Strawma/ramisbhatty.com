@@ -8,15 +8,16 @@
 	import WindowsBottomSRC from '$lib/assets/images/windows-xp-bottom.png';
 	import JimSRC from '$lib/assets/images/jim.png';
 
+	// Pool of quotes to display in the sliding bar
 	const quotes = brb_quotes;
 	const brbText = "Be Right Back!";
-	// Pool of quotes to display in the sliding bar
 	const quoteTime = 8000; // Time in milliseconds to display each quote
 
 	let quoteIndex = $state(0);
 	let currentQuote = $derived(quotes[quoteIndex]);
 
 	let quoteVisible = $state(false);
+	let timeoutId;
 
 	function randomiseQuote() {
 		let newIndex = quoteIndex;
@@ -27,14 +28,26 @@
 	}
 
 	onMount(() => {
-		// Randomise the quote every 5 seconds
 		quoteVisible = true;
-		const interval = setInterval(() => {
-			quoteVisible = !quoteVisible;
-			randomiseQuote();
-		}, quoteTime);
+		function scheduleNextToggle() {
+			// Calculate delay based on current visibility state
+			const delay = quoteVisible ? quoteTime : quoteTime / 5;
 
-		return () => clearInterval(interval);
+			timeoutId = setTimeout(() => {
+				quoteVisible = !quoteVisible;
+
+				// If we just hid the quote, randomize for next one
+				if (!quoteVisible) {
+					randomiseQuote();
+				}
+
+				// Schedule next toggle with appropriate timing
+				scheduleNextToggle();
+			}, delay);
+		}
+		scheduleNextToggle();
+
+		return () => clearTimeout(timeoutId);
 	});
 </script>
 
@@ -57,8 +70,8 @@
 		{#if quoteVisible}
 			<div
 				class="absolute ticker-content"
-				in:slide={{ duration: quoteTime/2, easing: linear }}
-				out:slide={{ duration: quoteTime/2, easing: linear }}
+				in:slide={{ duration: quoteTime/10, easing: linear }}
+				out:slide={{ duration: quoteTime/10, easing: linear }}
 			>
 				{currentQuote}
 			</div>
@@ -91,7 +104,7 @@
   }
 
   .rotating-image {
-    animation: slow-rotation 20s linear infinite alternate;
+    animation: slow-rotation 8s linear infinite alternate;
   }
 
 	.brb-text-container {
