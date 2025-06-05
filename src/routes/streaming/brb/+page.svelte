@@ -1,14 +1,60 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import { slide } from 'svelte/transition';
+	import { linear } from 'svelte/easing';
+
 	import WindowsSRC from '$lib/assets/images/windows-xp.png';
 	import WindowsBottomSRC from '$lib/assets/images/windows-xp-bottom.png';
 	import JimSRC from '$lib/assets/images/jim.png';
 
 	const brbText = "Be Right Back!";
+	// Pool of quotes to display in the sliding bar
+	const quotes = [
+		"Eat Your Boluses!",
+		"He'll Probably Be Back",
+		"the fog is coming",
+		"Stay Hydrated!",
+		"[Insert Quote Here]",
+		"Don't Forget to Stretch!",
+		"Gone Fishing",
+		"Taking a Quick Break",
+		"It's Simple, Son",
+		"...",
+		"Still in Cinemas",
+		"Remind Me to Run 3 Minutes of Ads",
+		"Taking a Power Nap",
+		"Eating Fuel Cubes",
+	];
+	const quoteTime = 10000; // Time in milliseconds to display each quote
+
+	let quoteIndex = $state(0);
+	let currentQuote = $derived(quotes[quoteIndex]);
+
+	let quoteVisible = $state(false);
+
+	function randomiseQuote() {
+		let newIndex = quoteIndex;
+		while (newIndex === quoteIndex && quotes.length > 1) {
+			newIndex = Math.floor(Math.random() * quotes.length);
+		}
+		quoteIndex = newIndex;
+	}
+
+	onMount(() => {
+		// Randomise the quote every 5 seconds
+		quoteVisible = true;
+		const interval = setInterval(() => {
+			quoteVisible = !quoteVisible;
+			randomiseQuote();
+		}, quoteTime);
+
+		return () => clearInterval(interval);
+	});
 </script>
 
-<div class="w-full h-screen relative">
+<div class="w-full h-screen relative overflow-hidden">
 	<!-- BRB Text -->
-	<div class="absolute top-55/100 left-4/100 -translate-y-1/2 text-white font-bold z-30 text-container">
+	<div class="absolute top-55/100 left-4/100 -translate-y-1/2 text-white font-bold z-30 brb-text-container">
 		{#each brbText as char, i (i)}
 			<span class="floating-letter" style="animation-delay: {i * 0.1}s;">
 				{#if char === " "}
@@ -19,7 +65,19 @@
 			</span>
 		{/each}
 	</div>
-	<!-- BRB Bonus Text -->
+
+	<!-- BRB Sliding -->
+	<div class="absolute bottom-8/100 left-0 w-full h-[8%] bg-black bg-opacity-70 text-white flex items-center justify-center z-30 ticker-bar">
+		{#if quoteVisible}
+			<div
+				class="absolute ticker-content"
+				in:slide={{ duration: quoteTime/4, easing: linear }}
+				out:slide={{ duration: quoteTime/4, easing: linear }}
+			>
+				{currentQuote}
+			</div>
+		{/if}
+	</div>
 
 	<!-- Background images -->
 	<img src={WindowsSRC} alt="Windows XP" class="absolute w-full h-full object-cover z-0 hue-shift-bg" />
@@ -39,25 +97,42 @@
 
   @keyframes slow-rotation {
     from {
-      transform: rotate(0deg);
+      transform: rotate(-30deg);
     }
     to {
-      transform: rotate(360deg);
+      transform: rotate(30deg);
     }
   }
 
   .rotating-image {
-    animation: slow-rotation 20s linear infinite;
+    animation: slow-rotation 20s linear infinite alternate;
   }
 
-		 /* Add this to your existing styles */
-	.text-container {
+	.brb-text-container {
 	 white-space: nowrap;
 	 max-width: 90vw;
 	 font-family: 'pixel-sans', cursive, sans-serif;
 	 text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 	 font-size: clamp(1rem, 10vw, 10rem);
 	}
+
+  .ticker-bar {
+    background: linear-gradient(to bottom, #245eab, #0c407c);
+    border-top: 2px solid #6bafea;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.3);
+  }
+
+  .ticker-content {
+    font-family: 'pixel-sans', sans-serif;
+    color: white;
+    font-size: clamp(0.5rem, 2vw, 2rem);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    white-space: nowrap;
+    position: absolute;
+    width: auto;
+    animation: ticker 20s linear infinite;
+    display: inline-block;
+  }
 
   @keyframes floating {
     0%, 100% {
