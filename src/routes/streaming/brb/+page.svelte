@@ -40,7 +40,7 @@
 
 <div class="w-full h-screen relative overflow-hidden">
 	<!-- BRB Text -->
-	<div class="absolute top-55/100 left-4/100 -translate-y-1/2 text-white font-bold z-30 brb-text-container">
+	<div class="absolute top-60/100 left-4/100 -translate-y-1/2 text-white font-bold z-30 brb-text-container">
 		{#each brbText as char, i (i)}
 			<span class="floating-letter" style="animation-delay: {i * 0.1}s;">
 				{#if char === " "}
