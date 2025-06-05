@@ -70,8 +70,8 @@
 		{#if quoteVisible}
 			<div
 				class="absolute ticker-content"
-				in:slide={{ duration: quoteTime/10, easing: linear }}
-				out:slide={{ duration: quoteTime/10, easing: linear }}
+				in:slide={{ duration: 200, easing: linear }}
+				out:slide={{ duration: 200, easing: linear }}
 			>
 				{currentQuote}
 			</div>
@@ -104,7 +104,7 @@
   }
 
   .rotating-image {
-    animation: slow-rotation 8s linear infinite alternate;
+    animation: slow-rotation 5s linear infinite alternate;
   }
 
 	.brb-text-container {
