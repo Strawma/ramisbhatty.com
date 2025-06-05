@@ -12,7 +12,7 @@
   }
 }
 
-body {
+main {
   margin: 0;
   height: 100vh;
   background: linear-gradient(-45deg, #ff0000, #ff9900, #ffff00, #00ff00, #00ffff, #0000ff, #9900ff, #ff00ff);

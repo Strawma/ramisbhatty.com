@@ -3,7 +3,6 @@
   import GooberSrc from '$lib/assets/images/goober.jpg';
   import SplatSource from '$lib/assets/sounds/splat.mp3';
   import Bouncer from "./Bouncer.svelte";
-  import './RainbowBody.css';
 
   const bouncerSrcs = [RamisSrc, GooberSrc];
   const bouncerNames = ["Ramis", "Goober"];
@@ -55,3 +54,6 @@
   <Bouncer name={bouncerName} src={bouncerSrc} on:click={handleClick} />
 </main>
 
+<style>
+  @import '$lib/RainbowBody.css';
+</style>
