@@ -3,29 +3,15 @@
 	import { slide } from 'svelte/transition';
 	import { linear } from 'svelte/easing';
 
+	import brb_quotes from '$lib/data/quotes.json';
 	import WindowsSRC from '$lib/assets/images/windows-xp.png';
 	import WindowsBottomSRC from '$lib/assets/images/windows-xp-bottom.png';
 	import JimSRC from '$lib/assets/images/jim.png';
 
+	const quotes = brb_quotes;
 	const brbText = "Be Right Back!";
 	// Pool of quotes to display in the sliding bar
-	const quotes = [
-		"Eat Your Boluses!",
-		"He'll Probably Be Back",
-		"the fog is coming",
-		"Stay Hydrated!",
-		"[Insert Quote Here]",
-		"Don't Forget to Stretch!",
-		"Gone Fishing",
-		"Taking a Quick Break",
-		"It's Simple, Son",
-		"...",
-		"Still in Cinemas",
-		"Remind Me to Run 3 Minutes of Ads",
-		"Taking a Power Nap",
-		"Eating Fuel Cubes",
-	];
-	const quoteTime = 10000; // Time in milliseconds to display each quote
+	const quoteTime = 8000; // Time in milliseconds to display each quote
 
 	let quoteIndex = $state(0);
 	let currentQuote = $derived(quotes[quoteIndex]);
@@ -71,8 +57,8 @@
 		{#if quoteVisible}
 			<div
 				class="absolute ticker-content"
-				in:slide={{ duration: quoteTime/4, easing: linear }}
-				out:slide={{ duration: quoteTime/4, easing: linear }}
+				in:slide={{ duration: quoteTime/2, easing: linear }}
+				out:slide={{ duration: quoteTime/2, easing: linear }}
 			>
 				{currentQuote}
 			</div>
