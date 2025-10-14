@@ -44,7 +44,7 @@
 
 	<!-- Marquee header -->
 	<div class="bg-gradient-to-r from-blue-600 to-purple-600 text-yellow-300 p-2 mb-4 border-4 border-black">
-		<marquee class="text-2xl font-bold">🌟 WELCOME TO MY AWESOME HOMEPAGE 🌟 UNDER CONSTRUCTION 🚧</marquee>
+		<marquee class="text-2xl font-bold">*** WELCOME TO MY AWESOME HOMEPAGE ***</marquee>
 	</div>
 
 	<!-- Main container with that classic table look -->
@@ -64,13 +64,13 @@
 			<!-- Sidebar -->
 			<div class="md:col-span-1">
 				<div class="bg-[#ffff00] border-4 border-black p-4 mb-4" style="box-shadow: 4px 4px 0 #000;">
-					<h2 class="text-xl font-bold mb-3 text-center underline">📁 MENU 📁</h2>
+					<h2 class="text-xl font-bold mb-3 text-center underline">: : MENU : :</h2>
 					<ul class="space-y-2">
-						<li><a href="#" class="text-blue-600 underline hover:text-red-600">🏠 Home</a></li>
-<!--						<li><a href="#" class="text-blue-600 underline hover:text-red-600">👤 About Me</a></li>-->
-<!--						<li><a href="#" class="text-blue-600 underline hover:text-red-600">💼 Portfolio</a></li>-->
-<!--						<li><a href="#" class="text-blue-600 underline hover:text-red-600">📧 Contact</a></li>-->
-<!--						<li><a href="#" class="text-blue-600 underline hover:text-red-600">🔗 Cool Links</a></li>-->
+						<li><a href="#" class="text-blue-600 underline hover:text-red-600">> Home</a></li>
+<!--						<li><a href="#" class="text-blue-600 underline hover:text-red-600">> About Me</a></li>-->
+<!--						<li><a href="#" class="text-blue-600 underline hover:text-red-600">> Portfolio</a></li>-->
+<!--						<li><a href="#" class="text-blue-600 underline hover:text-red-600">> Contact</a></li>-->
+<!--						<li><a href="#" class="text-blue-600 underline hover:text-red-600">> Cool Links</a></li>-->
 					</ul>
 				</div>
 
@@ -105,13 +105,13 @@
 						<blink class="text-red-600 font-bold">NEW!</blink> This site is best viewed in <strong>Netscape Navigator 4.0</strong> at 800x600 resolution!
 					</p>
 					<p class="mb-4">
-						You are now entering the <strong><u>ULTIMATE</u></strong> personal homepage experience. Please sign my guestbook before you leave! 📝
+						You are now entering the <strong><u>ULTIMATE</u></strong> personal homepage experience.
 					</p>
 				</div>
 
 				<!-- Facts section -->
 				<div class="bg-[#00ffff] border-4 border-black p-6" style="box-shadow: 4px 4px 0 #000;">
-					<h2 class="text-2xl font-bold mb-4 text-center underline">💎 RANDOM FACT GENERATOR 💎</h2>
+					<h2 class="text-2xl font-bold mb-4 text-center underline">&lt; RANDOM FACT GENERATOR &gt;</h2>
 					<div class="bg-white border-2 border-black p-4 mb-4">
 						{#if isLoading}
 							<p class="text-lg italic animate-pulse">Loading fact from the World Wide Web...</p>
@@ -127,33 +127,9 @@
 					</button>
 				</div>
 
-				<!-- Skills section -->
-				<div class="bg-gradient-to-b from-[#ff69b4] to-[#ff1493] border-4 border-black p-6 text-white" style="box-shadow: 4px 4px 0 #000;">
-					<h2 class="text-2xl font-bold mb-4 text-center underline">⭐ MY SKILLS ⭐</h2>
-					<div class="space-y-3">
-						{#each [
-							{ name: 'HTML', level: 420 },
-							{ name: '<blink> tag usage', level: 9999 },
-							{ name: 'Table layouts', level: 1337 },
-							{ name: 'GIF animations', level: 9001 }
-						] as skill (skill.name)}
-							<div class="bg-white text-black p-2 border-2 border-black">
-								<div class="flex justify-between mb-1 font-bold">
-									<span>{skill.name}</span>
-									<span>{skill.level}%</span>
-								</div>
-								<div class="w-full bg-[#808080] border-2 border-black h-6">
-									<div class="bg-gradient-to-r from-lime-400 to-green-500 h-full border-r-2 border-black"
-											 style="width: {Math.min(skill.level, 100)}%"></div>
-								</div>
-							</div>
-						{/each}
-					</div>
-				</div>
-
 				<!-- Under construction banner -->
 				<div class="bg-yellow-400 border-4 border-black p-4 text-center" style="box-shadow: 4px 4px 0 #000;">
-					<p class="text-2xl font-bold animate-pulse">🚧 SITE UNDER CONSTRUCTION 🚧</p>
+					<p class="text-2xl font-bold animate-pulse">!!! SITE UNDER CONSTRUCTION !!!</p>
 				</div>
 
 			</div>
