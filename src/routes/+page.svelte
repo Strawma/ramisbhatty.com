@@ -63,7 +63,7 @@
 			on:click={handleChaosButton}/>
 	{/each}
 	<!-- Main container with that classic table look -->
-	<div class="max-w-4xl min-h-screen mx-auto bg-[#c0c0c0] px-8 flex flex-col relative z-10">
+	<div class="max-w-3xl min-h-screen mx-auto bg-[#c0c0c0] px-8 flex flex-col relative z-10">
 		<!-- Marquee header -->
 		<div class="bg-gradient-to-r from-blue-600 to-purple-600 text-yellow-300 p-2 mb-4 border-4 border-black">
 			<marquee class="text-2xl font-bold">*** WELCOME TO MY AWESOME HOMEPAGE ***</marquee>
@@ -111,19 +111,18 @@
 				</div>
 
 				<!-- Ad space -->
-				<div class="bg-white border-4 border-black p-4 mt-4 text-center" style="box-shadow: 4px 4px 0 #000;">
-					<p class="text-sm mb-2">-- AD SPACE --</p>
-					<img src={AoOniSrc} alt="Ad" class="mx-auto w-48 h-32 object-contain" />
-					<p class="text-xs mt-2">Your Ad Here!</p>
-					<p class="text-xs mt-2">for more information</p>
-					<p class="text-xs mt-2 break-all"><a href="mailto:advertising@ramisbhatty.com" class="text-blue-600 underline hover:text-red-600">advertising@ramisbhatty.com</a></p>
-				</div>
+<!--				<div class="bg-white border-4 border-black p-4 mt-4 text-center" style="box-shadow: 4px 4px 0 #000;">-->
+<!--					<p class="text-sm mb-2">&#45;&#45; AD SPACE &#45;&#45;</p>-->
+<!--					<img src={AoOniSrc} alt="Ad" class="mx-auto w-48 h-32 object-contain" />-->
+<!--					<p class="text-xs mt-2">Your Ad Here!</p>-->
+<!--					<p class="text-xs mt-2">for more information</p>-->
+<!--					<p class="text-xs text-[10px] mt-2 break-all"><a href="mailto:advertising@ramisbhatty.com" class="text-blue-600 underline hover:text-red-600">advertising@ramisbhatty.com</a></p>-->
+<!--				</div>-->
 
 			</div>
 
 			<!-- Main content area -->
 			<div class="md:col-span-3 space-y-4">
-
 				<!-- Welcome section -->
 				<div class="bg-white border-4 border-black p-6" style="box-shadow: 4px 4px 0 #000;">
 					<h1 class="text-4xl font-bold text-center mb-4" style="text-shadow: 2px 2px 0 #ff00ff, 4px 4px 0 #00ffff;">
@@ -139,13 +138,49 @@
 				</div>
 
 				<!-- Facts section -->
-				<div class="bg-[#00ffff] border-4 border-black p-6" style="box-shadow: 4px 4px 0 #000;">
+<!--				<div class="bg-[#00ffff] border-4 border-black p-6" style="box-shadow: 4px 4px 0 #000;">-->
+<!--					<h2 class="text-2xl font-bold mb-4 text-center underline">&lt; RANDOM FACT GENERATOR &gt;</h2>-->
+<!--					<div class="bg-white border-2 border-black p-4 mb-4">-->
+<!--						{#if isLoading}-->
+<!--							<p class="text-lg italic animate-pulse">Loading fact from the World Wide Web...</p>-->
+<!--						{:else}-->
+<!--							<p class="text-lg italic">"{currentFact}"</p>-->
+<!--						{/if}-->
+<!--					</div>-->
+<!--					<button-->
+<!--						on:click={nextFact}-->
+<!--						class="bg-gradient-to-b from-[#c0c0c0] to-[#808080] border-4 border-black px-6 py-2 font-bold hover:from-[#e0e0e0]"-->
+<!--						style="box-shadow: 2px 2px 0 #000;">-->
+<!--						GENERATE NEW FACT →-->
+<!--					</button>-->
+<!--				</div>-->
+			</div>
+		</div>
+
+		<!-- Horizontal rule -->
+		<hr class="border-1 border-black my-4" />
+
+		<!-- Two-column -->
+		<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+			<!-- Left component - spans first 2 columns -->
+			<div class="md:col-span-2">
+				<div class="bg-white border-4 border-black p-4 text-center" style="box-shadow: 4px 4px 0 #000;">
+					<p class="text-sm mb-2">-- AD SPACE --</p>
+					<img src={AoOniSrc} alt="Ad" class="mx-auto w-64 h-48 object-contain" />
+					<p class="text-xs mt-2">Your Ad Here!</p>
+					<p class="text-xs mt-2 break-all"><a href="mailto:advertising@ramisbhatty.com" class="text-blue-600 underline hover:text-red-600">advertising@ramisbhatty.com</a></p>
+				</div>
+			</div>
+
+			<!-- Right component - spans last 2 columns -->
+			<div class="md:col-span-2">
+				<div class="bg-[#00ffff] border-4 border-black p-4 " style="box-shadow: 4px 4px 0 #000;">
 					<h2 class="text-2xl font-bold mb-4 text-center underline">&lt; RANDOM FACT GENERATOR &gt;</h2>
 					<div class="bg-white border-2 border-black p-4 mb-4">
 						{#if isLoading}
-							<p class="text-lg italic animate-pulse">Loading fact from the World Wide Web...</p>
+							<p class="text-ls italic animate-pulse min-h-23">Loading fact from the World Wide Web...</p>
 						{:else}
-							<p class="text-lg italic">"{currentFact}"</p>
+							<p class="text-xs italic break-all min-h-23">"{currentFact}"</p>
 						{/if}
 					</div>
 					<button
@@ -155,16 +190,15 @@
 						GENERATE NEW FACT →
 					</button>
 				</div>
-
-				<!-- Under construction banner -->
-				<div class="bg-yellow-400 border-4 border-black p-4 text-center" style="box-shadow: 4px 4px 0 #000;">
-					<p class="text-2xl font-bold animate-pulse">!!! SITE UNDER CONSTRUCTION !!!</p>
-				</div>
-
 			</div>
 		</div>
 
 		<!-- Footer -->
+		<!-- Under construction banner -->
+		<div class="bg-yellow-400 mt-4 border-4 border-black p-4 text-center" style="box-shadow: 4px 4px 0 #000;">
+			<p class="text-2xl font-bold animate-pulse">!!! SITE UNDER CONSTRUCTION !!!</p>
+		</div>
+
 		<div class="mt-6 bg-[#000080] text-white border-4 border-black p-4 text-center" style="box-shadow: 4px 4px 0 #000;">
 			<p class="mb-2">This page is optimized for Internet Explorer 6</p>
 			<div class="flex justify-center gap-4 items-center flex-wrap">
