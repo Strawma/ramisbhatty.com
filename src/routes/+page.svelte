@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
-	import RamisSrc from '$lib/assets/images/ramis.jpg';
+	import RamisSrc from '$lib/assets/images/ramis-pixellated.jpg';
 	import Bouncer from './Bouncer.svelte';
 
 	let clicks = 0;
