@@ -11,7 +11,6 @@
 
 	function handleChaosButton() {
 		clicks++;
-		alert("You have been blessed by the webmaster!");
 	}
 
 	async function fetchRandomFact(): Promise<string> {
@@ -41,7 +40,7 @@
 	});
 </script>
 
-<div class="min-h-screen bg-[#c0c0c0] p-4 font-['Comic_Sans_MS',_cursive]">
+<div class="min-h-screen bg-[#c0c0c0] p-4 font-['pixel-sans',_cursive]">
 
 	<!-- Marquee header -->
 	<div class="bg-gradient-to-r from-blue-600 to-purple-600 text-yellow-300 p-2 mb-4 border-4 border-black">
@@ -68,10 +67,10 @@
 					<h2 class="text-xl font-bold mb-3 text-center underline">📁 MENU 📁</h2>
 					<ul class="space-y-2">
 						<li><a href="#" class="text-blue-600 underline hover:text-red-600">🏠 Home</a></li>
-						<li><a href="#" class="text-blue-600 underline hover:text-red-600">👤 About Me</a></li>
-						<li><a href="#" class="text-blue-600 underline hover:text-red-600">💼 Portfolio</a></li>
-						<li><a href="#" class="text-blue-600 underline hover:text-red-600">📧 Contact</a></li>
-						<li><a href="#" class="text-blue-600 underline hover:text-red-600">🔗 Cool Links</a></li>
+<!--						<li><a href="#" class="text-blue-600 underline hover:text-red-600">👤 About Me</a></li>-->
+<!--						<li><a href="#" class="text-blue-600 underline hover:text-red-600">💼 Portfolio</a></li>-->
+<!--						<li><a href="#" class="text-blue-600 underline hover:text-red-600">📧 Contact</a></li>-->
+<!--						<li><a href="#" class="text-blue-600 underline hover:text-red-600">🔗 Cool Links</a></li>-->
 					</ul>
 				</div>
 
@@ -155,7 +154,6 @@
 				<!-- Under construction banner -->
 				<div class="bg-yellow-400 border-4 border-black p-4 text-center" style="box-shadow: 4px 4px 0 #000;">
 					<p class="text-2xl font-bold animate-pulse">🚧 SITE UNDER CONSTRUCTION 🚧</p>
-					<p class="mt-2">Last updated: Never | Webmaster: You</p>
 				</div>
 
 			</div>
@@ -163,7 +161,7 @@
 
 		<!-- Footer -->
 		<div class="mt-6 bg-[#000080] text-white border-4 border-black p-4 text-center" style="box-shadow: 4px 4px 0 #000;">
-			<p class="mb-2">This page is optimized for Internet Explorer 6 💿</p>
+			<p class="mb-2">This page is optimized for Internet Explorer 6</p>
 			<div class="flex justify-center gap-4 items-center flex-wrap">
 				<span class="bg-blue-500 px-3 py-1 border-2 border-white text-xs">HTML 4.01</span>
 				<span class="bg-green-600 px-3 py-1 border-2 border-white text-xs">CSS ENABLED</span>
@@ -175,8 +173,6 @@
 </div>
 
 <style>
-  @import "tailwindcss";
-
   blink {
     animation: blink 1s infinite;
   }
@@ -184,5 +180,10 @@
   @keyframes blink {
     0%, 49% { opacity: 1; }
     50%, 100% { opacity: 0; }
+  }
+
+  @font-face {
+    font-family: 'pixel-sans';
+    src: url('$lib/assets/fonts/pixel-comic-sans.ttf') format('truetype');
   }
 </style>
