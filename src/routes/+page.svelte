@@ -35,7 +35,7 @@
 	}
 
 	onMount(() => {
-		bouncers = Array.from({ length: 25 }, (_, i) => ({
+		bouncers = Array.from({ length: 10 }, (_, i) => ({
 			id: i,
 			name: `ramis-${i}`,
 			src: RamisSrc,
