@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
+	import RamisSrc from '$lib/assets/images/ramis.jpg';
+	import Bouncer from './Bouncer.svelte';
 
 	let clicks = 0;
 	let visitorCount = Math.floor(Math.random() * 999999);
@@ -8,6 +10,8 @@
 
 	let currentFact = "";
 	let isLoading = false;
+
+	let bouncers: Array<{id: number, name: string, src: string, initialX: number, initialY: number}> = [];
 
 	function handleChaosButton() {
 		clicks++;
@@ -31,6 +35,14 @@
 	}
 
 	onMount(() => {
+		bouncers = Array.from({ length: 25 }, (_, i) => ({
+			id: i,
+			name: `ramis-${i}`,
+			src: RamisSrc,
+			initialX: Math.random() * (window.innerWidth - 150),
+			initialY: Math.random() * (window.innerHeight - 150)
+		}));
+
 		const interval = setInterval(() => {
 			visitorCount = Math.floor(Math.random() * 999999);
 			currentTime = new Date().toLocaleString();
@@ -41,8 +53,16 @@
 </script>
 
 <div class="min-h-screen font-['pixel-sans',_cursive]" style="background: linear-gradient(45deg, #ff00ff 0%, #00ff00 25%, #ff0000 50%, #00ffff 75%, #ffff00 100%);">
+	{#each bouncers as bouncer (bouncer.id)}
+		<Bouncer
+			name={bouncer.name}
+			src={bouncer.src}
+			initialX={bouncer.initialX}
+			initialY={bouncer.initialY}
+			on:click={handleChaosButton}/>
+	{/each}
 	<!-- Main container with that classic table look -->
-	<div class="max-w-5xl min-h-screen mx-auto bg-[#c0c0c0] px-8 flex flex-col">
+	<div class="max-w-5xl min-h-screen mx-auto bg-[#c0c0c0] px-8 flex flex-col relative z-10">
 
 	<!-- Marquee header -->
 		<div class="bg-gradient-to-r from-blue-600 to-purple-600 text-yellow-300 p-2 mb-4 border-4 border-black">
