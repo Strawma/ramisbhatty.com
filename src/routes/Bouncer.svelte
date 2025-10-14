@@ -78,7 +78,7 @@
 		totalTime += deltaTime;
 
 		if (totalTime >= 1000 / fps) {
-			totalTime -= 1000 / fps;
+			totalTime = 0;
 			const containerRect = document.documentElement.getBoundingClientRect();
 			let leftBoundary = containerRect.left;
 			let topBoundary = containerRect.top;
