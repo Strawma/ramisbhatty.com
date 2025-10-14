@@ -3,6 +3,7 @@
 	import { fade } from 'svelte/transition';
 	import RamisSrc from '$lib/assets/images/ramis-pixellated.jpg';
 	import Bouncer from './Bouncer.svelte';
+	import AoOniSrc from '$lib/assets/images/ao oni.gif'
 
 	let clicks = 0;
 	let visitorCount = Math.floor(Math.random() * 999999);
@@ -109,6 +110,15 @@
 				<div class="bg-black text-lime-400 border-4 border-[#00ff00] p-3 font-mono text-sm text-center">
 					{currentTime}
 				</div>
+
+				<!-- Ad space -->
+				<div class="bg-white border-4 border-black p-4 mt-4 text-center" style="box-shadow: 4px 4px 0 #000;">
+					<p class="text-sm mb-2">-- AD SPACE --</p>
+					<img src={AoOniSrc} alt="Ad" class="mx-auto w-48 h-32 object-contain" />
+					<p class="text-xs mt-2">Your Ad Here!</p>
+					<p class="text-xs mt-2">for more information <a href="mailto:advertising@ramisbhatty.com" class="text-blue-600 underline hover:text-red-600">advertising@ramisbhatty.com</a></p>
+				</div>
+
 			</div>
 
 			<!-- Main content area -->
