@@ -19,10 +19,9 @@
 </script>
 
 <div class="top-bar fixed top-0 left-0 w-full h-16 bg-white bg-opacity-30 backdrop-blur-sm z-50 flex items-center justify-between px-4 shadow-md">
-  <div class="logo font-[Comic_Sans_MS] text-xl font-bold">Bouncy Friends</div>
+  <div class="logo font-[Comic_Sans_MS] text-xl font-bold">Bouncy Friendos</div>
   <nav class="flex gap-4">
     <a href="/" class="font-[Comic_Sans_MS] hover:underline">Home</a>
-    <a href="/horse" class="font-[Comic_Sans_MS] hover:underline">Do Not Click</a>
   </nav>
 </div>
 
