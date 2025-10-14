@@ -40,15 +40,14 @@
 	});
 </script>
 
-<div class="min-h-screen bg-[#c0c0c0] p-4 font-['pixel-sans',_cursive]">
+<div class="min-h-screen font-['pixel-sans',_cursive]" style="background: linear-gradient(45deg, #ff00ff 0%, #00ff00 25%, #ff0000 50%, #00ffff 75%, #ffff00 100%);">
+	<!-- Main container with that classic table look -->
+	<div class="max-w-5xl min-h-screen mx-auto bg-[#c0c0c0] px-8 flex flex-col">
 
 	<!-- Marquee header -->
-	<div class="bg-gradient-to-r from-blue-600 to-purple-600 text-yellow-300 p-2 mb-4 border-4 border-black">
-		<marquee class="text-2xl font-bold">*** WELCOME TO MY AWESOME HOMEPAGE ***</marquee>
-	</div>
-
-	<!-- Main container with that classic table look -->
-	<div class="max-w-5xl mx-auto">
+		<div class="bg-gradient-to-r from-blue-600 to-purple-600 text-yellow-300 p-2 mb-4 border-4 border-black">
+			<marquee class="text-2xl font-bold">*** WELCOME TO MY AWESOME HOMEPAGE ***</marquee>
+		</div>
 
 		<!-- Visitor counter -->
 		<div class="bg-white border-4 border-[#808080] p-2 mb-4 text-center" style="box-shadow: 4px 4px 0 #000;">
@@ -67,10 +66,10 @@
 					<h2 class="text-xl font-bold mb-3 text-center underline">: : MENU : :</h2>
 					<ul class="space-y-2">
 						<li><a href="#" class="text-blue-600 underline hover:text-red-600">> Home</a></li>
-<!--						<li><a href="#" class="text-blue-600 underline hover:text-red-600">> About Me</a></li>-->
-<!--						<li><a href="#" class="text-blue-600 underline hover:text-red-600">> Portfolio</a></li>-->
-<!--						<li><a href="#" class="text-blue-600 underline hover:text-red-600">> Contact</a></li>-->
-<!--						<li><a href="#" class="text-blue-600 underline hover:text-red-600">> Cool Links</a></li>-->
+						<!--						<li><a href="#" class="text-blue-600 underline hover:text-red-600">> About Me</a></li>-->
+						<!--						<li><a href="#" class="text-blue-600 underline hover:text-red-600">> Portfolio</a></li>-->
+						<!--						<li><a href="#" class="text-blue-600 underline hover:text-red-600">> Contact</a></li>-->
+						<!--						<li><a href="#" class="text-blue-600 underline hover:text-red-600">> Cool Links</a></li>-->
 					</ul>
 				</div>
 
@@ -79,7 +78,7 @@
 					<button
 						on:click={handleChaosButton}
 						class="animate-pulse text-white font-bold text-lg bg-red-600 border-2 border-yellow-300 px-4 py-2 hover:bg-red-700">
-						⚡ CLICK ME! ⚡
+						CLICK ME!
 					</button>
 					{#if clicks > 0}
 						<p class="text-yellow-300 mt-2 text-sm" in:fade>Clicks: {clicks}</p>
