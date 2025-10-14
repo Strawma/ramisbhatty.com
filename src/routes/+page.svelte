@@ -63,9 +63,8 @@
 			on:click={handleChaosButton}/>
 	{/each}
 	<!-- Main container with that classic table look -->
-	<div class="max-w-5xl min-h-screen mx-auto bg-[#c0c0c0] px-8 flex flex-col relative z-10">
-
-	<!-- Marquee header -->
+	<div class="max-w-4xl min-h-screen mx-auto bg-[#c0c0c0] px-8 flex flex-col relative z-10">
+		<!-- Marquee header -->
 		<div class="bg-gradient-to-r from-blue-600 to-purple-600 text-yellow-300 p-2 mb-4 border-4 border-black">
 			<marquee class="text-2xl font-bold">*** WELCOME TO MY AWESOME HOMEPAGE ***</marquee>
 		</div>
@@ -116,7 +115,8 @@
 					<p class="text-sm mb-2">-- AD SPACE --</p>
 					<img src={AoOniSrc} alt="Ad" class="mx-auto w-48 h-32 object-contain" />
 					<p class="text-xs mt-2">Your Ad Here!</p>
-					<p class="text-xs mt-2">for more information <a href="mailto:advertising@ramisbhatty.com" class="text-blue-600 underline hover:text-red-600">advertising@ramisbhatty.com</a></p>
+					<p class="text-xs mt-2">for more information</p>
+					<p class="text-xs mt-2 break-all"><a href="mailto:advertising@ramisbhatty.com" class="text-blue-600 underline hover:text-red-600">advertising@ramisbhatty.com</a></p>
 				</div>
 
 			</div>
