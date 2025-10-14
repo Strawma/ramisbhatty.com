@@ -3,8 +3,8 @@
 
 	const maxWidth = 150;
 	const maxHeight = 150;
-	let width: number;
-	let height: number;
+	let width = maxWidth;
+	let height = maxHeight;
 	const minSpeed = 100;
 	const maxSpeed = 400;
 	export let name: string = "Bouncer";
@@ -40,6 +40,8 @@
 		img.src = src;
 
 		img.onload = () => {
+			if (!canvasEl) return;
+
 			// internal low-res canvas size
 			canvasEl.width = pixelResolution;
 			canvasEl.height = pixelResolution;
@@ -70,42 +72,38 @@
 	}
 
 	function moveBouncer(timestamp: number) {
-		// adjust size of bouncer if window size changes
-		adjustSize();
-
 		const deltaTime = timestamp - lastTime;
 		lastTime = timestamp;
 		totalTime += deltaTime;
 
 		if (totalTime >= 1000 / fps) {
 			totalTime = 0;
-			const containerRect = document.documentElement.getBoundingClientRect();
-			let leftBoundary = containerRect.left;
-			let topBoundary = containerRect.top;
-			let rightBoundary = containerRect.right;
-			let bottomBoundary = containerRect.bottom;
+			const leftBoundary = 0;
+			const topBoundary = 0;
+			const rightBoundary = window.innerWidth;
+			const bottomBoundary = document.documentElement.scrollHeight;
 
 			x += dx / fps;
 			y += dy / fps;
 
 			let bounced = false;
-			if (x + window.scrollX <= leftBoundary) {
+			if (x <= leftBoundary) {
 				dx = Math.abs(dx);
-				x = 0;
+				x = leftBoundary;
 				bounced = true;
-			} else if (x + width + window.scrollX >= rightBoundary) {
+			} else if (x + width >= rightBoundary) {
 				dx = -Math.abs(dx);
-				x = window.innerWidth - width;
+				x = rightBoundary - width;
 				bounced = true;
 			}
 
-			if (y + window.scrollY <= topBoundary) {
+			if (y <= topBoundary) {
 				dy = Math.abs(dy);
-				y = 0;
+				y = topBoundary;
 				bounced = true;
-			} else if (y + height + window.scrollY >= bottomBoundary) {
+			} else if (y + height >= bottomBoundary) {
 				dy = -Math.abs(dy);
-				y = window.innerHeight - height;
+				y = bottomBoundary - height;
 				bounced = true;
 			}
 
@@ -141,11 +139,10 @@
 </script>
 
 <button
-	class="bg-transparent border-0 p-0 cursor-pointer absolute focus:outline-none focus:ring-2 focus:ring-black block"
+	class="bg-transparent border-0 p-0 cursor-pointer absolute focus:outline-none focus:ring-2 focus:ring-black block z-50"
 	style="left: {x}px; top: {y}px;"
 	on:click
 >
-	<!-- canvas is rendered at a low internal resolution and scaled up with pixelated rendering -->
 	<canvas
 		bind:this={canvasEl}
 		style="width: {width}px; height: {height}px; image-rendering: pixelated; display: block;"
