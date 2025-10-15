@@ -49,7 +49,7 @@
 	<!-- Main container with that classic table look -->
 	<BouncerManager width="100vw" height="100vh" fps={8}>
 		<!-- Make 15 random bouncers with different sizes -->
-		{#each {length : 15} as i (i)}
+		{#each Array.from({length: 15}) as _, i (i)}
 			<Bouncer radius={Math.floor(Math.random() * 40) + 20} speed={Math.floor(Math.random()*600) + 300} imageSrc={RamisSrc}/>
 		{/each}
 		<div class="max-w-3xl min-h-screen mx-auto bg-[#c0c0c0] px-8 flex flex-col relative z-10">
