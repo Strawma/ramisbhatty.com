@@ -142,10 +142,12 @@
 	class="bg-transparent border-0 p-0 cursor-pointer absolute focus:outline-none focus:ring-2 focus:ring-black block z-50"
 	style="left: {x}px; top: {y}px;"
 	on:click
+	aria-label={name}
+
 >
 	<canvas
 		bind:this={canvasEl}
 		style="width: {width}px; height: {height}px; image-rendering: pixelated; display: block;"
 		aria-label={name}
-	/>
+	></canvas>
 </button>
