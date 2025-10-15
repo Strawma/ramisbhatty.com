@@ -58,17 +58,21 @@
 			isPlaying = false;
 		} else {
 			if (selectedMidiUrl) {
-				// Fetch the MIDI file from the server
-				const response = await fetch(selectedMidiUrl);
-				const arrayBuffer = await response.arrayBuffer();
+				try {
+					// Fetch the MIDI file from the server
+					const response = await fetch(selectedMidiUrl);
+					const arrayBuffer = await response.arrayBuffer();
 
-				// Use Magenta's built-in MIDI parser
-				const { sequences } = await import('@magenta/music');
-				const ns = sequences.midiToSequenceProto(new Uint8Array(arrayBuffer));
+					// Parse MIDI using Magenta's MIDI module
+					const { midiToSequenceProto } = await import('@magenta/music/esm/core/midi_io');
+					const ns = midiToSequenceProto(new Uint8Array(arrayBuffer));
 
-				await midiPlayer.loadSamples(ns);
-				midiPlayer.start(ns);
-				isPlaying = true;
+					await midiPlayer.loadSamples(ns);
+					midiPlayer.start(ns);
+					isPlaying = true;
+				} catch (error) {
+					console.error('Failed to play MIDI:', error);
+				}
 			}
 		}
 	}
