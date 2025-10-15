@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import AoOniSrc from '$lib/assets/images/ao oni.gif'
-	import RamisSrc from '$lib/assets/images/ramis-pixellated.jpg'
+	import RamisSrc from '$lib/assets/images/ramis-pixellated.png'
 
 	import Bouncer from '$lib/components/Bouncer.svelte';
 	import BouncerManager from '$lib/components/BouncerManager.svelte';
@@ -48,9 +48,9 @@
 <div class="min-h-screen font-['pixel-sans',_cursive]" style="background: linear-gradient(45deg, #ff00ff 0%, #00ff00 25%, #ff0000 50%, #00ffff 75%, #ffff00 100%);">
 	<!-- Main container with that classic table look -->
 	<BouncerManager width="100vw" height="100vh" fps={8}>
-		<Bouncer radius={70} color="#ff6b6b" speed={300} imageSrc={RamisSrc} />
-		<Bouncer radius={70} color="#6bff6b" speed={300} imageSrc={RamisSrc} />
-		<Bouncer radius={70} color="#6b6bff" speed={300} imageSrc={RamisSrc} />
+		<Bouncer radius={70} speed={300} imageSrc={RamisSrc}/>
+		<Bouncer radius={70} speed={300} imageSrc={RamisSrc}/>
+		<Bouncer radius={70} speed={300} imageSrc={RamisSrc}/>
 		<div class="max-w-3xl min-h-screen mx-auto bg-[#c0c0c0] px-8 flex flex-col relative z-10">
 			<!-- Marquee header -->
 			<div class="bg-gradient-to-r from-blue-600 to-purple-600 text-yellow-300 p-2 mb-4 border-4 border-black">
@@ -83,7 +83,7 @@
 					<!-- Blinking button -->
 					<div class="bg-gradient-to-b from-[#ff0000] to-[#8b0000] border-4 border-black p-4 text-center mb-4" style="box-shadow: 4px 4px 0 #000;">
 						<button
-							on:click={handleChaosButton}
+							onclick={handleChaosButton}
 							class="animate-pulse text-white font-bold text-lg bg-red-600 border-2 border-yellow-300 px-4 py-2 hover:bg-red-700">
 							CLICK ME!
 						</button>
@@ -96,15 +96,6 @@
 					<div class="bg-black text-lime-400 border-4 border-[#00ff00] p-3 font-mono text-sm text-center">
 						{currentTime}
 					</div>
-
-					<!-- Ad space -->
-					<!--				<div class="bg-white border-4 border-black p-4 mt-4 text-center" style="box-shadow: 4px 4px 0 #000;">-->
-					<!--					<p class="text-sm mb-2">&#45;&#45; AD SPACE &#45;&#45;</p>-->
-					<!--					<img src={AoOniSrc} alt="Ad" class="mx-auto w-48 h-32 object-contain" />-->
-					<!--					<p class="text-xs mt-2">Your Ad Here!</p>-->
-					<!--					<p class="text-xs mt-2">for more information</p>-->
-					<!--					<p class="text-xs text-[10px] mt-2 break-all"><a href="mailto:advertising@ramisbhatty.com" class="text-blue-600 underline hover:text-red-600">advertising@ramisbhatty.com</a></p>-->
-					<!--				</div>-->
 
 				</div>
 
@@ -123,24 +114,6 @@
 							You are now entering the <strong><u>ULTIMATE</u></strong> personal homepage experience.
 						</p>
 					</div>
-
-					<!-- Facts section -->
-					<!--				<div class="bg-[#00ffff] border-4 border-black p-6" style="box-shadow: 4px 4px 0 #000;">-->
-					<!--					<h2 class="text-2xl font-bold mb-4 text-center underline">&lt; RANDOM FACT GENERATOR &gt;</h2>-->
-					<!--					<div class="bg-white border-2 border-black p-4 mb-4">-->
-					<!--						{#if isLoading}-->
-					<!--							<p class="text-lg italic animate-pulse">Loading fact from the World Wide Web...</p>-->
-					<!--						{:else}-->
-					<!--							<p class="text-lg italic">"{currentFact}"</p>-->
-					<!--						{/if}-->
-					<!--					</div>-->
-					<!--					<button-->
-					<!--						on:click={nextFact}-->
-					<!--						class="bg-gradient-to-b from-[#c0c0c0] to-[#808080] border-4 border-black px-6 py-2 font-bold hover:from-[#e0e0e0]"-->
-					<!--						style="box-shadow: 2px 2px 0 #000;">-->
-					<!--						GENERATE NEW FACT →-->
-					<!--					</button>-->
-					<!--				</div>-->
 				</div>
 			</div>
 
@@ -173,7 +146,7 @@
 							{/if}
 						</div>
 						<button
-							on:click={nextFact}
+							onclick={nextFact}
 							class="bg-gradient-to-b from-[#c0c0c0] to-[#808080] border-4 border-black px-6 py-2 font-bold hover:from-[#e0e0e0]"
 							style="box-shadow: 2px 2px 0 #000;">
 							GENERATE NEW FACT →

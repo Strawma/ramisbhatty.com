@@ -1,23 +1,26 @@
 <script lang="ts">
-	import { onMount, setContext } from 'svelte';
+	import { onMount, setContext, type Snippet } from 'svelte';
 
 	let canvas = $state<HTMLCanvasElement>();
 	let container = $state<HTMLDivElement>();
 
 	let {
-		width = 800,
+		width= 800,
 		height = 600,
 		fps = 60,
 		children
 	}: {
-		width?: number;
-		height?: number;
+		width?: number | string;
+		height?: number | string;
 		fps?: number;
 		children?: Snippet;
 	} = $props();
 
 	let numericWidth = $state(800);
 	let numericHeight = $state(600);
+
+	let previousWidth = $state(800);
+	let previousHeight = $state(600);
 
 	interface Bouncer {
 		id: string;
@@ -33,7 +36,14 @@
 	let bouncers = $state<Bouncer[]>([]);
 	let obstacles = $state<DOMRect[]>([]);
 
-	setContext('bouncerManager', {
+	export interface BouncerManagerContext {
+		getCanvasDimensions: () => { width: number; height: number };
+		registerBouncer: (bouncer: Bouncer) => () => void;
+		registerObstacle: (rect: DOMRect) => void;
+	}
+
+	setContext<BouncerManagerContext>('bouncerManager', {
+		getCanvasDimensions: () => ({ width: numericWidth, height: numericHeight }),
 		registerBouncer: (bouncer: Bouncer) => {
 			bouncers = [...bouncers, bouncer];
 			return () => {
@@ -96,6 +106,20 @@
 			if (container) {
 				numericWidth = container.offsetWidth;
 				numericHeight = container.offsetHeight;
+
+				if (previousWidth > 0 && previousHeight > 0) {
+					const scaleX = numericWidth / previousWidth;
+					const scaleY = numericHeight / previousHeight;
+
+					bouncers = bouncers.map(bouncer => ({
+						...bouncer,
+						x: bouncer.x * scaleX,
+						y: bouncer.y * scaleY
+					}));
+				}
+
+				previousWidth = numericWidth;
+				previousHeight = numericHeight;
 			}
 		};
 
@@ -151,7 +175,6 @@
 
   .bouncer-visual {
     position: absolute;
-    border-radius: 50%;
     pointer-events: none;
   }
 
@@ -159,6 +182,5 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 50%;
   }
 </style>
