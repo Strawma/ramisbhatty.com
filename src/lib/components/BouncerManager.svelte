@@ -4,7 +4,17 @@
 	let canvas = $state<HTMLCanvasElement>();
 	let container = $state<HTMLDivElement>();
 
-	let { width = 800, height = 600, fps = 60 } = $props();
+	let {
+		width = 800,
+		height = 600,
+		fps = 60,
+		children
+	}: {
+		width?: number;
+		height?: number;
+		fps?: number;
+		children?: Snippet;
+	} = $props();
 
 	let numericWidth = $state(800);
 	let numericHeight = $state(600);
@@ -104,7 +114,9 @@
 <div bind:this={container} class="bouncer-manager" style="width: {width}px; height: {height}px;">
 	<canvas bind:this={canvas} width={numericWidth} height={numericHeight}></canvas>
 	<div class="content">
-		<slot></slot>
+		{#if children}
+			{@render children()}
+		{/if}
 	</div>
 	{#each bouncers as bouncer (bouncer.id)}
 		<div
