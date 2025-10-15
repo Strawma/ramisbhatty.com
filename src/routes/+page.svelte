@@ -48,9 +48,10 @@
 <div class="min-h-screen font-['pixel-sans',_cursive]" style="background: linear-gradient(45deg, #ff00ff 0%, #00ff00 25%, #ff0000 50%, #00ffff 75%, #ffff00 100%);">
 	<!-- Main container with that classic table look -->
 	<BouncerManager width="100vw" height="100vh" fps={8}>
-		<Bouncer radius={70} speed={300} imageSrc={RamisSrc}/>
-		<Bouncer radius={70} speed={300} imageSrc={RamisSrc}/>
-		<Bouncer radius={70} speed={300} imageSrc={RamisSrc}/>
+		<!-- Make 15 random bouncers with different sizes -->
+		{#each {length : 15} as i (i)}
+			<Bouncer radius={Math.floor(Math.random() * 40) + 20} speed={Math.floor(Math.random()*600) + 300} imageSrc={RamisSrc}/>
+		{/each}
 		<div class="max-w-3xl min-h-screen mx-auto bg-[#c0c0c0] px-8 flex flex-col relative z-10">
 			<!-- Marquee header -->
 			<div class="bg-gradient-to-r from-blue-600 to-purple-600 text-yellow-300 p-2 mb-4 border-4 border-black">

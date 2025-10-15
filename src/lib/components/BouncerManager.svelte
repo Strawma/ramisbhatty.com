@@ -4,9 +4,12 @@
 	let canvas = $state<HTMLCanvasElement>();
 	let container = $state<HTMLDivElement>();
 
+	const baseWidth = 1000;
+	const baseHeight = 1000;
+
 	let {
-		width= 800,
-		height = 600,
+		width= baseWidth,
+		height = baseHeight,
 		fps = 60,
 		children
 	}: {
@@ -16,11 +19,11 @@
 		children?: Snippet;
 	} = $props();
 
-	let numericWidth = $state(800);
-	let numericHeight = $state(600);
+	let numericWidth = $state(baseWidth);
+	let numericHeight = $state(baseHeight);
 
-	let previousWidth = $state(800);
-	let previousHeight = $state(600);
+	let previousWidth = $state(baseWidth);
+	let previousHeight = $state(baseHeight);
 
 	interface Bouncer {
 		id: string;
@@ -38,12 +41,14 @@
 
 	export interface BouncerManagerContext {
 		getCanvasDimensions: () => { width: number; height: number };
+		getFPS: () => number;
 		registerBouncer: (bouncer: Bouncer) => () => void;
 		registerObstacle: (rect: DOMRect) => void;
 	}
 
 	setContext<BouncerManagerContext>('bouncerManager', {
 		getCanvasDimensions: () => ({ width: numericWidth, height: numericHeight }),
+		getFPS: () => fps,
 		registerBouncer: (bouncer: Bouncer) => {
 			bouncers = [...bouncers, bouncer];
 			return () => {
@@ -114,7 +119,10 @@
 					bouncers = bouncers.map(bouncer => ({
 						...bouncer,
 						x: bouncer.x * scaleX,
-						y: bouncer.y * scaleY
+						y: bouncer.y * scaleY,
+						vx: bouncer.vx * scaleX,
+						vy: bouncer.vy * scaleY,
+						radius: bouncer.radius * scaleX
 					}));
 				}
 

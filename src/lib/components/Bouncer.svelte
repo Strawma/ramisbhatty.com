@@ -9,6 +9,7 @@
 	onMount(() => {
 		const id = crypto.randomUUID();
 		const { width, height } = context.getCanvasDimensions();
+		speed = speed / context.getFPS();
 
 		const bouncer = {
 			id,
