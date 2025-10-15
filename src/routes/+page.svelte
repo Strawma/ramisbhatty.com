@@ -2,16 +2,17 @@
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import AoOniSrc from '$lib/assets/images/ao oni.gif'
+	import RamisSrc from '$lib/assets/images/ramis-pixellated.jpg'
 
 	import Bouncer from '$lib/components/Bouncer.svelte';
 	import BouncerManager from '$lib/components/BouncerManager.svelte';
 
-	let clicks = 0;
-	let visitorCount = Math.floor(Math.random() * 999999);
-	let currentTime = new Date().toLocaleString();
+	let clicks = $state(0);
+	let visitorCount = $state(Math.floor(Math.random() * 999999));
+	let currentTime = $state(new Date().toLocaleString());
 
-	let currentFact = "";
-	let isLoading = false;
+	let currentFact = $state("");
+	let isLoading = $state(false);
 
 	function handleChaosButton() {
 		clicks++;
@@ -46,10 +47,10 @@
 
 <div class="min-h-screen font-['pixel-sans',_cursive]" style="background: linear-gradient(45deg, #ff00ff 0%, #00ff00 25%, #ff0000 50%, #00ffff 75%, #ffff00 100%);">
 	<!-- Main container with that classic table look -->
-	<BouncerManager width="100vw" height="100vh">
-		<Bouncer radius={20} color="#ff6b6b" speed={300} />
-		<Bouncer radius={25} color="#6bff6b" speed={200} />
-		<Bouncer radius={15} color="#6b6bff" speed={40} />
+	<BouncerManager width="100vw" height="100vh" fps={8}>
+		<Bouncer radius={70} color="#ff6b6b" speed={300} imageSrc={RamisSrc} />
+		<Bouncer radius={70} color="#6bff6b" speed={300} imageSrc={RamisSrc} />
+		<Bouncer radius={70} color="#6b6bff" speed={300} imageSrc={RamisSrc} />
 		<div class="max-w-3xl min-h-screen mx-auto bg-[#c0c0c0] px-8 flex flex-col relative z-10">
 			<!-- Marquee header -->
 			<div class="bg-gradient-to-r from-blue-600 to-purple-600 text-yellow-300 p-2 mb-4 border-4 border-black">

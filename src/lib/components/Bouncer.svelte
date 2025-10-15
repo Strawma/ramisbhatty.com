@@ -1,9 +1,7 @@
 <script lang="ts">
 	import { onMount, getContext } from 'svelte';
 
-	export let radius = 20;
-	export let color = '#ff6b6b';
-	export let speed = 3;
+	let { radius = 20, color = '#ff6b6b', speed = 3, imageSrc = null } = $props();
 
 	const context = getContext('bouncerManager');
 
@@ -16,7 +14,8 @@
 			vx: (Math.random() - 0.5) * speed,
 			vy: (Math.random() - 0.5) * speed,
 			radius,
-			color
+			color,
+			imageSrc
 		};
 
 		return context.registerBouncer(bouncer);
