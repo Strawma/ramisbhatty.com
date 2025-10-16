@@ -30,7 +30,7 @@
 	});
 </script>
 
-<div class="bg-[#00ffff] border-4 border-black p-4 " style="box-shadow: 4px 4px 0 #000;">
+<div class="bg-[#00ffff] border-4 border-black p-4 text-center" style="box-shadow: 4px 4px 0 #000;">
 	<h2 class="text-2xl font-bold mb-4 text-center underline">&lt; RANDOM FACT GENERATOR &gt;</h2>
 	<div class="bg-white border-2 border-black p-4 mb-4">
 		{#if isLoading}
@@ -41,7 +41,7 @@
 	</div>
 	<button
 		onclick={generateFact}
-		class="bg-gradient-to-b from-[#c0c0c0] to-[#808080] border-4 border-black px-6 py-2 font-bold hover:from-[#e0e0e0]"
+		class="bg-gradient-to-b from-[#c0c0c0] to-[#808080] border-4 border-black px-5 py-2 font-bold hover:from-[#e0e0e0] cursor-pointer"
 		style="box-shadow: 2px 2px 0 #000;">
 		GENERATE NEW FACT →
 	</button>

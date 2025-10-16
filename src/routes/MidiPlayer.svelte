@@ -86,14 +86,14 @@
 	<div class="flex gap-2 justify-center">
 		<button
 			onclick={togglePlay}
-			class="bg-gradient-to-b from-[#c0c0c0] to-[#808080] border-2 border-black px-1 py-1 text-sm font-bold hover:from-[#e0e0e0]"
+			class="bg-gradient-to-b from-[#c0c0c0] to-[#808080] border-2 border-black px-1 py-1 text-sm font-bold hover:from-[#e0e0e0] cursor-pointer"
 			style="box-shadow: 2px 2px 0 #000;">
 			{isPlaying ? '⏸ PAUSE' : '▶ PLAY'}
 		</button>
 		<button
 			onclick={skipSong}
 			disabled={!isPlaying}
-			class="bg-gradient-to-b from-[#c0c0c0] to-[#808080] border-2 border-black px-1 py-1 text-sm font-bold hover:from-[#e0e0e0] disabled:opacity-50"
+			class="bg-gradient-to-b from-[#c0c0c0] to-[#808080] border-2 border-black px-1 py-1 text-sm font-bold hover:from-[#e0e0e0] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
 			style="box-shadow: 2px 2px 0 #000;">
 			⏭ SKIP
 		</button>

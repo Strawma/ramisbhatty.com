@@ -69,7 +69,7 @@
 					<div class="bg-gradient-to-b from-[#ff0000] to-[#8b0000] border-4 border-black p-4 text-center mb-4" style="box-shadow: 4px 4px 0 #000;">
 						<button
 							onclick={handleChaosButton}
-							class="animate-pulse text-white font-bold text-lg bg-red-600 border-2 border-yellow-300 px-4 py-2 hover:bg-red-700">
+							class="animate-pulse text-white font-bold text-lg bg-red-600 border-2 border-yellow-300 px-4 py-2 hover:bg-red-700 cursor-pointer">
 							CLICK ME!
 						</button>
 						{#if clicks > 0}
@@ -146,10 +146,10 @@
 			<div class="mt-6 bg-[#000080] text-white border-4 border-black p-4 text-center" style="box-shadow: 4px 4px 0 #000;">
 				<p class="mb-2">This page is optimized for Internet Explorer 6</p>
 				<div class="flex justify-center gap-4 items-center flex-wrap">
-					<span class="bg-blue-500 px-3 py-1 border-2 border-white text-xs">HTML 4.01</span>
-					<span class="bg-green-600 px-3 py-1 border-2 border-white text-xs">CSS ENABLED</span>
-					<span class="bg-red-600 px-3 py-1 border-2 border-white text-xs">JAVASCRIPT</span>
-					<span class="bg-purple-600 px-3 py-1 border-2 border-white text-xs">MIDI MUSIC</span>
+					<a href="https://www.w3.org/TR/2018/SPSD-html401-20180327/" class="bg-blue-500 px-3 py-1 border-2 border-white text-xs">HTML 4.01</a>
+					<a href="https://www.w3.org/TR/CSS2/" class="bg-green-600 px-3 py-1 border-2 border-white text-xs">CSS ENABLED</a>
+					<a href="https://ecma-international.org/publications-and-standards/standards/ecma-262/" class="bg-red-600 px-3 py-1 border-2 border-white text-xs">JAVASCRIPT</a>
+					<a href="https://midi.org/specs" class="bg-purple-600 px-3 py-1 border-2 border-white text-xs">MIDI MUSIC</a>
 				</div>
 			</div>
 		</div>
