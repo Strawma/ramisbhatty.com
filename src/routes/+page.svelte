@@ -83,7 +83,7 @@
 					</div>
 
 					<!-- MIDI Player -->
-					<MidiPlayer midiFiles={midiFiles} tailwind="mt-4" />
+					<MidiPlayer midiFiles={midiFiles} class="mt-4" />
 
 				</div>
 
