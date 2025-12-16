@@ -8,14 +8,15 @@
 		class?: string;
 	} = $props();
 
-	// 2. Interfaces for the external library (Clean up 'any')
+	// 2. Interfaces
 	interface TinySynth {
 		getAudioContext: () => AudioContext;
 		loadMIDI: (data: Uint8Array) => void;
 		playMIDI: () => void;
 		stopMIDI: () => void;
-		setMasterVol: (vol: number) => void;
-		getPlayStatus: () => { cur: number; max: number }; // Returns seconds (or ticks)
+		locateMIDI: (tick: number) => void;
+		setMasterVol: (vol: number) => void; // <--- The function we need
+		getPlayStatus: () => { play: boolean; curTick: number; maxTick: number };
 		ready: () => Promise<void>;
 	}
 
@@ -24,9 +25,10 @@
 	let currentMidiUrl = $state<string | null>(null);
 	let isPlaying = $state<boolean>(false);
 	let isLoading = $state<boolean>(false);
+	let volume = $state<number>(0.25);
+
 	let playbackInterval: number | undefined;
 
-	// Convert glob import to usable array
 	const midiList = Object.entries(midiFiles).map(([path, url]) => ({
 		name: path.split('/').pop()?.replace('.mid', '') || 'Unknown',
 		url: url as string
@@ -36,8 +38,7 @@
 	async function initSynth() {
 		if (synth) return synth;
 
-		// Dynamic import
-		// @ts-expect-error - Library often lacks definition files
+		// @ts-expect-error - library import
 		const module = await import('webaudio-tinysynth');
 		const WebAudioTinySynth = module.default || module;
 
@@ -46,6 +47,7 @@
 			useReverb: 1,
 			voices: 64
 		});
+		if (synth) synth.setMasterVol(volume);
 
 		return synth;
 	}
@@ -56,45 +58,38 @@
 		return midiList[randomIndex];
 	}
 
-	// 5. Playback Logic
 	async function playRandomSong() {
 		let midi = getRandomMidi();
 		if (!midi) return;
-
-		// Avoid repeating the same song immediately if others exist
 		while (midi.url === currentMidiUrl && midiList.length > 1) {
 			midi = getRandomMidi();
 		}
-
 		if (midi) await loadAndPlay(midi.url);
 	}
 
 	async function loadAndPlay(url: string) {
 		isLoading = true;
-		stopMonitoring(); // Stop checking previous song status
+		stopMonitoring();
 
 		const s = await initSynth();
 		if (!s) return;
 
 		try {
-			// Fetch and Load
 			const response = await fetch(url);
 			const arrayBuffer = await response.arrayBuffer();
 
-			// Handle Audio Context (Browser Autoplay Policy)
 			const ac = s.getAudioContext();
-			if (ac.state === 'suspended') {
-				await ac.resume();
-			}
+			if (ac.state === 'suspended') await ac.resume();
 
-			s.stopMIDI(); // Stop previous
+			s.stopMIDI();
+			// Ensure volume is enforced on every load (just in case)
+			s.setMasterVol(volume);
+
 			s.loadMIDI(new Uint8Array(arrayBuffer));
 			s.playMIDI();
 
 			currentMidiUrl = url;
 			isPlaying = true;
-
-			// Start monitoring for end-of-song
 			startMonitoring(s);
 
 		} catch (error) {
@@ -104,19 +99,14 @@
 		}
 	}
 
-	// 6. Monitoring (The "Auto-Play Next" Logic)
 	function startMonitoring(s: TinySynth) {
-		// Poll every second to see if song finished
 		playbackInterval = window.setInterval(() => {
 			const status = s.getPlayStatus();
-
-			// Note: status.cur is current ticks/time, status.max is total
-			// We add a tiny buffer check or check if strictly equal/greater
-			if (status && status.max > 0 && status.cur >= status.max) {
-				console.log('Song ended, skipping to next...');
+			if (isPlaying !== status.play) isPlaying = status.play;
+			if (status.play && status.maxTick > 0 && status.curTick >= status.maxTick) {
 				playRandomSong();
 			}
-		}, 1000);
+		}, 200);
 	}
 
 	function stopMonitoring() {
@@ -126,20 +116,19 @@
 		}
 	}
 
-	// 7. Controls
 	async function togglePlay() {
 		if (!synth) {
 			await playRandomSong();
 			return;
 		}
-
 		const ac = synth.getAudioContext();
+		if (ac.state === 'suspended') await ac.resume();
 
-		if (ac.state === 'running') {
-			await ac.suspend();
+		if (isPlaying) {
+			synth.stopMIDI();
 			isPlaying = false;
 		} else {
-			await ac.resume();
+			synth.playMIDI();
 			isPlaying = true;
 		}
 	}
@@ -148,13 +137,18 @@
 		playRandomSong();
 	}
 
-	// 8. Cleanup on Component Destroy
+	function updateVolume(e: Event) {
+		const target = e.target as HTMLInputElement;
+		volume = parseFloat(target.value);
+		if (synth) {
+			synth.setMasterVol(volume);
+		}
+	}
+
 	$effect(() => {
 		return () => {
 			stopMonitoring();
-			if (synth) {
-				synth.stopMIDI();
-			}
+			if (synth) synth.stopMIDI();
 		};
 	});
 </script>
@@ -165,8 +159,8 @@
 >
 	<p class="text-yellow-300 font-bold mb-2 text-sm drop-shadow-md">♫ MIDI MUSIC ♫</p>
 
-	<div class="flex gap-2 justify-center">
-		<!-- Play/Pause -->
+	<!-- Controls -->
+	<div class="flex gap-2 justify-center mb-3">
 		<button
 			onclick={togglePlay}
 			disabled={isLoading}
@@ -182,10 +176,9 @@
 			{/if}
 		</button>
 
-		<!-- Skip -->
 		<button
 			onclick={skipSong}
-			disabled={!isPlaying && !currentMidiUrl}
+			disabled={!currentMidiUrl}
 			class="bg-gradient-to-b from-[#c0c0c0] to-[#808080] border-2 border-black px-3 py-1 text-sm font-bold
 				   hover:from-[#e0e0e0] active:border-t-black active:border-l-black active:translate-y-[1px]
 				   disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
@@ -193,5 +186,19 @@
 		>
 			⏭ SKIP
 		</button>
+	</div>
+
+	<!-- Volume Slider -->
+	<div class="flex items-center justify-center gap-2 text-white text-xs font-bold">
+		<span>VOL:</span>
+		<input
+			type="range"
+			min="0"
+			max="0.6"
+			step="0.01"
+			value={volume}
+			oninput={updateVolume}
+			class="w-24 cursor-pointer accent-yellow-300"
+		/>
 	</div>
 </div>
