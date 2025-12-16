@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import AoOniSrc from '$lib/assets/images/ao oni.gif'
-	import RamisSrc from '$lib/assets/images/ramis-pixellated.png'
+	import RamisSrc from '$lib/assets/images/ramis-pixellated.webp'
 
 	import Bouncer from '$lib/components/Bouncer.svelte';
 	import BouncerManager from '$lib/components/BouncerManager.svelte';

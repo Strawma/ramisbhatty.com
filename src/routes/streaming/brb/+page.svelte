@@ -4,9 +4,9 @@
 	import { linear } from 'svelte/easing';
 
 	import brb_quotes from '$lib/data/quotes.json';
-	import WindowsSRC from '$lib/assets/images/windows-xp.png';
-	import WindowsBottomSRC from '$lib/assets/images/windows-xp-bottom.png';
-	import JimSRC from '$lib/assets/images/jim.png';
+	import WindowsSRC from '$lib/assets/images/windows-xp.webp';
+	import WindowsBottomSRC from '$lib/assets/images/windows-xp-bottom.webp';
+	import JimSRC from '$lib/assets/images/jim.webp';
 
 	// Pool of quotes to display in the sliding bar
 	const quotes = brb_quotes;
