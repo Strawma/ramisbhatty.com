@@ -55,6 +55,6 @@
 		}
 	},
 	"dependencies": {
-		"@magenta/music": "^1.23.1"
+		"webaudio-tinysynth": "^1.1.3"
 	}
 }
