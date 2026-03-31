@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import MidiPlayer from './MidiPlayer.svelte';
+	import { nav } from '$lib/data/config' ;
 
 	let {
 		midiFiles,
@@ -22,15 +23,10 @@
 	interface NavLink {
 		label: string;
 		href: string;
-		enabled: boolean;
 	}
 
 	const navLinks: NavLink[] = [
-		{ label: 'Home', href: '#', enabled: true },
-		{ label: 'About Me', href: '#', enabled: false },
-		{ label: 'Portfolio', href: '#', enabled: false },
-		{ label: 'Contact', href: '#', enabled: false },
-		{ label: 'Cool Links', href: '#', enabled: false },
+		{ label: 'Home', href: nav.home},
 	];
 </script>
 
@@ -39,7 +35,7 @@
 	<nav class="bg-[#ffff00] retro-panel p-4">
 		<h2 class="text-xl font-bold mb-3 text-center underline">: : MENU : :</h2>
 		<ul class="space-y-2">
-			{#each navLinks.filter((l) => l.enabled) as link (link.label)}
+			{#each navLinks as link (link.label)}
 				<li>
 					<a href={link.href} class="text-blue-600 underline hover:text-red-600">
 						> {link.label}

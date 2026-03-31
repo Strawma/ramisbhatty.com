@@ -1,6 +1,7 @@
 <!-- AdBanner.svelte -->
 <script lang="ts">
 	import AoOniSrc from '$lib/assets/images/ao oni.gif';
+	import { contact } from '$lib/data/config';
 	let { class: className = '', size = 'large' } = $props();
 </script>
 
@@ -18,8 +19,8 @@
 	</a>
 	<p class="text-xs mt-2">Your Ad Here!</p>
 	<p class="text-xs mt-2 break-all">
-		<a href="mailto:advertising@ramisbhatty.com" class="text-blue-600 underline hover:text-red-600">
-			advertising@ramisbhatty.com
+		<a href="mailto:{contact.ad_email}" class="text-blue-600 underline hover:text-red-600">
+			{contact.ad_email}
 		</a>
 	</p>
 </div>
