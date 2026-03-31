@@ -1,3 +1,28 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
+
+/* The retro raised panel that's used everywhere */
+.retro-panel {
+  border: 4px solid black;
+  box-shadow: 4px 4px 0 #000;
+}
+
+/* Common retro button style */
+.retro-btn {
+  background-image: linear-gradient(to bottom, #c0c0c0, #808080);
+  border: 2px solid black;
+  font-weight: bold;
+  box-shadow: 2px 2px 0 #000;
+  cursor: pointer;
+}
+.retro-btn:hover {
+  background-image: linear-gradient(to bottom, #e0e0e0, #a0a0a0);
+}
+.retro-btn:active {
+  translate: 0 1px;
+}
+.retro-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
