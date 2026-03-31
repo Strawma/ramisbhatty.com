@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
-	import AoOniSrc from '$lib/assets/images/ao oni.gif'
 	import RamisSrc from '$lib/assets/images/ramis-pixellated.webp'
 
-	import Bouncer from '$lib/components/Bouncer.svelte';
-	import BouncerManager from '$lib/components/BouncerManager.svelte';
+	import Bouncer from '$lib/components/bouncer/Bouncer.svelte';
+	import BouncerManager from '$lib/components/bouncer/BouncerManager.svelte';
 
 	import MidiPlayer from './MidiPlayer.svelte';
 	import FactGenerator from './FactGenerator.svelte';
+	import AdBanner from './AdBanner.svelte';
 
 	const midiFiles = import.meta.glob('$lib/assets/midi/*.mid', { eager: true, query: '?url', import: 'default' });
 
@@ -29,7 +29,7 @@
 	});
 </script>
 
-<div class="min-h-screen font-['pixel-sans',_cursive]" style="background: linear-gradient(45deg, #ff00ff 0%, #00ff00 25%, #ff0000 50%, #00ffff 75%, #ffff00 100%);">
+<div class="min-h-screen font-['pixel-sans',cursive]" style="background: linear-gradient(45deg, #ff00ff 0%, #00ff00 25%, #ff0000 50%, #00ffff 75%, #ffff00 100%);">
 	<!-- Main container with that classic table look -->
 	<BouncerManager width="100vw" height="100vh" fps={8}>
 		<!-- Make 15 random bouncers with different sizes -->
@@ -38,7 +38,7 @@
 		{/each}
 		<div class="max-w-3xl min-h-screen mx-auto bg-[#c0c0c0] px-8 flex flex-col relative z-10">
 			<!-- Marquee header -->
-			<div class="bg-gradient-to-r from-blue-600 to-purple-600 text-yellow-300 p-2 mb-4 border-4 border-black">
+			<div class="bg-linear-to-r from-blue-600 to-purple-600 text-yellow-300 p-2 mb-4 border-4 border-black">
 				<marquee class="text-2xl font-bold">*** WELCOME TO MY AWESOME HOMEPAGE ***</marquee>
 			</div>
 			<!-- Visitor counter -->
@@ -66,7 +66,7 @@
 					</div>
 
 					<!-- Blinking button -->
-					<div class="bg-gradient-to-b from-[#ff0000] to-[#8b0000] border-4 border-black p-4 text-center mb-4" style="box-shadow: 4px 4px 0 #000;">
+					<div class="bg-linear-to-b from-[#ff0000] to-[#8b0000] border-4 border-black p-4 text-center mb-4" style="box-shadow: 4px 4px 0 #000;">
 						<button
 							onclick={handleChaosButton}
 							class="animate-pulse text-white font-bold text-lg bg-red-600 border-2 border-yellow-300 px-4 py-2 hover:bg-red-700 cursor-pointer">
@@ -103,32 +103,18 @@
 						</p>
 					</div>
 
-					<div class="bg-white border-4 border-black p-4 text-center" style="box-shadow: 4px 4px 0 #000;">
-						<p class="text-sm mb-2">-- AD SPACE --</p>
-						<a href="https://cse103-notes.readthedocs.io/en/latest/pumpinglemma.html">
-							<img src={AoOniSrc} alt="Ad" class="mx-auto w-200 h-16 object-fill" />
-						</a>
-						<p class="text-xs mt-2">Your Ad Here!</p>
-						<p class="text-xs mt-2 break-all"><a href="mailto:advertising@ramisbhatty.com" class="text-blue-600 underline hover:text-red-600">advertising@ramisbhatty.com</a></p>
-					</div>
+					<AdBanner/>
 				</div>
 			</div>
 
 			<!-- Horizontal rule -->
-			<hr class="border-1 border-black my-4" />
+			<hr class="border border-black my-4" />
 
 			<!-- Two-column -->
 			<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
 				<!-- Left component - spans first 2 columns -->
 				<div class="md:col-span-2">
-					<div class="bg-white border-4 border-black p-4 text-center" style="box-shadow: 4px 4px 0 #000;">
-						<p class="text-sm mb-2">-- AD SPACE --</p>
-						<a href="https://cse103-notes.readthedocs.io/en/latest/pumpinglemma.html">
-							<img src={AoOniSrc} alt="Ad" class="mx-auto w-64 h-48 object-contain" />
-						</a>
-						<p class="text-xs mt-2">Your Ad Here!</p>
-						<p class="text-xs mt-2 break-all"><a href="mailto:advertising@ramisbhatty.com" class="text-blue-600 underline hover:text-red-600">advertising@ramisbhatty.com</a></p>
-					</div>
+					<AdBanner size="small"/>
 				</div>
 
 				<!-- Right component - spans last 2 columns -->
