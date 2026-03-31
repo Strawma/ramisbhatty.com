@@ -143,7 +143,7 @@
 	});
 </script>
 
-<div bind:this={container} class="bouncer-manager" style="width: {width}px; height: {height}px;">
+<div bind:this={container} class="bouncer-manager" style="width: {width}; height: {height};">
 	<canvas bind:this={canvas} width={numericWidth} height={numericHeight}></canvas>
 	<div class="content">
 		{#if children}
