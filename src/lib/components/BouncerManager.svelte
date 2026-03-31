@@ -4,26 +4,24 @@
 	let canvas = $state<HTMLCanvasElement>();
 	let container = $state<HTMLDivElement>();
 
-	const baseWidth = 1000;
-	const baseHeight = 1000;
-
 	let {
-		width= baseWidth,
-		height = baseHeight,
+		width = '1000px',
+		height = '1000px',
 		fps = 60,
-		children
+		children,
 	}: {
-		width?: number | string;
-		height?: number | string;
+		width?: string;
+		height?: string;
 		fps?: number;
 		children?: Snippet;
 	} = $props();
 
-	let numericWidth = $state(baseWidth);
-	let numericHeight = $state(baseHeight);
+	let numericWidth = $state(1000);
+	let numericHeight = $state(1000);
+	let previousWidth = $state(1000);
+	let previousHeight = $state(1000);
 
-	let previousWidth = $state(baseWidth);
-	let previousHeight = $state(baseHeight);
+	// ---------- Types ----------
 
 	interface Bouncer {
 		id: string;
@@ -34,110 +32,206 @@
 		radius: number;
 		color: string;
 		imageSrc: string | null;
+		image: HTMLImageElement | null;
 	}
-
-	let bouncers = $state<Bouncer[]>([]);
-	let obstacles = $state<DOMRect[]>([]);
 
 	export interface BouncerManagerContext {
 		getCanvasDimensions: () => { width: number; height: number };
 		getFPS: () => number;
-		registerBouncer: (bouncer: Bouncer) => () => void;
-		registerObstacle: (rect: DOMRect) => void;
+		registerBouncer: (bouncer: Omit<Bouncer, 'image'>) => () => void;
 	}
+
+	// ---------- State ----------
+
+	// Plain array — no need for Svelte reactivity since
+	// canvas rendering is imperative, not template-driven
+	let bouncers: Bouncer[] = [];
+
+	// Cache loaded images so 15 bouncers sharing the same
+	// sprite only trigger one network request
+	const imageCache = new Map<string, HTMLImageElement>();
+
+	function loadImage(src: string): Promise<HTMLImageElement> {
+		const cached = imageCache.get(src);
+		if (cached) return Promise.resolve(cached);
+
+		return new Promise((resolve, reject) => {
+			const img = new Image();
+			img.onload = () => {
+				imageCache.set(src, img);
+				resolve(img);
+			};
+			img.onerror = reject;
+			img.src = src;
+		});
+	}
+
+	// ---------- Context ----------
 
 	setContext<BouncerManagerContext>('bouncerManager', {
 		getCanvasDimensions: () => ({ width: numericWidth, height: numericHeight }),
 		getFPS: () => fps,
-		registerBouncer: (bouncer: Bouncer) => {
-			bouncers = [...bouncers, bouncer];
+		registerBouncer: (bouncer) => {
+			const entry: Bouncer = { ...bouncer, image: null };
+
+			if (bouncer.imageSrc) {
+				loadImage(bouncer.imageSrc).then((img) => {
+					entry.image = img;
+				});
+			}
+
+			bouncers.push(entry);
+
+			// Return cleanup function (called on Bouncer unmount)
 			return () => {
-				bouncers = bouncers.filter(item => item.id !== bouncer.id);
+				const idx = bouncers.findIndex((b) => b.id === entry.id);
+				if (idx !== -1) bouncers.splice(idx, 1);
 			};
 		},
-		registerObstacle: (rect: DOMRect) => {
-			obstacles = [...obstacles, rect];
-		}
 	});
 
+	// Physics (mutate in place - no allocations per frame)
+
 	function updatePhysics() {
-		bouncers = bouncers.map(bouncer => {
-			let { x, y, vx, vy, radius } = bouncer;
+		const w = numericWidth;
+		const h = numericHeight;
 
-			x += vx;
-			y += vy;
+		for (const b of bouncers) {
+			b.x += b.vx;
+			b.y += b.vy;
 
-			if (x - radius < 0 || x + radius > numericWidth) {
-				vx = -vx;
-				x = x - radius < 0 ? radius : numericWidth - radius;
+			if (b.x - b.radius < 0) {
+				b.vx = Math.abs(b.vx);
+				b.x = b.radius;
+			} else if (b.x + b.radius > w) {
+				b.vx = -Math.abs(b.vx);
+				b.x = w - b.radius;
 			}
-			if (y - radius < 0 || y + radius > numericHeight) {
-				vy = -vy;
-				y = y - radius < 0 ? radius : numericHeight - radius;
+
+			if (b.y - b.radius < 0) {
+				b.vy = Math.abs(b.vy);
+				b.y = b.radius;
+			} else if (b.y + b.radius > h) {
+				b.vy = -Math.abs(b.vy);
+				b.y = h - b.radius;
 			}
+		}
 
-			return { ...bouncer, x, y, vx, vy };
-		});
-
-		// Check collisions
+		// Collisions
 		for (let i = 0; i < bouncers.length; i++) {
 			for (let j = i + 1; j < bouncers.length; j++) {
-				const b1 = bouncers[i];
-				const b2 = bouncers[j];
-				const dx = b2.x - b1.x;
-				const dy = b2.y - b1.y;
-				const distance = Math.sqrt(dx * dx + dy * dy);
+				const a = bouncers[i];
+				const b = bouncers[j];
+				const dx = b.x - a.x;
+				const dy = b.y - a.y;
+				const dist = Math.sqrt(dx * dx + dy * dy);
+				const minDist = a.radius + b.radius;
 
-				if (distance < b1.radius + b2.radius) {
-					const angle = Math.atan2(dy, dx);
-					const sin = Math.sin(angle);
-					const cos = Math.cos(angle);
+				if (dist < minDist && dist > 0) {
+					const nx = dx / dist;
+					const ny = dy / dist;
+					const overlap = (minDist - dist) / 2;
 
-					const overlap = b1.radius + b2.radius - distance;
-					b1.x -= (overlap / 2) * cos;
-					b1.y -= (overlap / 2) * sin;
-					b2.x += (overlap / 2) * cos;
-					b2.y += (overlap / 2) * sin;
+					a.x -= overlap * nx;
+					a.y -= overlap * ny;
+					b.x += overlap * nx;
+					b.y += overlap * ny;
 
-					[b1.vx, b2.vx] = [b2.vx, b1.vx];
-					[b1.vy, b2.vy] = [b2.vy, b1.vy];
+					// Swap velocities along collision normal
+					const dvx = a.vx - b.vx;
+					const dvy = a.vy - b.vy;
+					const dot = dvx * nx + dvy * ny;
+
+					a.vx -= dot * nx;
+					a.vy -= dot * ny;
+					b.vx += dot * nx;
+					b.vy += dot * ny;
 				}
 			}
 		}
 	}
 
-	onMount(() => {
-		const updateDimensions = () => {
-			if (container) {
-				numericWidth = container.offsetWidth;
-				numericHeight = container.offsetHeight;
+	// ---------- Rendering ----------
 
-				if (previousWidth > 0 && previousHeight > 0) {
-					const scaleX = numericWidth / previousWidth;
-					const scaleY = numericHeight / previousHeight;
+	function render(ctx: CanvasRenderingContext2D) {
+		ctx.clearRect(0, 0, numericWidth, numericHeight);
 
-					bouncers = bouncers.map(bouncer => ({
-						...bouncer,
-						x: bouncer.x * scaleX,
-						y: bouncer.y * scaleY,
-						vx: bouncer.vx * scaleX,
-						vy: bouncer.vy * scaleY,
-						radius: bouncer.radius * scaleX
-					}));
-				}
-
-				previousWidth = numericWidth;
-				previousHeight = numericHeight;
+		for (const b of bouncers) {
+			if (b.image) {
+				// Draw the sprite
+				ctx.drawImage(
+					b.image,
+					b.x - b.radius,
+					b.y - b.radius,
+					b.radius * 2,
+					b.radius * 2,
+				);
+			} else if (b.color) {
+				// Fallback: colored circle
+				ctx.beginPath();
+				ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+				ctx.fillStyle = b.color;
+				ctx.fill();
 			}
-		};
+		}
+	}
+
+	// ---------- Lifecycle ----------
+
+	onMount(() => {
+		const ctx = canvas!.getContext('2d')!;
+
+		function updateDimensions() {
+			if (!container) return;
+
+			const newW = container.offsetWidth;
+			const newH = container.offsetHeight;
+
+			if (previousWidth > 0 && previousHeight > 0) {
+				const scaleX = newW / previousWidth;
+				const scaleY = newH / previousHeight;
+
+				for (const b of bouncers) {
+					b.x *= scaleX;
+					b.y *= scaleY;
+					b.vx *= scaleX;
+					b.vy *= scaleY;
+					b.radius *= scaleX;
+				}
+			}
+
+			numericWidth = newW;
+			numericHeight = newH;
+			previousWidth = newW;
+			previousHeight = newH;
+
+			// Sync canvas buffer size with display size
+			canvas!.width = newW;
+			canvas!.height = newH;
+		}
 
 		updateDimensions();
 		window.addEventListener('resize', updateDimensions);
 
-		const interval = setInterval(updatePhysics, 1000 / fps);
+		// ---------- Animation Loop with FPS Control ----------
+		let animFrame: number;
+		let lastTime = 0;
+		const frameInterval = 1000 / fps;
+
+		function loop(timestamp: number) {
+			animFrame = requestAnimationFrame(loop);
+
+			if (timestamp - lastTime < frameInterval) return;
+			lastTime = timestamp;
+
+			updatePhysics();
+			render(ctx);
+		}
+
+		animFrame = requestAnimationFrame(loop);
 
 		return () => {
-			clearInterval(interval);
+			cancelAnimationFrame(animFrame);
 			window.removeEventListener('resize', updateDimensions);
 		};
 	});
@@ -150,16 +244,7 @@
 			{@render children()}
 		{/if}
 	</div>
-	{#each bouncers as bouncer (bouncer.id)}
-		<div
-			class="bouncer-visual"
-			style="left: {bouncer.x - bouncer.radius}px; top: {bouncer.y - bouncer.radius}px; width: {bouncer.radius * 2}px; height: {bouncer.radius * 2}px; background: {bouncer.color};"
-		>
-			{#if bouncer.imageSrc}
-				<img src={bouncer.imageSrc} alt="Bouncer" class="bouncer-image" />
-			{/if}
-		</div>
-	{/each}
+	<!-- Bouncers are now drawn on the canvas -->
 </div>
 
 <style>
@@ -179,16 +264,5 @@
     position: relative;
     width: 100%;
     height: 100%;
-  }
-
-  .bouncer-visual {
-    position: absolute;
-    pointer-events: none;
-  }
-
-  .bouncer-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
   }
 </style>
