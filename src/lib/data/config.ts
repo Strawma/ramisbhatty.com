@@ -11,5 +11,6 @@ export const contact = {
 export const nav = {
 	home: '/',
 	blog: '/blog',
-	silly:  '/silly'
+	silly:  '/silly',
+	legacy: 'https://legacy.ramisbhatty.com'
 } as const;

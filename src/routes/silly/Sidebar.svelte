@@ -27,6 +27,7 @@
 
 	const navLinks: NavLink[] = [
 		{ label: 'Home', href: nav.home},
+		{ label: 'legacy', href: nav.legacy}
 	];
 </script>
 
