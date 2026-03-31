@@ -11,6 +11,15 @@ Installed addons:
 
 Uses pnpm package manager
 
+### Updating
+Update using:
+- pnpm update
+- pnpm outdated
+- pnpx sv migrate
+- pnpm update --interactive --latest
+- pnpm install
+- pnpm dev
+
 ### Developing
 
 start a development server:
