@@ -11,7 +11,7 @@
 
 <nav class="max-w-2xl mx-auto w-full px-6 py-6 flex items-center justify-between">
 	<a href="{nav.home}" class="font-bold text-lg hover:text-neutral-600 transition-colors">
-		Ramis Bhatty
+		{contact.name}
 	</a>
 	<div class="flex gap-6 text-sm">
 		{#each links as link(link.href)}
