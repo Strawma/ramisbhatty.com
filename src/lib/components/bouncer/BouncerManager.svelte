@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { onMount, setContext, type Snippet } from 'svelte';
+	import { SvelteMap } from 'svelte/reactivity';
 
 	let canvas = $state<HTMLCanvasElement>();
 
 	let {
 		fps = 60,
-		children,
+		children
 	}: {
 		fps?: number;
 		children?: Snippet;
@@ -40,7 +41,7 @@
 	// ── State ────────────────────────────────────────────
 
 	const bouncers: Bouncer[] = [];
-	const imageCache = new Map<string, HTMLImageElement>();
+	const imageCache = new SvelteMap<string, HTMLImageElement>();
 
 	function loadImage(src: string): Promise<HTMLImageElement> {
 		const cached = imageCache.get(src);
@@ -68,7 +69,7 @@
 				vx: 0,
 				vy: 0,
 				image: null,
-				initialized: false, // manager will position once it has dimensions
+				initialized: false // manager will position once it has dimensions
 			};
 
 			if (config.imageSrc) {
@@ -83,7 +84,7 @@
 				const idx = bouncers.findIndex((b) => b.id === bouncer.id);
 				if (idx !== -1) bouncers.splice(idx, 1);
 			};
-		},
+		}
 	});
 
 	// ── Helpers ──────────────────────────────────────────
@@ -227,10 +228,7 @@
 </script>
 
 <!-- Canvas sits between background and content -->
-<canvas
-	bind:this={canvas}
-	class="fixed inset-0 pointer-events-none z-10"
-></canvas>
+<canvas bind:this={canvas} class="fixed inset-0 pointer-events-none z-10"></canvas>
 
 <!-- Bouncer registrations (render nothing visible) -->
 {#if children}

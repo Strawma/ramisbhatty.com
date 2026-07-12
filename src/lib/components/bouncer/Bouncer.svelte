@@ -6,9 +6,9 @@
 		size = 0.03,
 		color = '',
 		speed = 300,
-		imageSrc = null,
+		imageSrc = null
 	}: {
-		size?: number;       // fraction of min(vw, vh), e.g. 0.03 = 3%
+		size?: number; // fraction of min(vw, vh), e.g. 0.03 = 3%
 		color?: string;
 		speed?: number;
 		imageSrc?: string | null;
@@ -23,7 +23,7 @@
 			size,
 			speed,
 			color,
-			imageSrc,
+			imageSrc
 		});
 	});
 </script>

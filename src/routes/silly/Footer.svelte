@@ -3,23 +3,23 @@
 		{
 			label: 'HTML 4.01',
 			href: 'https://www.w3.org/TR/2018/SPSD-html401-20180327/',
-			color: 'bg-blue-500',
+			color: 'bg-blue-500'
 		},
 		{
 			label: 'CSS ENABLED',
 			href: 'https://www.w3.org/TR/CSS2/',
-			color: 'bg-green-600',
+			color: 'bg-green-600'
 		},
 		{
 			label: 'JAVASCRIPT',
 			href: 'https://ecma-international.org/publications-and-standards/standards/ecma-262/',
-			color: 'bg-red-600',
+			color: 'bg-red-600'
 		},
 		{
 			label: 'MIDI MUSIC',
 			href: 'https://midi.org/specs',
-			color: 'bg-purple-600',
-		},
+			color: 'bg-purple-600'
+		}
 	];
 </script>
 
@@ -36,6 +36,7 @@
 			{#each badges as badge (badge.label)}
 				<a
 					href={badge.href}
+					rel="external"
 					class="{badge.color} px-3 py-1 border-2 border-white text-xs"
 				>
 					{badge.label}

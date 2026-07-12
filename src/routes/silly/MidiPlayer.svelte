@@ -29,10 +29,12 @@
 
 	let playbackInterval: number | undefined;
 
-	const midiList = Object.entries(midiFiles).map(([path, url]) => ({
-		name: path.split('/').pop()?.replace('.mid', '') || 'Unknown',
-		url: url as string
-	}));
+	const midiList = $derived(
+		Object.entries(midiFiles).map(([path, url]) => ({
+			name: path.split('/').pop()?.replace('.mid', '') || 'Unknown',
+			url: url as string
+		}))
+	);
 
 	// 4. Initialization
 	async function initSynth() {
@@ -59,12 +61,16 @@
 	}
 
 	async function playRandomSong() {
-		let midi = getRandomMidi();
-		if (!midi) return;
+		const initialMidi = getRandomMidi();
+		if (!initialMidi) return;
+
+		let midi = initialMidi;
 		while (midi.url === currentMidiUrl && midiList.length > 1) {
-			midi = getRandomMidi();
+			const nextMidi = getRandomMidi();
+			if (!nextMidi) return;
+			midi = nextMidi;
 		}
-		if (midi) await loadAndPlay(midi.url);
+		await loadAndPlay(midi.url);
 	}
 
 	async function loadAndPlay(url: string) {
@@ -91,7 +97,6 @@
 			currentMidiUrl = url;
 			isPlaying = true;
 			startMonitoring(s);
-
 		} catch (error) {
 			console.error('MIDI Load Error:', error);
 		} finally {

@@ -13,12 +13,12 @@
 	const midiFiles = import.meta.glob('$lib/assets/midi/*.mid', {
 		eager: true,
 		query: '?url',
-		import: 'default',
+		import: 'default'
 	});
 
 	const bouncerConfigs = Array.from({ length: 15 }, () => ({
-		size: 0.02 + Math.random() * 0.08,   // 2%–10% of viewport
-		speed: Math.floor(Math.random() * 600) + 300,
+		size: 0.02 + Math.random() * 0.08, // 2%–10% of viewport
+		speed: Math.floor(Math.random() * 600) + 300
 	}));
 </script>
 
@@ -32,15 +32,15 @@
 		style="background: linear-gradient(45deg, #ff00ff 0%, #00ff00 25%, #ff0000 50%, #00ffff 75%, #ffff00 100%);"
 	>
 		<div class="max-w-3xl min-h-screen mx-auto bg-[#c0c0c0] px-8 flex flex-col relative z-20">
-				<Header />
+			<Header />
 
-				<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-					<Sidebar {midiFiles} />
-					<div class="md:col-span-3 space-y-4">
-						<Welcome />
-						<AdBanner />
-					</div>
+			<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+				<Sidebar {midiFiles} />
+				<div class="md:col-span-3 space-y-4">
+					<Welcome />
+					<AdBanner />
 				</div>
+			</div>
 
 			<hr class="border border-black my-4" />
 
@@ -55,15 +55,8 @@
 </BouncerManager>
 
 <style>
-  blink {
-    animation: blink 1s infinite;
-  }
-  @keyframes blink {
-    0%, 49% { opacity: 1; }
-    50%, 100% { opacity: 0; }
-  }
-  @font-face {
-    font-family: 'pixel-sans';
-    src: url('$lib/assets/fonts/pixel-comic-sans.ttf') format('truetype');
-  }
+	@font-face {
+		font-family: 'pixel-sans';
+		src: url('$lib/assets/fonts/pixel-comic-sans.ttf') format('truetype');
+	}
 </style>

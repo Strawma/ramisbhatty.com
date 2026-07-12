@@ -2,10 +2,11 @@
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import MidiPlayer from './MidiPlayer.svelte';
-	import { nav } from '$lib/data/config' ;
+	import { nav } from '$lib/data/config';
+	import { resolve } from '$app/paths';
 
 	let {
-		midiFiles,
+		midiFiles
 	}: {
 		midiFiles: Record<string, unknown>;
 	} = $props();
@@ -23,11 +24,12 @@
 	interface NavLink {
 		label: string;
 		href: string;
+		internal: boolean;
 	}
 
 	const navLinks: NavLink[] = [
-		{ label: 'Home', href: nav.home},
-		{ label: 'legacy', href: nav.legacy}
+		{ label: 'Home', href: nav.home, internal: true },
+		{ label: 'legacy', href: nav.legacy, internal: false }
 	];
 </script>
 
@@ -38,9 +40,15 @@
 		<ul class="space-y-2">
 			{#each navLinks as link (link.label)}
 				<li>
-					<a href={link.href} class="text-blue-600 underline hover:text-red-600">
-						> {link.label}
-					</a>
+					{#if link.internal}
+						<a href={resolve(nav.home)} class="text-blue-600 underline hover:text-red-600">
+							> {link.label}
+						</a>
+					{:else}
+						<a href={link.href} rel="external" class="text-blue-600 underline hover:text-red-600">
+							> {link.label}
+						</a>
+					{/if}
 				</li>
 			{/each}
 		</ul>
