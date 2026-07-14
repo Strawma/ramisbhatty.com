@@ -7,6 +7,8 @@ onlyBuiltDependencies:
   - '@tailwindcss/oxide'
   - core-js
   - esbuild
+  - sharp
+  - workerd
 
 overrides:
   'static-eval@<=2.0.1': '>=2.0.2'
