@@ -1,0 +1,13 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "ramisbhatty-com",
+	"compatibility_date": "2026-07-14",
+	"pages_build_output_dir": ".svelte-kit/cloudflare",
+	"d1_databases": [
+		{
+			"binding": "BOOKCLUB_DB",
+			"database_name": "ramis-bookclub",
+			"database_id": "17f73704-9818-4f07-a92b-d52caab3ab53"
+		}
+	]
+}
