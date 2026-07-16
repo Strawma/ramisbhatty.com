@@ -50,7 +50,7 @@ export const actions: Actions = {
 		}
 
 		const database = getBookclubDatabase(event.platform);
-		const member = await findMemberByInviteCode(database, inviteCode.trim());
+		const member = await findMemberByInviteCode(database, inviteCode);
 
 		if (!member) {
 			return fail(400, { error: 'That invite code was not recognized.' });
