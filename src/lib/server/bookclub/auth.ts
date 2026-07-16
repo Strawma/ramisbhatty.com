@@ -135,6 +135,18 @@ export async function findMemberByInviteCode(
 		}
 	}
 
+	if (!match) {
+		console.warn('Book club invite lookup failed', {
+			activeMemberCount: members.results.length,
+			inviteCodeLength: inviteCode.length,
+			firstCodePoint: inviteCode.codePointAt(0),
+			lastCodePoint: inviteCode.codePointAt(inviteCode.length - 1),
+			hashFormats: members.results.map((member) =>
+				member.invite_code_hash.split('$').slice(0, 2).join('$')
+			)
+		});
+	}
+
 	return match;
 }
 
