@@ -122,8 +122,11 @@ async function verifyInviteCode(inviteCode: string, encodedHash: string): Promis
 		}
 
 		return matches;
-	} catch {
-		console.warn('Book club invite verification crypto failed');
+	} catch (error) {
+		console.warn('Book club invite verification crypto failed', {
+			errorName: error instanceof Error ? error.name : 'unknown',
+			errorMessage: error instanceof Error ? error.message : String(error)
+		});
 		return false;
 	}
 }
