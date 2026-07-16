@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
 
 export const DATABASE_NAME = 'ramis-bookclub';
-const INVITE_HASH_ITERATIONS = 120_000;
+const INVITE_HASH_ITERATIONS = 100_000;
 const MAX_INVITE_HASH_ITERATIONS = 1_000_000;
 
 export function sqlString(value) {

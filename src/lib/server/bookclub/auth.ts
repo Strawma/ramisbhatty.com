@@ -4,7 +4,7 @@ import { getBookclubDatabase, type BookclubMember } from './db';
 
 export const BOOKCLUB_SESSION_COOKIE = 'bookclub_session';
 const SESSION_LIFETIME_SECONDS = 60 * 60 * 24 * 14;
-const INVITE_HASH_ITERATIONS = 120_000;
+const INVITE_HASH_ITERATIONS = 100_000;
 const MAX_INVITE_HASH_ITERATIONS = 1_000_000;
 
 interface StoredMember extends BookclubMember {
@@ -108,25 +108,8 @@ async function verifyInviteCode(inviteCode: string, encodedHash: string): Promis
 			key,
 			256
 		);
-		const actual = new Uint8Array(derived);
-		const matches = constantTimeEqual(actual, expected);
-
-		if (!matches) {
-			console.warn('Book club invite digest mismatch', {
-				saltLength: salt.length,
-				expectedLength: expected.length,
-				actualLength: actual.length,
-				expectedPrefix: encodeBase64Url(expected).slice(0, 12),
-				actualPrefix: encodeBase64Url(actual).slice(0, 12)
-			});
-		}
-
-		return matches;
-	} catch (error) {
-		console.warn('Book club invite verification crypto failed', {
-			errorName: error instanceof Error ? error.name : 'unknown',
-			errorMessage: error instanceof Error ? error.message : String(error)
-		});
+		return constantTimeEqual(new Uint8Array(derived), expected);
+	} catch {
 		return false;
 	}
 }
@@ -149,18 +132,6 @@ export async function findMemberByInviteCode(
 		if (await verifyInviteCode(inviteCode, member.invite_code_hash)) {
 			match = { id: member.id, name: member.name, role: member.role };
 		}
-	}
-
-	if (!match) {
-		console.warn('Book club invite lookup failed', {
-			activeMemberCount: members.results.length,
-			inviteCodeLength: inviteCode.length,
-			firstCodePoint: inviteCode.codePointAt(0),
-			lastCodePoint: inviteCode.codePointAt(inviteCode.length - 1),
-			hashFormats: members.results.map((member) =>
-				member.invite_code_hash.split('$').slice(0, 2).join('$')
-			)
-		});
 	}
 
 	return match;
