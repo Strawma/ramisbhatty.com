@@ -108,9 +108,22 @@ async function verifyInviteCode(inviteCode: string, encodedHash: string): Promis
 			key,
 			256
 		);
+		const actual = new Uint8Array(derived);
+		const matches = constantTimeEqual(actual, expected);
 
-		return constantTimeEqual(new Uint8Array(derived), expected);
+		if (!matches) {
+			console.warn('Book club invite digest mismatch', {
+				saltLength: salt.length,
+				expectedLength: expected.length,
+				actualLength: actual.length,
+				expectedPrefix: encodeBase64Url(expected).slice(0, 12),
+				actualPrefix: encodeBase64Url(actual).slice(0, 12)
+			});
+		}
+
+		return matches;
 	} catch {
+		console.warn('Book club invite verification crypto failed');
 		return false;
 	}
 }
