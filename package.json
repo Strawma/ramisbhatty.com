@@ -11,6 +11,8 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"bookclub:provision-admin": "node scripts/bookclub-provision-admin.mjs",
+		"bookclub:reset-invite": "node scripts/bookclub-reset-invite.mjs",
+		"bookclub:check-invite": "node scripts/bookclub-check-invite.mjs",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint ."
 	},
