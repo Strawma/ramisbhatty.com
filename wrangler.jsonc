@@ -4,6 +4,9 @@
 	"compatibility_date": "2026-07-14",
 	"compatibility_flags": ["nodejs_compat"],
 	"pages_build_output_dir": ".svelte-kit/cloudflare",
+	"vars": {
+		"TURNSTILE_SITE_KEY": "0x4AAAAAAD1P2yjd-DIq4C1i"
+	},
 	"d1_databases": [
 		{
 			"binding": "BOOKCLUB_DB",

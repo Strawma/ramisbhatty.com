@@ -1,10 +1,11 @@
 <script lang="ts">
-	let { form } = $props();
+	let { form, data } = $props();
 </script>
 
 <svelte:head>
 	<title>Book Club Login | Ramis Bhatty</title>
 	<meta name="description" content="Private access to Ramis Bhatty's book club." />
+	<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </svelte:head>
 
 <main class="min-h-screen bg-amber-50 px-6 py-12 text-stone-900 sm:py-20">
@@ -30,6 +31,22 @@
 					class="mt-2 w-full rounded-xl border-2 border-stone-900 px-4 py-3 shadow-[3px_3px_0_#292524] focus:ring-2 focus:ring-amber-500"
 				/>
 			</div>
+
+			{#if data.turnstileSiteKey}
+				<div
+					class="cf-turnstile"
+					data-sitekey={data.turnstileSiteKey}
+					data-action="bookclub-login"
+					data-theme="light"
+				></div>
+			{:else}
+				<p
+					class="rounded-xl border-2 border-amber-800 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+					role="status"
+				>
+					The bot check is not configured yet.
+				</p>
+			{/if}
 
 			{#if form?.error}
 				<p
