@@ -13,7 +13,8 @@ Installed addons:
 Uses pnpm package manager.
 
 The repository does not pin a local Node.js or pnpm version. Use Unix-native tools in the
-development environment and keep the deployment-specific versions in Cloudflare Pages settings.
+development environment and keep the deployment-specific versions in Cloudflare Pages settings. Node.js
+20 or newer is required for the Cloudflare Workers Vitest integration used by the test suite.
 
 ### Local development
 
@@ -67,6 +68,12 @@ pnpm build
 ```
 
 You can preview the production build with `pnpm preview`.
+
+Run the book-club test suite against an isolated local D1 database with:
+
+```bash
+pnpm test
+```
 
 ### Cloudflare Pages
 

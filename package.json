@@ -10,6 +10,8 @@
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"test": "vitest run",
+		"test:watch": "vitest",
 		"bookclub:provision-admin": "node scripts/bookclub-provision-admin.mjs",
 		"bookclub:reset-invite": "node scripts/bookclub-reset-invite.mjs",
 		"bookclub:check-invite": "node scripts/bookclub-check-invite.mjs",
@@ -17,9 +19,10 @@
 		"lint": "prettier --check . && eslint ."
 	},
 	"engines": {
-		"node": ">=18.18.0"
+		"node": ">=20.0.0"
 	},
 	"devDependencies": {
+		"@cloudflare/vitest-pool-workers": "^0.18.5",
 		"@cloudflare/workers-types": "^5.20260715.1",
 		"@eslint/compat": "^2.1.0",
 		"@eslint/js": "^10.0.1",
@@ -43,6 +46,7 @@
 		"typescript": "^6.0.3",
 		"typescript-eslint": "^8.64.0",
 		"vite": "^8.1.4",
+		"vitest": "^4.1.10",
 		"wrangler": "^4.111.0"
 	},
 	"dependencies": {
