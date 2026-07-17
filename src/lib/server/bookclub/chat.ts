@@ -2,7 +2,7 @@ import type { D1Database } from '@cloudflare/workers-types';
 
 const CHAT_MESSAGE_LIMIT = 50;
 const CHAT_MESSAGE_COOLDOWN_MS = 5_000;
-const CHAT_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
+export const CHAT_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 
 export class ChatCooldownError extends Error {
 	constructor() {
@@ -34,22 +34,18 @@ export async function getChatMessages(
 	database: D1Database,
 	memberId: string
 ): Promise<BookclubChatMessage[]> {
-	const results = await database.batch([
-		database
-			.prepare('DELETE FROM bookclub_chat_messages WHERE created_at < ?')
-			.bind(new Date(Date.now() - CHAT_RETENTION_MS).toISOString()),
-		database
-			.prepare(
-				`SELECT chat.id, chat.member_id, members.name AS member_name, chat.body, chat.created_at,
-				        chat.message_type
-				 FROM bookclub_chat_messages AS chat
-				 INNER JOIN bookclub_members AS members ON members.id = chat.member_id
-				 ORDER BY chat.created_at DESC
-				 LIMIT ?`
-			)
-			.bind(CHAT_MESSAGE_LIMIT)
-	]);
-	const messages = results[1] as { results: ChatMessageRow[] };
+	const messages = await database
+		.prepare(
+			`SELECT chat.id, chat.member_id, members.name AS member_name, chat.body, chat.created_at,
+			        chat.message_type
+			 FROM bookclub_chat_messages AS chat
+			 INNER JOIN bookclub_members AS members ON members.id = chat.member_id
+			 WHERE chat.created_at >= ?
+			 ORDER BY chat.created_at DESC
+			 LIMIT ?`
+		)
+		.bind(new Date(Date.now() - CHAT_RETENTION_MS).toISOString(), CHAT_MESSAGE_LIMIT)
+		.all<ChatMessageRow>();
 
 	return messages.results.reverse().map((message) => ({
 		id: message.id,

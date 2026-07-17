@@ -8,6 +8,7 @@ import {
 	setBookclubSessionCookie
 } from '$lib/server/bookclub/auth';
 import { getBookclubDatabase } from '$lib/server/bookclub/db';
+import { cleanupBookclubDataAfterLogin } from '$lib/server/bookclub/maintenance';
 import { verifyTurnstileToken } from '$lib/server/bookclub/turnstile';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -65,6 +66,8 @@ export const actions: Actions = {
 		const token = await createSession(database, member.id);
 
 		setBookclubSessionCookie(event, token);
+
+		await cleanupBookclubDataAfterLogin(database);
 
 		throw redirect(303, '/bookclub');
 	}

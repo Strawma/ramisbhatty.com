@@ -11,6 +11,7 @@ import {
 	createChatMessage,
 	getChatMessages
 } from '../src/lib/server/bookclub/chat';
+import { cleanupBookclubData } from '../src/lib/server/bookclub/maintenance';
 import { findBookCover } from '../src/lib/server/bookclub/covers';
 import {
 	consumeInvitation,
@@ -388,7 +389,7 @@ describe('book-club cycles and suggestions', () => {
 });
 
 describe('book-club chat and meetings', () => {
-	it('enforces the chat cooldown atomically and removes messages older than seven days', async () => {
+	it('enforces the chat cooldown and cleans messages older than seven days', async () => {
 		const member = await createTestMember('Ramis');
 		await createChatMessage(database, member.id, 'Fresh message');
 
@@ -410,6 +411,99 @@ describe('book-club chat and meetings', () => {
 
 		const messages = await getChatMessages(database, member.id);
 		expect(messages.map((message) => message.body)).toEqual(['Fresh message']);
+		expect(
+			await database
+				.prepare('SELECT COUNT(*) AS count FROM bookclub_chat_messages WHERE body = ?')
+				.bind('Old message')
+				.first<{ count: number }>()
+		).toMatchObject({ count: 1 });
+
+		await cleanupBookclubData(database);
+		expect(
+			await database
+				.prepare('SELECT COUNT(*) AS count FROM bookclub_chat_messages WHERE body = ?')
+				.bind('Old message')
+				.first<{ count: number }>()
+		).toMatchObject({ count: 0 });
+	});
+
+	it('cleans expired sessions and old terminal invitations', async () => {
+		const admin = await createTestMember('Ramis', 'admin');
+		const now = Date.now();
+		const oldDate = new Date(now - 91 * 24 * 60 * 60 * 1000).toISOString();
+
+		await database
+			.prepare(
+				`INSERT INTO bookclub_sessions (id, member_id, token_hash, expires_at)
+				 VALUES (?, ?, ?, ?)`
+			)
+			.bind(
+				crypto.randomUUID(),
+				admin.id,
+				'expired-token-hash',
+				new Date(now - 1_000).toISOString()
+			)
+			.run();
+		await database
+			.prepare(
+				`INSERT INTO bookclub_meetings (id, scheduled_for, scheduled_by_member_id)
+				 VALUES (?, ?, ?)`
+			)
+			.bind(crypto.randomUUID(), new Date(now - 1_000).toISOString(), admin.id)
+			.run();
+
+		await database.batch(
+			Array.from({ length: 51 }, (_, index) =>
+				database
+					.prepare(
+						`INSERT INTO bookclub_invitations
+						 (id, purpose, token_hash, member_id, created_by_member_id, expires_at, consumed_at, created_at)
+						 VALUES (?, 'reset', ?, ?, ?, ?, ?, ?)`
+					)
+					.bind(
+						crypto.randomUUID(),
+						`old-token-${index}`,
+						admin.id,
+						admin.id,
+						oldDate,
+						oldDate,
+						oldDate
+					)
+			)
+		);
+		await database
+			.prepare(
+				`INSERT INTO bookclub_invitations
+				 (id, purpose, token_hash, member_id, created_by_member_id, expires_at, created_at)
+				 VALUES (?, 'reset', ?, ?, ?, ?, ?)`
+			)
+			.bind(
+				crypto.randomUUID(),
+				'active-old-token',
+				admin.id,
+				admin.id,
+				new Date(now + 1_000).toISOString(),
+				oldDate
+			)
+			.run();
+
+		await cleanupBookclubData(database, new Date(now));
+
+		expect(
+			await database
+				.prepare('SELECT COUNT(*) AS count FROM bookclub_sessions')
+				.first<{ count: number }>()
+		).toMatchObject({ count: 0 });
+		expect(
+			await database
+				.prepare('SELECT COUNT(*) AS count FROM bookclub_meetings')
+				.first<{ count: number }>()
+		).toMatchObject({ count: 0 });
+		expect(
+			await database
+				.prepare('SELECT COUNT(*) AS count FROM bookclub_invitations')
+				.first<{ count: number }>()
+		).toMatchObject({ count: 51 });
 	});
 
 	it('stores one replaceable upcoming meeting', async () => {
