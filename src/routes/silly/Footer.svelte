@@ -25,19 +25,19 @@
 
 <footer class="mt-4 space-y-4">
 	<!-- Under construction -->
-	<div class="bg-yellow-400 retro-panel p-4 text-center">
-		<p class="text-2xl font-bold animate-pulse">!!! SITE UNDER CONSTRUCTION !!!</p>
+	<div class="retro-panel bg-yellow-400 p-4 text-center">
+		<p class="animate-pulse text-2xl font-bold">!!! SITE UNDER CONSTRUCTION !!!</p>
 	</div>
 
 	<!-- Browser badges -->
-	<div class="bg-[#000080] text-white retro-panel p-4 text-center">
+	<div class="retro-panel bg-[#000080] p-4 text-center text-white">
 		<p class="mb-2">This page is optimized for Internet Explorer 6</p>
-		<div class="flex justify-center gap-4 items-center flex-wrap">
+		<div class="flex flex-wrap items-center justify-center gap-4">
 			{#each badges as badge (badge.label)}
 				<a
 					href={badge.href}
 					rel="external"
-					class="{badge.color} px-3 py-1 border-2 border-white text-xs"
+					class="{badge.color} border-2 border-white px-3 py-1 text-xs"
 				>
 					{badge.label}
 				</a>

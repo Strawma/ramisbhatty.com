@@ -228,7 +228,7 @@
 </script>
 
 <!-- Canvas sits between background and content -->
-<canvas bind:this={canvas} class="fixed inset-0 pointer-events-none z-10"></canvas>
+<canvas bind:this={canvas} class="pointer-events-none fixed inset-0 z-10"></canvas>
 
 <!-- Bouncer registrations (render nothing visible) -->
 {#if children}

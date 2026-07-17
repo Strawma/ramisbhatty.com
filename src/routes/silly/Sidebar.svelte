@@ -33,10 +33,10 @@
 	];
 </script>
 
-<aside class="md:col-span-1 space-y-4">
+<aside class="space-y-4 md:col-span-1">
 	<!-- Navigation -->
-	<nav class="bg-[#ffff00] retro-panel p-4">
-		<h2 class="text-xl font-bold mb-3 text-center underline">: : MENU : :</h2>
+	<nav class="retro-panel bg-[#ffff00] p-4">
+		<h2 class="mb-3 text-center text-xl font-bold underline">: : MENU : :</h2>
 		<ul class="space-y-2">
 			{#each navLinks as link (link.label)}
 				<li>
@@ -55,21 +55,21 @@
 	</nav>
 
 	<!-- Chaos button -->
-	<div class="bg-linear-to-b from-[#ff0000] to-[#8b0000] retro-panel p-4 text-center">
+	<div class="retro-panel bg-linear-to-b from-[#ff0000] to-[#8b0000] p-4 text-center">
 		<button
 			onclick={() => clicks++}
-			class="animate-pulse text-white font-bold text-lg bg-red-600
-             border-2 border-yellow-300 px-4 py-2 hover:bg-red-700 cursor-pointer"
+			class="animate-pulse cursor-pointer border-2 border-yellow-300 bg-red-600
+             px-4 py-2 text-lg font-bold text-white hover:bg-red-700"
 		>
 			CLICK ME!
 		</button>
 		{#if clicks > 0}
-			<p class="text-yellow-300 mt-2 text-sm" in:fade>Clicks: {clicks}</p>
+			<p class="mt-2 text-sm text-yellow-300" in:fade>Clicks: {clicks}</p>
 		{/if}
 	</div>
 
 	<!-- Clock -->
-	<div class="bg-black text-lime-400 border-4 border-[#00ff00] p-3 font-mono text-sm text-center">
+	<div class="border-4 border-[#00ff00] bg-black p-3 text-center font-mono text-sm text-lime-400">
 		{currentTime}
 	</div>
 

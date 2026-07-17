@@ -12,7 +12,7 @@
 	<section
 		class="mx-auto max-w-md rounded-3xl border-4 border-stone-900 bg-white p-6 shadow-[8px_8px_0_#292524] sm:p-8"
 	>
-		<p class="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-amber-700">Members only</p>
+		<p class="mb-3 text-sm font-bold tracking-[0.2em] text-amber-700 uppercase">Members only</p>
 		<h1 class="text-4xl font-black tracking-tight">The book club</h1>
 		<p class="mt-4 text-stone-600">
 			Enter your invite code to join the clubhouse. There is no public sign-up.
@@ -59,7 +59,7 @@
 
 			<button
 				type="submit"
-				class="w-full rounded-xl border-2 border-stone-900 bg-amber-300 px-4 py-3 font-black shadow-[3px_3px_0_#292524] transition-transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-amber-500 active:translate-y-0"
+				class="w-full rounded-xl border-2 border-stone-900 bg-amber-300 px-4 py-3 font-black shadow-[3px_3px_0_#292524] transition-transform hover:-translate-y-0.5 focus:ring-2 focus:ring-amber-500 focus:outline-none active:translate-y-0"
 			>
 				Enter the club
 			</button>

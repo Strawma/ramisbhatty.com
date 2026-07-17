@@ -53,10 +53,10 @@
 	});
 </script>
 
-<div class="w-full h-screen relative overflow-hidden">
+<div class="relative h-screen w-full overflow-hidden">
 	<!-- BRB Text -->
 	<div
-		class="absolute top-60/100 left-4/100 -translate-y-1/2 text-white font-bold z-30 brb-text-container"
+		class="brb-text-container absolute top-60/100 left-4/100 z-30 -translate-y-1/2 font-bold text-white"
 	>
 		{#each brbText as char, i (i)}
 			<span class="floating-letter" style="animation-delay: {i * 0.1}s;">
@@ -71,11 +71,11 @@
 
 	<!-- BRB Sliding -->
 	<div
-		class="absolute bottom-8/100 left-0 w-full h-[8%] bg-black bg-opacity-70 text-white flex items-center justify-center z-30 ticker-bar"
+		class="bg-opacity-70 ticker-bar absolute bottom-8/100 left-0 z-30 flex h-[8%] w-full items-center justify-center bg-black text-white"
 	>
 		{#if quoteVisible}
 			<div
-				class="absolute ticker-content"
+				class="ticker-content absolute"
 				in:slide={{ duration: 200, easing: linear }}
 				out:slide={{ duration: 200, easing: linear }}
 			>
@@ -88,17 +88,17 @@
 	<img
 		src={WindowsSRC}
 		alt="Windows XP"
-		class="absolute w-full h-full object-cover z-0 hue-shift-bg"
+		class="hue-shift-bg absolute z-0 h-full w-full object-cover"
 	/>
 	<img
 		src={JimSRC}
 		alt="Jim"
-		class="absolute h-[90%] min-h-[100px] top-44/100 left-3/4 -translate-y-1/2 -translate-x-1/2 object-contain z-10 rotating-image"
+		class="rotating-image absolute top-44/100 left-3/4 z-10 h-[90%] min-h-[100px] -translate-x-1/2 -translate-y-1/2 object-contain"
 	/>
 	<img
 		src={WindowsBottomSRC}
 		alt="Windows XP Bottom"
-		class="absolute w-full h-full object-cover z-20 hue-shift-bottom"
+		class="hue-shift-bottom absolute z-20 h-full w-full object-cover"
 	/>
 </div>
 

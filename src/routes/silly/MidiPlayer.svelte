@@ -159,19 +159,19 @@
 </script>
 
 <div
-	class="bg-gradient-to-b from-[#ff00ff] to-[#8b008b] border-4 border-black p-4 text-center select-none {tailwind}"
+	class="border-4 border-black bg-gradient-to-b from-[#ff00ff] to-[#8b008b] p-4 text-center select-none {tailwind}"
 	style="box-shadow: 4px 4px 0 #000;"
 >
-	<p class="text-yellow-300 font-bold mb-2 text-sm drop-shadow-md">♫ MIDI MUSIC ♫</p>
+	<p class="mb-2 text-sm font-bold text-yellow-300 drop-shadow-md">♫ MIDI MUSIC ♫</p>
 
 	<!-- Controls -->
-	<div class="flex gap-2 justify-center mb-3">
+	<div class="mb-3 flex justify-center gap-2">
 		<button
 			onclick={togglePlay}
 			disabled={isLoading}
-			class="bg-gradient-to-b from-[#c0c0c0] to-[#808080] border-2 border-black px-3 py-1 text-sm font-bold
-				   hover:from-[#e0e0e0] active:border-t-black active:border-l-black active:translate-y-[1px]
-				   disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer min-w-[80px]"
+			class="min-w-[80px] cursor-pointer border-2 border-black bg-gradient-to-b from-[#c0c0c0] to-[#808080] px-3 py-1
+				   text-sm font-bold hover:from-[#e0e0e0] active:translate-y-[1px]
+				   active:border-t-black active:border-l-black disabled:cursor-not-allowed disabled:opacity-50"
 			style="box-shadow: 2px 2px 0 #000;"
 		>
 			{#if isLoading}
@@ -184,9 +184,9 @@
 		<button
 			onclick={skipSong}
 			disabled={!currentMidiUrl}
-			class="bg-gradient-to-b from-[#c0c0c0] to-[#808080] border-2 border-black px-3 py-1 text-sm font-bold
-				   hover:from-[#e0e0e0] active:border-t-black active:border-l-black active:translate-y-[1px]
-				   disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+			class="cursor-pointer border-2 border-black bg-gradient-to-b from-[#c0c0c0] to-[#808080] px-3 py-1 text-sm
+				   font-bold hover:from-[#e0e0e0] active:translate-y-[1px] active:border-t-black
+				   active:border-l-black disabled:cursor-not-allowed disabled:opacity-50"
 			style="box-shadow: 2px 2px 0 #000;"
 		>
 			⏭ SKIP
@@ -194,7 +194,7 @@
 	</div>
 
 	<!-- Volume Slider -->
-	<div class="flex items-center justify-center gap-2 text-white text-xs font-bold">
+	<div class="flex items-center justify-center gap-2 text-xs font-bold text-white">
 		<span>VOL:</span>
 		<input
 			type="range"

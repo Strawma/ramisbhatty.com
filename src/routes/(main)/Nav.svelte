@@ -5,19 +5,19 @@
 	import { page } from '$app/state';
 </script>
 
-<nav class="max-w-2xl mx-auto w-full px-6 py-6 flex items-center justify-between">
-	<a href={resolve(nav.home)} class="font-bold text-lg hover:text-neutral-600 transition-colors">
+<nav class="mx-auto flex w-full max-w-2xl items-center justify-between px-6 py-6">
+	<a href={resolve(nav.home)} class="text-lg font-bold transition-colors hover:text-neutral-600">
 		{contact.name}
 	</a>
 	<div class="flex gap-6 text-sm">
 		<a
 			href={resolve(nav.home)}
-			class="hover:text-neutral-600 transition-colors"
+			class="transition-colors hover:text-neutral-600"
 			class:font-semibold={page.url.pathname === nav.home}
 		>
 			Home
 		</a>
-		<a href={contact.github} rel="external" class="hover:text-neutral-600 transition-colors"
+		<a href={contact.github} rel="external" class="transition-colors hover:text-neutral-600"
 			>Github</a
 		>
 	</div>

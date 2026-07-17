@@ -32,20 +32,20 @@
 </script>
 
 <div
-	class="bg-[#00ffff] border-4 border-black p-4 text-center {className}"
+	class="border-4 border-black bg-[#00ffff] p-4 text-center {className}"
 	style="box-shadow: 4px 4px 0 #000;"
 >
-	<h2 class="text-2xl font-bold mb-4 text-center underline">&lt; RANDOM FACT GENERATOR &gt;</h2>
-	<div class="bg-white border-2 border-black p-4 mb-4">
+	<h2 class="mb-4 text-center text-2xl font-bold underline">&lt; RANDOM FACT GENERATOR &gt;</h2>
+	<div class="mb-4 border-2 border-black bg-white p-4">
 		{#if isLoading}
-			<p class="text-ls italic animate-pulse min-h-23">Loading fact from the World Wide Web...</p>
+			<p class="text-ls min-h-23 animate-pulse italic">Loading fact from the World Wide Web...</p>
 		{:else}
-			<p class="text-xs italic break-all min-h-23">"{currentFact}"</p>
+			<p class="min-h-23 text-xs break-all italic">"{currentFact}"</p>
 		{/if}
 	</div>
 	<button
 		onclick={generateFact}
-		class="bg-linear-to-b from-[#c0c0c0] to-[#808080] border-4 border-black px-5 py-2 font-bold hover:from-[#e0e0e0] cursor-pointer"
+		class="cursor-pointer border-4 border-black bg-linear-to-b from-[#c0c0c0] to-[#808080] px-5 py-2 font-bold hover:from-[#e0e0e0]"
 		style="box-shadow: 2px 2px 0 #000;"
 	>
 		GENERATE NEW FACT →

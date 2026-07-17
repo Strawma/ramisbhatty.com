@@ -6,19 +6,19 @@
 </script>
 
 <div
-	class="bg-white border-4 border-black p-4 text-center {className}"
+	class="border-4 border-black bg-white p-4 text-center {className}"
 	style="box-shadow: 4px 4px 0 #000;"
 >
-	<p class="text-sm mb-2">-- AD SPACE --</p>
+	<p class="mb-2 text-sm">-- AD SPACE --</p>
 	<a href="https://cse103-notes.readthedocs.io/en/latest/pumpinglemma.html">
 		<img
 			src={AoOniSrc}
 			alt="Ad"
-			class="mx-auto {size === 'large' ? 'w-200 h-16 object-fill' : 'w-64 h-48 object-contain'}"
+			class="mx-auto {size === 'large' ? 'h-16 w-200 object-fill' : 'h-48 w-64 object-contain'}"
 		/>
 	</a>
-	<p class="text-xs mt-2">Your Ad Here!</p>
-	<p class="text-xs mt-2 break-all">
+	<p class="mt-2 text-xs">Your Ad Here!</p>
+	<p class="mt-2 text-xs break-all">
 		<a href="mailto:{contact.ad_email}" class="text-blue-600 underline hover:text-red-600">
 			{contact.ad_email}
 		</a>

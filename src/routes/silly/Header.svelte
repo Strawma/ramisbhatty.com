@@ -13,22 +13,22 @@
 
 <header>
 	<!-- Marquee banner -->
-	<div class="bg-linear-to-r from-blue-600 to-purple-600 text-yellow-300 p-2 mb-4 retro-panel">
+	<div class="retro-panel mb-4 bg-linear-to-r from-blue-600 to-purple-600 p-2 text-yellow-300">
 		<div class="overflow-hidden" aria-label="Welcome to my awesome homepage">
-			<span class="retro-marquee block whitespace-nowrap text-2xl font-bold">
+			<span class="retro-marquee block text-2xl font-bold whitespace-nowrap">
 				*** WELCOME TO MY AWESOME HOMEPAGE ***
 			</span>
 		</div>
 	</div>
 
 	<!-- Visitor counter -->
-	<div class="bg-white retro-panel p-2 mb-4 text-center">
-		<span class="inline-block w-4 h-4 bg-red-500 animate-pulse mr-2"></span>
+	<div class="retro-panel mb-4 bg-white p-2 text-center">
+		<span class="mr-2 inline-block h-4 w-4 animate-pulse bg-red-500"></span>
 		<span class="font-bold text-red-600">YOU ARE VISITOR NUMBER:</span>
-		<span class="bg-black text-lime-400 px-3 py-1 font-mono text-xl mx-2">
+		<span class="mx-2 bg-black px-3 py-1 font-mono text-xl text-lime-400">
 			{visitorCount.toLocaleString()}
 		</span>
-		<span class="inline-block w-4 h-4 bg-red-500 animate-pulse ml-2"></span>
+		<span class="ml-2 inline-block h-4 w-4 animate-pulse bg-red-500"></span>
 	</div>
 </header>
 

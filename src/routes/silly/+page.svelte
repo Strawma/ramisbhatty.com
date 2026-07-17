@@ -31,20 +31,20 @@
 		class="min-h-screen font-['pixel-sans',cursive]"
 		style="background: linear-gradient(45deg, #ff00ff 0%, #00ff00 25%, #ff0000 50%, #00ffff 75%, #ffff00 100%);"
 	>
-		<div class="max-w-3xl min-h-screen mx-auto bg-[#c0c0c0] px-8 flex flex-col relative z-20">
+		<div class="relative z-20 mx-auto flex min-h-screen max-w-3xl flex-col bg-[#c0c0c0] px-8">
 			<Header />
 
-			<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+			<div class="grid grid-cols-1 gap-4 md:grid-cols-4">
 				<Sidebar {midiFiles} />
-				<div class="md:col-span-3 space-y-4">
+				<div class="space-y-4 md:col-span-3">
 					<Welcome />
 					<AdBanner />
 				</div>
 			</div>
 
-			<hr class="border border-black my-4" />
+			<hr class="my-4 border border-black" />
 
-			<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+			<div class="grid grid-cols-1 gap-4 md:grid-cols-4">
 				<AdBanner size="square" class="md:col-span-2" />
 				<FactGenerator class="md:col-span-2" />
 			</div>

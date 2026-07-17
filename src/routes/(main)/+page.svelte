@@ -7,7 +7,7 @@
 
 <p>I'm a computer science student with some interests and stuff. Check it out!</p>
 
-<b class="flex-1 flex items-center justify-center"> Nothing </b>
+<b class="flex flex-1 items-center justify-center"> Nothing </b>
 
 <!-- contacts at bottm -->
 <div class="mt-auto">
