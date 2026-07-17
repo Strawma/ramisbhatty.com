@@ -288,12 +288,12 @@
 						</div>
 					</section>
 
-					<section id="admin" class="border-4 border-black bg-[#d4d0c8] shadow-[4px_4px_0_#000]">
-						<div class="border-b-2 border-black bg-[#800000] px-3 py-2 font-bold text-white">
-							ADMIN CONSOLE // {data.member.role === 'admin' ? 'AVAILABLE' : 'RESTRICTED'}
-						</div>
-						<div class="space-y-4 p-4">
-							{#if data.member.role === 'admin'}
+					{#if data.member.role === 'admin'}
+						<section id="admin" class="border-4 border-black bg-[#d4d0c8] shadow-[4px_4px_0_#000]">
+							<div class="border-b-2 border-black bg-[#800000] px-3 py-2 font-bold text-white">
+								ADMIN CONSOLE // AVAILABLE
+							</div>
+							<div class="space-y-4 p-4">
 								{#if data.dashboard.activeCycle}
 									<div class="border-2 border-black bg-white p-3">
 										<p class="font-bold">OPEN CYCLE: {data.dashboard.activeCycle.label}</p>
@@ -404,11 +404,9 @@
 										</div>
 									</form>
 								</div>
-							{:else}
-								<p class="leading-6">This panel is reserved for the club administrator.</p>
-							{/if}
-						</div>
-					</section>
+							</div>
+						</section>
+					{/if}
 				</div>
 			</div>
 		</div>

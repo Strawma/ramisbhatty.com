@@ -45,9 +45,8 @@
 
 	function formatMessageDate(value: string): string {
 		return new Date(value).toLocaleDateString([], {
-			weekday: 'long',
-			year: 'numeric',
-			month: 'long',
+			weekday: 'short',
+			month: 'short',
 			day: 'numeric'
 		});
 	}
@@ -80,30 +79,37 @@
 					{#if !previousMessage || messageDateKey(previousMessage.createdAt) !== messageDateKey(message.createdAt)}
 						<div
 							role="separator"
-							class="my-2 border-y border-green-800 py-1 text-center font-bold text-green-500"
+							class="my-2 border-y border-green-800 py-1 text-center text-[10px] font-bold text-green-500 sm:text-xs"
 						>
 							{formatMessageDate(message.createdAt)}
 						</div>
 					{/if}
 					<div
 						class:my-1={message.isAnnouncement}
-						class="grid grid-cols-[4.5rem_minmax(6rem,8rem)_minmax(0,1fr)_auto] items-start gap-2"
+						class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-2 gap-y-0.5 sm:grid-cols-[4.5rem_minmax(6rem,8rem)_minmax(0,1fr)_auto] sm:gap-2"
 					>
 						<time class="shrink-0 text-green-700" datetime={message.createdAt}
 							>[{formatMessageTime(message.createdAt)}]</time
 						>
 						{#if message.isAnnouncement}
-							<span class="col-span-2 min-w-0 font-bold break-words text-yellow-300"
+							<span class="col-span-2 min-w-0 font-bold break-words text-yellow-300 sm:col-span-2"
 								>SYSTEM: {message.body}</span
 							>
 						{:else}
 							<span class="min-w-0 truncate font-bold text-cyan-300" title={message.memberName}
 								>{message.memberName}:</span
 							>
-							<span class="min-w-0 break-words">{message.body}</span>
+							<span class="col-span-3 row-start-2 min-w-0 break-words sm:col-span-1 sm:row-auto"
+								>{message.body}</span
+							>
 						{/if}
 						{#if isAdmin}
-							<form method="POST" action="?/deleteMessage" use:enhance class="ml-auto shrink-0">
+							<form
+								method="POST"
+								action="?/deleteMessage"
+								use:enhance
+								class="col-start-3 row-start-1 ml-auto shrink-0 sm:col-auto sm:row-auto"
+							>
 								<input type="hidden" name="messageId" value={message.id} />
 								<button
 									type="submit"
