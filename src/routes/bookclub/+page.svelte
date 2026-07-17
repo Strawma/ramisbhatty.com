@@ -6,6 +6,7 @@
 
 	let { data, form } = $props();
 	let timezoneOffset = $state(0);
+	let coverFailed = $state(false);
 
 	onMount(() => {
 		timezoneOffset = new Date().getTimezoneOffset();
@@ -111,12 +112,31 @@
 						CURRENT BOOK // {data.dashboard.currentBook ? 'ACTIVE' : 'NOT CONFIGURED'}
 					</div>
 					<div class="grid gap-4 p-4 sm:grid-cols-[140px_1fr] sm:p-5">
-						<div
-							class="flex min-h-44 items-center justify-center border-2 border-black bg-white p-3 text-center text-xs"
-						>
-							COVER IMAGE
-							<br />COMING SOON
-						</div>
+						{#if data.dashboard.currentBook?.coverUrl && !coverFailed}
+							<div class="border-2 border-black bg-white p-2">
+								<img
+									src={data.dashboard.currentBook.coverUrl}
+									alt={`Cover of ${data.dashboard.currentBook.title}`}
+									class="mx-auto max-h-64 w-full object-contain"
+									onerror={() => (coverFailed = true)}
+								/>
+								<p class="mt-2 text-center text-[10px] text-gray-600">
+									Cover via <a
+										href="https://openlibrary.org"
+										target="_blank"
+										rel="noreferrer"
+										class="underline">Open Library</a
+									>.
+								</p>
+							</div>
+						{:else}
+							<div
+								class="flex min-h-44 items-center justify-center border-2 border-black bg-white p-3 text-center text-xs"
+							>
+								COVER IMAGE
+								<br />NOT FOUND
+							</div>
+						{/if}
 						<div>
 							<p class="text-xs font-bold text-[#000080] uppercase">
 								Reading session: {data.dashboard.currentCycle?.label ?? 'not opened'}

@@ -9,6 +9,7 @@ export interface BookclubBook {
 	id: string;
 	title: string;
 	author: string;
+	coverUrl: string | null;
 	startedAt: string | null;
 }
 
@@ -50,6 +51,7 @@ interface BookRow {
 	id: string;
 	title: string;
 	author: string;
+	cover_url: string | null;
 	started_at: string | null;
 }
 
@@ -61,6 +63,7 @@ interface CycleRow {
 	book_id: string | null;
 	book_title: string | null;
 	book_author: string | null;
+	book_cover_url: string | null;
 	book_started_at: string | null;
 }
 
@@ -86,6 +89,7 @@ function toBook(row: BookRow | null): BookclubBook | null {
 		id: row.id,
 		title: row.title,
 		author: row.author,
+		coverUrl: row.cover_url,
 		startedAt: row.started_at
 	};
 }
@@ -104,6 +108,7 @@ function toCycle(row: CycleRow | null): BookclubCycle | null {
 						id: row.book_id,
 						title: row.book_title,
 						author: row.book_author,
+						coverUrl: row.book_cover_url,
 						startedAt: row.book_started_at
 					}
 				: null
@@ -126,7 +131,7 @@ export async function getDashboard(
 	] = await Promise.all([
 		database
 			.prepare(
-				`SELECT id, title, author, started_at
+				`SELECT id, title, author, cover_url, started_at
 				 FROM bookclub_books
 				 ORDER BY created_at DESC
 				 LIMIT 1`
@@ -135,7 +140,8 @@ export async function getDashboard(
 		database
 			.prepare(
 				`SELECT c.id, c.label, c.status, c.suggestion_limit, c.book_id,
-				        b.title AS book_title, b.author AS book_author, b.started_at AS book_started_at
+				        b.title AS book_title, b.author AS book_author, b.cover_url AS book_cover_url,
+				        b.started_at AS book_started_at
 				 FROM bookclub_cycles AS c
 				 LEFT JOIN bookclub_books AS b ON b.id = c.book_id
 				 ORDER BY c.created_at DESC
@@ -145,7 +151,8 @@ export async function getDashboard(
 		database
 			.prepare(
 				`SELECT c.id, c.label, c.status, c.suggestion_limit, c.book_id,
-				        b.title AS book_title, b.author AS book_author, b.started_at AS book_started_at
+				        b.title AS book_title, b.author AS book_author, b.cover_url AS book_cover_url,
+				        b.started_at AS book_started_at
 				 FROM bookclub_cycles AS c
 				 LEFT JOIN bookclub_books AS b ON b.id = c.book_id
 				 WHERE c.status = 'open'
@@ -156,7 +163,8 @@ export async function getDashboard(
 		database
 			.prepare(
 				`SELECT c.id, c.label, c.status, c.suggestion_limit, c.book_id,
-				        b.title AS book_title, b.author AS book_author, b.started_at AS book_started_at
+				        b.title AS book_title, b.author AS book_author, b.cover_url AS book_cover_url,
+				        b.started_at AS book_started_at
 				 FROM bookclub_cycles AS c
 				 LEFT JOIN bookclub_books AS b ON b.id = c.book_id
 				 WHERE c.status = 'closed'
@@ -313,7 +321,7 @@ export async function drawCycle(
 	cycleId: string,
 	drawnByMemberId: string,
 	allowIncomplete: boolean
-): Promise<void> {
+): Promise<BookclubBook> {
 	const cycle = await database
 		.prepare(
 			`SELECT id, status, suggestion_limit
@@ -381,4 +389,23 @@ export async function drawCycle(
 			)
 			.bind(crypto.randomUUID(), cycleId, winner.id, drawnByMemberId)
 	]);
+
+	return {
+		id: bookId,
+		title: winner.title,
+		author: winner.author,
+		coverUrl: null,
+		startedAt: now
+	};
+}
+
+export async function setBookCover(
+	database: D1Database,
+	bookId: string,
+	coverUrl: string
+): Promise<void> {
+	await database
+		.prepare('UPDATE bookclub_books SET cover_url = ? WHERE id = ?')
+		.bind(coverUrl, bookId)
+		.run();
 }

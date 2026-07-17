@@ -1,6 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { requireBookclubMember } from '$lib/server/bookclub/auth';
 import { ChatCooldownError, createChatMessage, deleteChatMessage } from '$lib/server/bookclub/chat';
+import { findBookCover } from '$lib/server/bookclub/covers';
 import { getBookclubDatabase } from '$lib/server/bookclub/db';
 import {
 	closeCycle,
@@ -8,7 +9,8 @@ import {
 	deleteSuggestion,
 	drawCycle,
 	getDashboard,
-	saveSuggestion
+	saveSuggestion,
+	setBookCover
 } from '$lib/server/bookclub/cycles';
 import { clearNextMeeting, scheduleNextMeeting } from '$lib/server/bookclub/meetings';
 import type { Actions, PageServerLoad } from './$types';
@@ -257,12 +259,21 @@ export const actions: Actions = {
 		const form = await event.request.formData();
 		const allowIncomplete = form.get('allowIncomplete') === 'on';
 
+		let book;
 		try {
-			await drawCycle(database, cycle.id, member.id, allowIncomplete);
+			book = await drawCycle(database, cycle.id, member.id, allowIncomplete);
 		} catch (error) {
 			return fail(400, {
 				error: error instanceof Error ? error.message : 'The draw could not be completed.'
 			});
+		}
+
+		// A missing cover should not undo or misreport a successful server-side draw.
+		try {
+			const coverUrl = await findBookCover(event.fetch, book.title, book.author);
+			if (coverUrl) await setBookCover(database, book.id, coverUrl);
+		} catch {
+			// The book remains usable without an automatically matched cover.
 		}
 
 		throw redirect(303, '/bookclub#current-book');

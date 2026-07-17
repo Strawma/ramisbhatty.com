@@ -11,6 +11,7 @@ import {
 	createChatMessage,
 	getChatMessages
 } from '../src/lib/server/bookclub/chat';
+import { findBookCover } from '../src/lib/server/bookclub/covers';
 import {
 	closeCycle,
 	createCycle,
@@ -113,6 +114,31 @@ describe('book-club authentication', () => {
 		expect(token).toHaveLength(43);
 		expect(session?.token_hash).not.toBe(token);
 		expect(new Date(session?.expires_at ?? 0).getTime()).toBeGreaterThan(Date.now());
+	});
+});
+
+describe('book-club cover lookup', () => {
+	it('turns an Open Library cover id into a display URL', async () => {
+		const coverUrl = await findBookCover(
+			async () =>
+				new Response(JSON.stringify({ docs: [{ title: 'Dune', cover_i: 12345 }] }), {
+					status: 200
+				}),
+			'Dune',
+			'Frank Herbert'
+		);
+
+		expect(coverUrl).toBe('https://covers.openlibrary.org/b/id/12345-L.jpg');
+	});
+
+	it('returns no cover when Open Library has no usable result', async () => {
+		const coverUrl = await findBookCover(
+			async () => new Response(JSON.stringify({ docs: [{ title: 'Unknown' }] }), { status: 200 }),
+			'Unknown',
+			'Nobody'
+		);
+
+		expect(coverUrl).toBeNull();
 	});
 });
 
