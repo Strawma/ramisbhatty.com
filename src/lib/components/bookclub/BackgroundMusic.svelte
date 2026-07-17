@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import backgroundMusicUrl from '$lib/assets/audio/bmbmt-background.mp3';
 
-	let { src = '/audio/bmbmt-background.mp3' }: { src?: string } = $props();
+	let { src = backgroundMusicUrl }: { src?: string } = $props();
 	let audio: HTMLAudioElement | null = null;
 	let musicState = $state<'off' | 'playing' | 'paused' | 'unavailable'>('off');
 
@@ -58,6 +59,6 @@
 		</button>
 	</div>
 	{#if musicState === 'unavailable'}
-		<p class="mt-2 text-yellow-300">Add the clubhouse track at /audio/bmbmt-background.mp3.</p>
+		<p class="mt-2 text-yellow-300">The clubhouse track could not be loaded.</p>
 	{/if}
 </div>
