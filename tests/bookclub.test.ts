@@ -17,7 +17,8 @@ import {
 	createInvitation,
 	getInvitationByToken,
 	revokeInvitation,
-	setMemberActive
+	setMemberActive,
+	setMemberDisplayName
 } from '../src/lib/server/bookclub/invitations';
 import {
 	closeCycle,
@@ -171,6 +172,9 @@ describe('book-club invitations', () => {
 		expect(await findMemberByUsernameAndInviteCode(database, 'alex', 'a'.repeat(12))).toMatchObject(
 			{ name: 'Alex' }
 		);
+		expect((await getChatMessages(database, admin.id)).map((message) => message.body)).toContain(
+			'NEW MEMBER: alex (Alex) joined the clubhouse.'
+		);
 		await expect(consumeInvitation(database, invitation.token, 'b'.repeat(12))).rejects.toThrow(
 			'invalid or expired'
 		);
@@ -219,10 +223,11 @@ describe('book-club invitations', () => {
 	});
 
 	it('deactivates a member and clears their sessions', async () => {
+		const admin = await createTestMember('Ramis', 'admin');
 		const member = await createTestMember('Alex');
 		await createSession(database, member.id);
 
-		expect(await setMemberActive(database, member.id, false)).toBe(true);
+		expect(await setMemberActive(database, member.id, false, admin.id)).toBe(true);
 		expect(
 			await database
 				.prepare(
@@ -231,6 +236,24 @@ describe('book-club invitations', () => {
 				.bind(member.id)
 				.first<{ active: number; sessions: number }>()
 		).toMatchObject({ active: 0, sessions: 0 });
+		expect((await getChatMessages(database, admin.id)).map((message) => message.body)).toContain(
+			'MEMBER REMOVED: alex (Alex) has been deactivated.'
+		);
+	});
+
+	it('announces member display-name changes', async () => {
+		const member = await createTestMember('Alex');
+
+		expect(await setMemberDisplayName(database, member.id, 'Alex Reader')).toBe(true);
+		expect(
+			await database
+				.prepare('SELECT name FROM bookclub_members WHERE id = ?')
+				.bind(member.id)
+				.first<{ name: string }>()
+		).toMatchObject({ name: 'Alex Reader' });
+		expect((await getChatMessages(database, member.id)).map((message) => message.body)).toContain(
+			'NAME CHANGE: alex is now known as Alex Reader.'
+		);
 	});
 });
 
@@ -311,6 +334,11 @@ describe('book-club cycles and suggestions', () => {
 		).rejects.toThrow('no longer open');
 
 		await drawCycle(database, cycleId, members[0].id, false);
+		expect(
+			(await getChatMessages(database, members[0].id)).some((message) =>
+				message.body.startsWith('CURRENT BOOK:')
+			)
+		).toBe(true);
 		const result = await database
 			.prepare(
 				`SELECT c.status, c.book_id, b.title, d.suggestion_id
@@ -380,6 +408,9 @@ describe('book-club chat and meetings', () => {
 			scheduledFor: firstMeeting,
 			note: 'Bring snacks'
 		});
+		expect((await getChatMessages(database, member.id)).map((message) => message.body)).toContain(
+			`MEETING UPDATED: ${firstMeeting} (Bring snacks)`
+		);
 
 		await scheduleNextMeeting(database, member.id, secondMeeting, null);
 		expect(await getNextMeeting(database)).toMatchObject({
@@ -387,7 +418,12 @@ describe('book-club chat and meetings', () => {
 			note: null
 		});
 
-		await clearNextMeeting(database);
+		await clearNextMeeting(database, member.id);
 		expect(await getNextMeeting(database)).toBeNull();
+		expect(
+			(await getChatMessages(database, member.id)).some((message) =>
+				message.body.startsWith('MEETING CANCELLED:')
+			)
+		).toBe(true);
 	});
 });

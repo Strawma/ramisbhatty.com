@@ -55,8 +55,8 @@ async function main() {
 
 	const name = await ask('Admin display name: ');
 
-	if (name.length === 0 || name.length > 100) {
-		throw new Error('The display name must contain between 1 and 100 characters.');
+	if (name.length === 0 || name.length > 24 || /[\r\n]/.test(name)) {
+		throw new Error('The display name must be a single line between 1 and 24 characters.');
 	}
 
 	const inviteCode = await askSecret('Invite code (hidden): ');

@@ -1,6 +1,6 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import type { BookclubMember } from './db';
-import { getChatMessages, type BookclubChatMessage } from './chat';
+import { getChatMessages, prepareChatAnnouncement, type BookclubChatMessage } from './chat';
 import { getNextMeeting, type BookclubMeeting } from './meetings';
 
 const SUGGESTION_LIMIT = 3;
@@ -382,6 +382,11 @@ export async function drawCycle(
 					 WHERE id = ? AND status IN ('open', 'closed')`
 			)
 			.bind(bookId, now, cycleId),
+		prepareChatAnnouncement(
+			database,
+			drawnByMemberId,
+			`CURRENT BOOK: ${winner.title} by ${winner.author}.`
+		),
 		database
 			.prepare(
 				`INSERT INTO bookclub_draws (id, cycle_id, suggestion_id, drawn_by_member_id)

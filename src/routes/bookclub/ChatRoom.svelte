@@ -10,6 +10,7 @@
 		body: string;
 		createdAt: string;
 		isOwn: boolean;
+		isAnnouncement: boolean;
 	};
 
 	let { messages, isAdmin }: { messages: Message[]; isAdmin: boolean } = $props();
@@ -75,12 +76,23 @@
 							{formatMessageDate(message.createdAt)}
 						</div>
 					{/if}
-					<div class="flex gap-2">
+					<div
+						class:my-1={message.isAnnouncement}
+						class="grid grid-cols-[4.5rem_minmax(6rem,8rem)_minmax(0,1fr)_auto] items-start gap-2"
+					>
 						<time class="shrink-0 text-green-700" datetime={message.createdAt}
 							>[{formatMessageTime(message.createdAt)}]</time
 						>
-						<span class="font-bold text-cyan-300">{message.memberName}:</span>
-						<span class="min-w-0 break-words">{message.body}</span>
+						{#if message.isAnnouncement}
+							<span class="col-span-2 min-w-0 font-bold break-words text-yellow-300"
+								>SYSTEM: {message.body}</span
+							>
+						{:else}
+							<span class="min-w-0 truncate font-bold text-cyan-300" title={message.memberName}
+								>{message.memberName}:</span
+							>
+							<span class="min-w-0 break-words">{message.body}</span>
+						{/if}
 						{#if isAdmin}
 							<form method="POST" action="?/deleteMessage" use:enhance class="ml-auto shrink-0">
 								<input type="hidden" name="messageId" value={message.id} />

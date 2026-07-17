@@ -51,11 +51,12 @@ export const actions: Actions = {
 			!isValidUsername(normalizeUsername(username)) ||
 			typeof displayName !== 'string' ||
 			displayName.trim().length === 0 ||
-			displayName.trim().length > 80
+			displayName.trim().length > 24 ||
+			/[\r\n]/.test(displayName)
 		) {
 			return fail(400, {
 				error:
-					'Use a unique username of 3-32 letters, numbers, dots, dashes, or underscores, plus a display name under 80 characters.'
+					'Use a unique username of 3-32 letters, numbers, dots, dashes, or underscores, plus a display name under 24 single-line characters.'
 			});
 		}
 
@@ -152,7 +153,7 @@ export const actions: Actions = {
 			}
 		}
 
-		if (!(await setMemberActive(database, memberId, active))) {
+		if (!(await setMemberActive(database, memberId, active, member.id))) {
 			return fail(400, { error: 'That member status did not change.' });
 		}
 

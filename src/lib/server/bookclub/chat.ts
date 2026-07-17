@@ -18,6 +18,7 @@ export interface BookclubChatMessage {
 	body: string;
 	createdAt: string;
 	isOwn: boolean;
+	isAnnouncement: boolean;
 }
 
 interface ChatMessageRow {
@@ -26,6 +27,7 @@ interface ChatMessageRow {
 	member_name: string;
 	body: string;
 	created_at: string;
+	message_type: 'user' | 'announcement';
 }
 
 export async function getChatMessages(
@@ -39,7 +41,8 @@ export async function getChatMessages(
 
 	const messages = await database
 		.prepare(
-			`SELECT chat.id, chat.member_id, members.name AS member_name, chat.body, chat.created_at
+			`SELECT chat.id, chat.member_id, members.name AS member_name, chat.body, chat.created_at,
+			        chat.message_type
 			 FROM bookclub_chat_messages AS chat
 			 INNER JOIN bookclub_members AS members ON members.id = chat.member_id
 			 ORDER BY chat.created_at DESC
@@ -54,8 +57,26 @@ export async function getChatMessages(
 		memberName: message.member_name,
 		body: message.body,
 		createdAt: message.created_at,
-		isOwn: message.member_id === memberId
+		isOwn: message.member_id === memberId,
+		isAnnouncement: message.message_type === 'announcement'
 	}));
+}
+
+export function prepareChatAnnouncement(database: D1Database, memberId: string, body: string) {
+	return database
+		.prepare(
+			`INSERT INTO bookclub_chat_messages (id, member_id, body, message_type)
+			 VALUES (?, ?, ?, 'announcement')`
+		)
+		.bind(crypto.randomUUID(), memberId, body);
+}
+
+export async function createChatAnnouncement(
+	database: D1Database,
+	memberId: string,
+	body: string
+): Promise<void> {
+	await prepareChatAnnouncement(database, memberId, body).run();
 }
 
 export async function createChatMessage(

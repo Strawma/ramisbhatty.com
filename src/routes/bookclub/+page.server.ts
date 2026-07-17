@@ -13,6 +13,7 @@ import {
 	setBookCover
 } from '$lib/server/bookclub/cycles';
 import { clearNextMeeting, scheduleNextMeeting } from '$lib/server/bookclub/meetings';
+import { setMemberDisplayName } from '$lib/server/bookclub/invitations';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
@@ -196,8 +197,35 @@ export const actions: Actions = {
 			return fail(403, { error: 'Only the club admin can clear the next meeting.' });
 		}
 
-		await clearNextMeeting(getBookclubDatabase(event.platform));
+		await clearNextMeeting(getBookclubDatabase(event.platform), member.id);
 		return { success: 'The next meeting was cleared.' };
+	},
+
+	changeDisplayName: async (event) => {
+		const member = await requireBookclubMember(event);
+		const form = await event.request.formData();
+		const displayName = form.get('displayName');
+
+		if (
+			typeof displayName !== 'string' ||
+			displayName.trim().length === 0 ||
+			displayName.trim().length > 24 ||
+			/[\r\n]/.test(displayName)
+		) {
+			return fail(400, { error: 'Choose a display name between 1 and 24 characters.' });
+		}
+
+		if (
+			!(await setMemberDisplayName(
+				getBookclubDatabase(event.platform),
+				member.id,
+				displayName.trim()
+			))
+		) {
+			return fail(400, { error: 'That is already your display name.' });
+		}
+
+		return { success: 'Display name updated.' };
 	},
 
 	sendMessage: async (event) => {

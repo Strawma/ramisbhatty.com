@@ -1,4 +1,5 @@
 import type { D1Database } from '@cloudflare/workers-types';
+import { prepareChatAnnouncement } from './chat';
 
 export interface BookclubMeeting {
 	id: string;
@@ -43,6 +44,12 @@ export async function scheduleNextMeeting(
 	scheduledFor: string,
 	note: string | null
 ): Promise<void> {
+	const previousMeeting = await getNextMeeting(database);
+	const changed =
+		!previousMeeting ||
+		previousMeeting.scheduledFor !== scheduledFor ||
+		previousMeeting.note !== note;
+
 	await database.batch([
 		database.prepare('DELETE FROM bookclub_meetings'),
 		database
@@ -50,10 +57,36 @@ export async function scheduleNextMeeting(
 				`INSERT INTO bookclub_meetings (id, scheduled_for, note, scheduled_by_member_id)
 				 VALUES (?, ?, ?, ?)`
 			)
-			.bind(crypto.randomUUID(), scheduledFor, note, memberId)
+			.bind(crypto.randomUUID(), scheduledFor, note, memberId),
+		...(changed
+			? [
+					prepareChatAnnouncement(
+						database,
+						memberId,
+						`MEETING UPDATED: ${new Date(scheduledFor).toISOString()}${note ? ` (${note})` : ''}`
+					)
+				]
+			: [])
 	]);
 }
 
-export async function clearNextMeeting(database: D1Database): Promise<void> {
-	await database.prepare('DELETE FROM bookclub_meetings').run();
+export async function clearNextMeeting(database: D1Database, memberId?: string): Promise<void> {
+	const previousMeeting = await database
+		.prepare('SELECT id, scheduled_for, note FROM bookclub_meetings LIMIT 1')
+		.first<MeetingRow>();
+
+	if (!previousMeeting) return;
+
+	await database.batch([
+		database.prepare('DELETE FROM bookclub_meetings'),
+		...(memberId
+			? [
+					prepareChatAnnouncement(
+						database,
+						memberId,
+						`MEETING CANCELLED: The meeting scheduled for ${previousMeeting.scheduled_for} was cleared.`
+					)
+				]
+			: [])
+	]);
 }

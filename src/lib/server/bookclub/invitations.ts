@@ -1,5 +1,6 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import { hashInviteCode, invalidateMemberSessions, normalizeUsername } from './auth';
+import { prepareChatAnnouncement } from './chat';
 import type { BookclubMember } from './db';
 
 const INVITATION_LIFETIME_MS = 48 * 60 * 60 * 1000;
@@ -266,6 +267,11 @@ export async function consumeInvitation(
 					 WHERE id = ? AND consumed_at IS NULL AND revoked_at IS NULL AND expires_at > ?`
 				)
 				.bind(memberId, inviteCodeHash, invitation.id, now),
+			prepareChatAnnouncement(
+				database,
+				memberId,
+				`NEW MEMBER: ${invitation.username ?? 'new member'} (${invitation.display_name ?? 'member'}) joined the clubhouse.`
+			),
 			database
 				.prepare(
 					`UPDATE bookclub_invitations SET consumed_at = ?
@@ -321,16 +327,36 @@ export async function consumeInvitation(
 export async function setMemberActive(
 	database: D1Database,
 	memberId: string,
-	active: boolean
+	active: boolean,
+	actorMemberId?: string
 ): Promise<boolean> {
-	const result = await database
-		.prepare('UPDATE bookclub_members SET active = ? WHERE id = ?')
-		.bind(active ? 1 : 0, memberId)
-		.run();
+	const target = await database
+		.prepare('SELECT username, name, active FROM bookclub_members WHERE id = ? LIMIT 1')
+		.bind(memberId)
+		.first<{ username: string; name: string; active: number }>();
 
-	if (result.meta.changes && !active) await invalidateMemberSessions(database, memberId);
+	if (!target || Boolean(target.active) === active) return false;
 
-	return Boolean(result.meta.changes);
+	await database.batch([
+		database
+			.prepare('UPDATE bookclub_members SET active = ? WHERE id = ?')
+			.bind(active ? 1 : 0, memberId),
+		...(actorMemberId
+			? [
+					prepareChatAnnouncement(
+						database,
+						actorMemberId,
+						active
+							? `MEMBER REACTIVATED: ${target.username} (${target.name}) is back in the clubhouse.`
+							: `MEMBER REMOVED: ${target.username} (${target.name}) has been deactivated.`
+					)
+				]
+			: [])
+	]);
+
+	if (!active) await invalidateMemberSessions(database, memberId);
+
+	return true;
 }
 
 export async function setMemberUsername(
@@ -344,4 +370,30 @@ export async function setMemberUsername(
 		.run();
 
 	return Boolean(result.meta.changes);
+}
+
+export async function setMemberDisplayName(
+	database: D1Database,
+	memberId: string,
+	displayName: string
+): Promise<boolean> {
+	const member = await database
+		.prepare('SELECT name, username FROM bookclub_members WHERE id = ? LIMIT 1')
+		.bind(memberId)
+		.first<{ name: string; username: string }>();
+
+	if (!member || member.name === displayName) return false;
+
+	await database.batch([
+		database
+			.prepare('UPDATE bookclub_members SET name = ? WHERE id = ?')
+			.bind(displayName, memberId),
+		prepareChatAnnouncement(
+			database,
+			memberId,
+			`NAME CHANGE: ${member.username} is now known as ${displayName}.`
+		)
+	]);
+
+	return true;
 }

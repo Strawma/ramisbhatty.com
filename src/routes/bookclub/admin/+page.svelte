@@ -92,7 +92,7 @@
 							<input
 								id="display-name"
 								name="displayName"
-								maxlength="80"
+								maxlength="24"
 								required
 								placeholder="e.g. Alex"
 								class="w-full border-2 border-black bg-white px-2 py-2 focus:ring-2 focus:ring-[#000080] focus:outline-none"
