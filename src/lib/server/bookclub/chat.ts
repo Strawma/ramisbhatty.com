@@ -3,6 +3,13 @@ import type { D1Database } from '@cloudflare/workers-types';
 const CHAT_MESSAGE_LIMIT = 50;
 const CHAT_MESSAGE_COOLDOWN_MS = 5_000;
 
+export class ChatCooldownError extends Error {
+	constructor() {
+		super('Please wait a few seconds before sending another message.');
+		this.name = 'ChatCooldownError';
+	}
+}
+
 export interface BookclubChatMessage {
 	id: string;
 	memberId: string;
@@ -51,24 +58,22 @@ export async function createChatMessage(
 	body: string
 ): Promise<void> {
 	const cooldownSince = new Date(Date.now() - CHAT_MESSAGE_COOLDOWN_MS).toISOString();
-	const recentMessage = await database
+	const result = await database
 		.prepare(
-			`SELECT id
-			 FROM bookclub_chat_messages
-			 WHERE member_id = ? AND created_at > ?
-			 LIMIT 1`
+			`INSERT INTO bookclub_chat_messages (id, member_id, body)
+			 SELECT ?, ?, ?
+			 WHERE NOT EXISTS (
+				 SELECT 1
+				 FROM bookclub_chat_messages
+				 WHERE member_id = ? AND created_at > ?
+			 )`
 		)
-		.bind(memberId, cooldownSince)
-		.first<{ id: string }>();
-
-	if (recentMessage) {
-		throw new Error('Please wait a few seconds before sending another message.');
-	}
-
-	await database
-		.prepare('INSERT INTO bookclub_chat_messages (id, member_id, body) VALUES (?, ?, ?)')
-		.bind(crypto.randomUUID(), memberId, body)
+		.bind(crypto.randomUUID(), memberId, body, memberId, cooldownSince)
 		.run();
+
+	if (!result.meta.changes) {
+		throw new ChatCooldownError();
+	}
 }
 
 export async function deleteChatMessage(database: D1Database, messageId: string): Promise<void> {

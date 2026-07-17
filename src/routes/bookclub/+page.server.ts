@@ -1,6 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { requireBookclubMember } from '$lib/server/bookclub/auth';
-import { createChatMessage, deleteChatMessage } from '$lib/server/bookclub/chat';
+import { ChatCooldownError, createChatMessage, deleteChatMessage } from '$lib/server/bookclub/chat';
 import { getBookclubDatabase } from '$lib/server/bookclub/db';
 import {
 	closeCycle,
@@ -113,7 +113,16 @@ export const actions: Actions = {
 			return fail(400, { error: 'The suggestion could not be identified.' });
 		}
 
-		await deleteSuggestion(getBookclubDatabase(event.platform), suggestionId, member.id);
+		const deleted = await deleteSuggestion(
+			getBookclubDatabase(event.platform),
+			suggestionId,
+			member.id
+		);
+
+		if (!deleted) {
+			return fail(400, { error: 'That suggestion is no longer available.' });
+		}
+
 		return { success: 'Suggestion removed.' };
 	},
 
@@ -201,9 +210,11 @@ export const actions: Actions = {
 		try {
 			await createChatMessage(getBookclubDatabase(event.platform), member.id, body.trim());
 		} catch (error) {
-			return fail(429, {
-				error: error instanceof Error ? error.message : 'The message could not be sent.'
-			});
+			if (error instanceof ChatCooldownError) {
+				return fail(429, { error: error.message });
+			}
+
+			return fail(503, { error: 'The chat is temporarily unavailable.' });
 		}
 
 		return { success: 'Message sent.' };

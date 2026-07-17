@@ -240,7 +240,7 @@ export async function saveSuggestion(
 	suggestionId?: string
 ): Promise<void> {
 	if (suggestionId) {
-		await database
+		const result = await database
 			.prepare(
 				`UPDATE bookclub_suggestions
 				 SET title = ?, author = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
@@ -252,10 +252,14 @@ export async function saveSuggestion(
 			)
 			.bind(title, author, suggestionId, cycleId, memberId, cycleId)
 			.run();
+
+		if (!result.meta.changes) {
+			throw new Error('That suggestion is no longer available.');
+		}
 		return;
 	}
 
-	await database
+	const result = await database
 		.prepare(
 			`INSERT INTO bookclub_suggestions (id, cycle_id, member_id, position, title, author)
 			 SELECT ?, ?, ?, ?, ?, ?
@@ -266,14 +270,18 @@ export async function saveSuggestion(
 		)
 		.bind(crypto.randomUUID(), cycleId, memberId, position, title, author, cycleId)
 		.run();
+
+	if (!result.meta.changes) {
+		throw new Error('That suggestion cycle is no longer open.');
+	}
 }
 
 export async function deleteSuggestion(
 	database: D1Database,
 	suggestionId: string,
 	memberId: string
-): Promise<void> {
-	await database
+): Promise<boolean> {
+	const result = await database
 		.prepare(
 			`DELETE FROM bookclub_suggestions
 			 WHERE id = ? AND member_id = ?
@@ -281,6 +289,8 @@ export async function deleteSuggestion(
 		)
 		.bind(suggestionId, memberId)
 		.run();
+
+	return Boolean(result.meta.changes);
 }
 
 export async function closeCycle(database: D1Database, cycleId: string): Promise<void> {

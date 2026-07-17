@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import { onMount } from 'svelte';
 	import ChatRoom from './ChatRoom.svelte';
 	import ClubNav from './ClubNav.svelte';
@@ -155,6 +156,7 @@
 								<form
 									method="POST"
 									action="?/saveSuggestion"
+									use:enhance
 									class="border-2 border-black bg-white p-3"
 								>
 									<input type="hidden" name="position" value={slot} />
@@ -246,7 +248,7 @@
 												0
 											)} tickets submitted.
 										</p>
-										<form method="POST" action="?/closeCycle" class="mt-3">
+										<form method="POST" action="?/closeCycle" use:enhance class="mt-3">
 											<button
 												type="submit"
 												class="border-2 border-black bg-[#d4d0c8] px-3 py-2 font-bold shadow-[2px_2px_0_#000] hover:bg-white"
@@ -264,7 +266,7 @@
 												0
 											)} tickets submitted. The suggestion pool is locked. This draw cannot be rerun.
 										</p>
-										<form method="POST" action="?/draw" class="mt-3 space-y-2">
+										<form method="POST" action="?/draw" use:enhance class="mt-3 space-y-2">
 											<label class="flex items-start gap-2 text-xs">
 												<input type="checkbox" name="allowIncomplete" class="mt-0.5" />
 												<span>Allow the current pool even if some members have empty slots.</span>
@@ -280,7 +282,7 @@
 								{:else}
 									<div class="border-2 border-black bg-white p-3">
 										<p class="font-bold">OPEN A NEW WEEK</p>
-										<form method="POST" action="?/createCycle" class="mt-3 flex gap-2">
+										<form method="POST" action="?/createCycle" use:enhance class="mt-3 flex gap-2">
 											<input
 												name="label"
 												placeholder="e.g. Week 01"
@@ -306,7 +308,7 @@
 											)}.
 										</p>
 									{/if}
-									<form method="POST" action="?/scheduleMeeting" class="mt-3 space-y-2">
+									<form method="POST" action="?/scheduleMeeting" use:enhance class="mt-3 space-y-2">
 										<label class="block text-xs font-bold" for="scheduled-for">DATE AND TIME</label>
 										<input
 											id="scheduled-for"

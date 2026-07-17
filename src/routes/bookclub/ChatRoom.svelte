@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import { invalidate } from '$app/navigation';
 	import { onMount } from 'svelte';
 
@@ -59,7 +60,7 @@
 						<span class="font-bold text-cyan-300">{message.memberName}:</span>
 						<span class="min-w-0 break-words">{message.body}</span>
 						{#if isAdmin}
-							<form method="POST" action="?/deleteMessage" class="ml-auto shrink-0">
+							<form method="POST" action="?/deleteMessage" use:enhance class="ml-auto shrink-0">
 								<input type="hidden" name="messageId" value={message.id} />
 								<button
 									type="submit"
@@ -74,7 +75,7 @@
 				{/each}
 			{/if}
 		</div>
-		<form method="POST" action="?/sendMessage" class="mt-3 flex gap-2">
+		<form method="POST" action="?/sendMessage" use:enhance class="mt-3 flex gap-2">
 			<label for="chat-message" class="sr-only">Chat message</label>
 			<input
 				id="chat-message"
