@@ -35,8 +35,8 @@
 </script>
 
 <svelte:head>
-	<title>The Book Club | Ramis Bhatty</title>
-	<meta name="description" content="A private book club for friends." />
+	<title>Bournemouth Mini Book Meet Thing (Working Title) | Ramis Bhatty</title>
+	<meta name="description" content="A private reading group for friends." />
 </svelte:head>
 
 <main class="min-h-screen bg-[#008080] p-2 font-mono text-sm text-black sm:p-4">
@@ -44,7 +44,7 @@
 		<header
 			class="flex flex-wrap items-center justify-between gap-2 border-b-4 border-black bg-[#000080] px-3 py-2 font-bold text-white"
 		>
-			<h1>RAMIS BOOK CLUB ONLINE</h1>
+			<h1>BMBMT // WORKING TITLE</h1>
 			<p class="text-xs text-cyan-200">CONNECTION: SECURE / SESSION: ACTIVE</p>
 		</header>
 
@@ -69,7 +69,7 @@
 							</p>
 						{/if}
 						<p class="mt-3 max-w-3xl leading-6">
-							The clubhouse is online. The shelves are still being arranged, but the extremely
+							Welcome to the Bournemouth Mini Book Meet Thing (Working Title). The shelves are still being arranged, but the extremely
 							serious reading operations can begin here.
 						</p>
 						<div class="mt-4 grid gap-2 sm:grid-cols-3">
@@ -127,7 +127,7 @@
 								class="mt-2 w-full border-2 border-black bg-white px-2 py-2 focus:ring-2 focus:ring-[#000080] focus:outline-none"
 							/>
 							<p class="mt-1 text-[10px] text-gray-600">
-								1-24 characters. The clubhouse will announce changes.
+								1-24 characters. The system will announce changes.
 							</p>
 						</div>
 						<button
@@ -181,8 +181,7 @@
 							</h2>
 							<p class="mt-3 leading-6">
 								{#if data.dashboard.currentBook}
-									By {data.dashboard.currentBook.author}. The club's reviews and reading status will
-									appear here as those features come online.
+									By {data.dashboard.currentBook.author}. More stuff will appear here when I can be bothered to implement it.
 								{:else}
 									Once an admin runs the draw, this panel will show the winning book and author.
 								{/if}
@@ -203,8 +202,8 @@
 						<div class="space-y-2 p-4">
 							<p class="leading-6">
 								{data.dashboard.activeCycle
-									? 'Submit three literary gambling tickets before the cycle closes.'
-									: 'No suggestion cycle is open. Await further literary instructions.'}
+									? 'Submit three literary gambling tickets before the session closes.'
+									: 'No suggestion session is open. Await further literary instructions.'}
 							</p>
 							{#each [1, 2, 3] as slot (slot)}
 								{@const suggestion = suggestionAt(slot)}
@@ -283,7 +282,7 @@
 						</div>
 						<div class="p-4">
 							<p class="leading-6">
-								Past books and reviews will appear here after the first reading cycle.
+								Past books and reviews will appear here after the first reading session.
 							</p>
 						</div>
 					</section>
@@ -296,7 +295,7 @@
 							<div class="space-y-4 p-4">
 								{#if data.dashboard.activeCycle}
 									<div class="border-2 border-black bg-white p-3">
-										<p class="font-bold">OPEN CYCLE: {data.dashboard.activeCycle.label}</p>
+										<p class="font-bold">OPEN SESSION: {data.dashboard.activeCycle.label}</p>
 										<p class="mt-1 text-xs">
 											{data.dashboard.suggestionProgress.reduce(
 												(total, item) => total + item.count,
@@ -336,11 +335,11 @@
 									</div>
 								{:else}
 									<div class="border-2 border-black bg-white p-3">
-										<p class="font-bold">OPEN A NEW WEEK</p>
+										<p class="font-bold">OPEN A NEW SESSION</p>
 										<form method="POST" action="?/createCycle" use:enhance class="mt-3 flex gap-2">
 											<input
 												name="label"
-												placeholder="e.g. Week 01"
+												placeholder="e.g. Session 01"
 												required
 												maxlength="80"
 												class="min-w-0 flex-1 border-2 border-black px-2 py-2 text-xs focus:ring-2 focus:ring-[#000080] focus:outline-none"
@@ -412,7 +411,7 @@
 		</div>
 
 		<footer class="border-t-4 border-black bg-[#808080] px-3 py-2 text-xs text-white">
-			RAMIS BOOK CLUB ONLINE // ALL SYSTEMS NOMINALLY OPERATIONAL // LAST UPDATE: NOW-ish
+			BMBMT // ALL SYSTEMS NOMINALLY OPERATIONAL // LAST UPDATE: NOW-ish
 		</footer>
 	</div>
 </main>

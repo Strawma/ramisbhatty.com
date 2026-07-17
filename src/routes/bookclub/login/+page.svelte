@@ -3,8 +3,8 @@
 </script>
 
 <svelte:head>
-	<title>Book Club Login | Ramis Bhatty</title>
-	<meta name="description" content="Private access to Ramis Bhatty's book club." />
+	<title>BMBMT Login | Ramis Bhatty</title>
+	<meta name="description" content="Private access to the Bournemouth Mini Book Meet Thing." />
 	<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </svelte:head>
 
@@ -15,17 +15,16 @@
 		<header
 			class="flex items-center justify-between gap-3 border-b-4 border-black bg-[#000080] px-3 py-2 font-bold text-white"
 		>
-			<h1>RAMIS BOOK CLUB ONLINE</h1>
+			<h1>BMBMT // WORKING TITLE</h1>
 			<span class="text-xs text-cyan-200">LOGIN.EXE</span>
 		</header>
 
 		<div class="p-4 sm:p-6">
 			<div class="border-2 border-black bg-white p-3">
 				<p class="font-bold text-[#000080]">MEMBERS ONLY // ACCESS TERMINAL</p>
-				<h2 class="mt-2 text-3xl font-black">Enter the clubhouse.</h2>
+				<h2 class="mt-2 text-3xl font-black">Join the club.</h2>
 				<p class="mt-3 leading-6">
-					Present your username and private login code to access the reading zone. There is no
-					public sign-up, because the clubhouse has standards.
+					Present your username and private login code to access the super exclusive reading zone.
 				</p>
 			</div>
 
@@ -89,7 +88,7 @@
 		</div>
 
 		<footer class="border-t-4 border-black bg-[#808080] px-3 py-2 text-xs text-white">
-			STATUS: AWAITING CREDENTIALS // PLEASE DO NOT FEED THE BOOKS AFTER MIDNIGHT
+			STATUS: AWAITING CREDENTIALS // PLEASE DO NOT SHARE YOUR LOGIN CODE WITH ANYONE
 		</footer>
 	</section>
 </main>

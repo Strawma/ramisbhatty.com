@@ -20,8 +20,11 @@
 </script>
 
 <svelte:head>
-	<title>Book Club Admin | Ramis Bhatty</title>
-	<meta name="description" content="Private administration for Ramis Bhatty's book club." />
+	<title>BMBMT Admin | Ramis Bhatty</title>
+	<meta
+		name="description"
+		content="Private administration for the Bournemouth Mini Book Meet Thing."
+	/>
 </svelte:head>
 
 <main class="min-h-screen bg-[#008080] p-2 font-mono text-sm text-black sm:p-4">
@@ -29,7 +32,7 @@
 		<header
 			class="flex flex-wrap items-center justify-between gap-2 border-b-4 border-black bg-[#000080] px-3 py-2 font-bold text-white"
 		>
-			<h1>RAMIS BOOK CLUB ONLINE</h1>
+			<h1>BMBMT // WORKING TITLE</h1>
 			<p class="text-xs text-cyan-200">ADMINISTRATION TERMINAL</p>
 		</header>
 

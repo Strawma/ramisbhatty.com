@@ -64,7 +64,7 @@
 	<summary
 		class="cursor-pointer border-b-2 border-black bg-[#008080] px-3 py-2 font-bold text-white"
 	>
-		RAMIS BOOK CLUB IRC // {isOpen ? 'ONLINE' : 'PAUSED'}
+		BMBMT IRC // {isOpen ? 'ONLINE' : 'PAUSED'}
 	</summary>
 	<div class="flex min-h-56 flex-col p-3">
 		<div

@@ -300,7 +300,7 @@ describe('book-club cycles and suggestions', () => {
 	it('enforces member-owned suggestion slots and reports progress', async () => {
 		const firstMember = await createTestMember('Ramis');
 		const secondMember = await createTestMember('Alex');
-		await createCycle(database, 'Week 01');
+		await createCycle(database, 'Session 01');
 		const cycleId = await getOpenCycleId();
 
 		await saveSuggestion(database, cycleId, firstMember.id, 1, 'Dune', 'Frank Herbert');
@@ -338,7 +338,7 @@ describe('book-club cycles and suggestions', () => {
 
 	it('locks a cycle before drawing and persists one winner', async () => {
 		const members = [await createTestMember('Ramis'), await createTestMember('Alex')];
-		await createCycle(database, 'Week 02');
+		await createCycle(database, 'Session 02');
 		const cycleId = await getOpenCycleId();
 		await fillSuggestions(cycleId, members);
 
@@ -376,7 +376,7 @@ describe('book-club cycles and suggestions', () => {
 
 	it('requires a complete suggestion pool unless the admin override is used', async () => {
 		const members = [await createTestMember('Ramis'), await createTestMember('Alex')];
-		await createCycle(database, 'Week 03');
+		await createCycle(database, 'Session 03');
 		const cycleId = await getOpenCycleId();
 		await saveSuggestion(database, cycleId, members[0].id, 1, 'Only Book', 'Only Author');
 		await closeCycle(database, cycleId);

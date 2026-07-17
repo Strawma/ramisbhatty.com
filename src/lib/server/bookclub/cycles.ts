@@ -252,7 +252,7 @@ export async function saveSuggestion(
 		.run();
 
 	if (!result.meta.changes) {
-		throw new Error('That suggestion cycle is no longer open.');
+		throw new Error('That suggestion session is no longer open.');
 	}
 }
 
@@ -284,7 +284,7 @@ export async function closeCycle(database: D1Database, cycleId: string): Promise
 		.run();
 
 	if (!result.meta.changes) {
-		throw new Error('This cycle is no longer open.');
+		throw new Error('This session is no longer open.');
 	}
 }
 
@@ -305,7 +305,7 @@ export async function drawCycle(
 		.first<{ id: string; status: BookclubCycle['status']; suggestion_limit: number }>();
 
 	if (!cycle || !['open', 'closed'].includes(cycle.status)) {
-		throw new Error('This cycle is no longer available for drawing.');
+		throw new Error('This session is no longer available for drawing.');
 	}
 
 	const suggestions = await database

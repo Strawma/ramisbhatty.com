@@ -6,8 +6,8 @@
 </script>
 
 <svelte:head>
-	<title>{isReset ? 'Reset Book Club Login' : 'Join The Book Club'} | Ramis Bhatty</title>
-	<meta name="description" content="Private book club account setup." />
+	<title>{isReset ? 'Reset BMBMT Login' : 'Join BMBMT'} | Ramis Bhatty</title>
+	<meta name="description" content="Private BMBMT account setup." />
 	<meta name="referrer" content="no-referrer" />
 </svelte:head>
 
@@ -18,7 +18,7 @@
 		<header
 			class="flex items-center justify-between gap-3 border-b-4 border-black bg-[#000080] px-3 py-2 font-bold text-white"
 		>
-			<h1>RAMIS BOOK CLUB ONLINE</h1>
+			<h1>BMBMT // WORKING TITLE</h1>
 			<span class="text-xs text-cyan-200">SETUP.EXE</span>
 		</header>
 
