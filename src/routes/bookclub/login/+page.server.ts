@@ -1,8 +1,10 @@
 import { fail, redirect } from '@sveltejs/kit';
 import {
 	createSession,
-	findMemberByInviteCode,
+	findMemberByUsernameAndInviteCode,
 	getSessionMember,
+	isValidUsername,
+	normalizeUsername,
 	setBookclubSessionCookie
 } from '$lib/server/bookclub/auth';
 import { getBookclubDatabase } from '$lib/server/bookclub/db';
@@ -22,14 +24,17 @@ export const load: PageServerLoad = async (event) => {
 export const actions: Actions = {
 	default: async (event) => {
 		const form = await event.request.formData();
+		const username = form.get('username');
 		const inviteCode = form.get('inviteCode');
 
 		if (
+			typeof username !== 'string' ||
+			!isValidUsername(normalizeUsername(username)) ||
 			typeof inviteCode !== 'string' ||
-			inviteCode.trim().length === 0 ||
+			inviteCode.length < 12 ||
 			inviteCode.length > 256
 		) {
-			return fail(400, { error: 'Enter your invite code.' });
+			return fail(400, { error: 'Enter your username and login code.' });
 		}
 
 		// Verify the bot challenge before reading member hashes or creating a session.
@@ -51,10 +56,10 @@ export const actions: Actions = {
 		}
 
 		const database = getBookclubDatabase(event.platform);
-		const member = await findMemberByInviteCode(database, inviteCode);
+		const member = await findMemberByUsernameAndInviteCode(database, username, inviteCode);
 
 		if (!member) {
-			return fail(400, { error: 'That invite code was not recognized.' });
+			return fail(400, { error: 'That username and login code were not recognized.' });
 		}
 
 		const token = await createSession(database, member.id);

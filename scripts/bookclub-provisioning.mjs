@@ -5,6 +5,15 @@ import { createInterface } from 'node:readline';
 export const DATABASE_NAME = 'ramis-bookclub';
 const INVITE_HASH_ITERATIONS = 100_000;
 const MAX_INVITE_HASH_ITERATIONS = 1_000_000;
+const USERNAME_PATTERN = /^[a-z0-9][a-z0-9._-]{2,31}$/;
+
+export function normalizeUsername(username) {
+	return username.trim().toLowerCase();
+}
+
+export function isValidUsername(username) {
+	return USERNAME_PATTERN.test(normalizeUsername(username));
+}
 
 // These scripts pass only escaped SQL literals to Wrangler. Raw invite codes are read from the
 // terminal and are never included in a command argument.

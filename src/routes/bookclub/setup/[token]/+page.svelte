@@ -31,6 +31,7 @@
 					<h2 class="mt-2 text-3xl font-black">
 						{isReset ? 'Choose a new code.' : `Welcome, ${data.invitation.memberName}.`}
 					</h2>
+					<p class="mt-2 font-bold text-[#800000]">USERNAME: {data.invitation.username}</p>
 					<p class="mt-3 leading-6">
 						{isReset
 							? 'Choose a new private login code. Your old sessions will be signed out when this link is used.'
@@ -46,11 +47,12 @@
 							name="inviteCode"
 							type="password"
 							autocomplete="new-password"
-							minlength="16"
+							minlength="12"
 							maxlength="256"
 							required
 							class="mt-2 w-full border-2 border-black bg-white px-3 py-3 shadow-[2px_2px_0_#000] focus:ring-2 focus:ring-[#000080] focus:outline-none"
 						/>
+						<p class="mt-1 text-xs">Minimum 12 characters.</p>
 					</div>
 					<div>
 						<label for="confirmation" class="block font-bold text-[#000080]"
@@ -61,7 +63,7 @@
 							name="confirmation"
 							type="password"
 							autocomplete="new-password"
-							minlength="16"
+							minlength="12"
 							maxlength="256"
 							required
 							class="mt-2 w-full border-2 border-black bg-white px-3 py-3 shadow-[2px_2px_0_#000] focus:ring-2 focus:ring-[#000080] focus:outline-none"

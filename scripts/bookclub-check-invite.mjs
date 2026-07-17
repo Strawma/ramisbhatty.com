@@ -1,9 +1,16 @@
-import { askSecret, runWrangler, verifyInviteCode } from './bookclub-provisioning.mjs';
+import {
+	ask,
+	askSecret,
+	isValidUsername,
+	normalizeUsername,
+	runWrangler,
+	verifyInviteCode
+} from './bookclub-provisioning.mjs';
 
 async function main() {
 	// This command is read-only and helps separate a bad code from a deployed-runtime issue.
 	const output = await runWrangler(
-		`SELECT id, name, role, invite_code_hash FROM bookclub_members WHERE active = 1;`,
+		`SELECT id, username, name, role, invite_code_hash FROM bookclub_members WHERE active = 1;`,
 		true
 	);
 	const payload = JSON.parse(output);
@@ -13,16 +20,18 @@ async function main() {
 		throw new Error('Could not read active members from D1. No changes were made.');
 	}
 
-	const inviteCode = await askSecret('Invite code to check (hidden): ');
+	const username = normalizeUsername(await ask('Username: '));
+	if (!isValidUsername(username)) throw new Error('That username is not valid.');
 
-	for (const member of members) {
-		if (await verifyInviteCode(inviteCode, member.invite_code_hash)) {
-			console.log(`Invite matches active ${member.role} ${JSON.stringify(member.name)}.`);
-			return;
-		}
+	const member = members.find((candidate) => candidate.username === username);
+	const inviteCode = await askSecret('Login code to check (hidden): ');
+
+	if (member && (await verifyInviteCode(inviteCode, member.invite_code_hash))) {
+		console.log(`Login matches active ${member.role} ${JSON.stringify(member.name)}.`);
+		return;
 	}
 
-	console.log('Invite does not match any active member in the remote D1 database.');
+	console.log('Username and login code do not match an active member in the remote D1 database.');
 }
 
 main().catch((error) => {

@@ -24,23 +24,38 @@
 				<p class="font-bold text-[#000080]">MEMBERS ONLY // ACCESS TERMINAL</p>
 				<h2 class="mt-2 text-3xl font-black">Enter the clubhouse.</h2>
 				<p class="mt-3 leading-6">
-					Present your private invite code to access the reading zone. There is no public sign-up,
-					because the clubhouse has standards.
+					Present your username and private login code to access the reading zone. There is no
+					public sign-up, because the clubhouse has standards.
 				</p>
 			</div>
 
 			<form method="POST" class="mt-5 space-y-5">
 				<div>
-					<label for="invite-code" class="block font-bold text-[#000080]">INVITE CODE</label>
+					<label for="username" class="block font-bold text-[#000080]">USERNAME</label>
+					<input
+						id="username"
+						name="username"
+						type="text"
+						autocomplete="username"
+						maxlength="32"
+						required
+						class="mt-2 w-full border-2 border-black bg-white px-3 py-3 shadow-[2px_2px_0_#000] focus:ring-2 focus:ring-[#000080] focus:outline-none"
+					/>
+					<p class="mt-1 text-xs">Use the username assigned by the administrator.</p>
+				</div>
+				<div>
+					<label for="invite-code" class="block font-bold text-[#000080]">LOGIN CODE</label>
 					<input
 						id="invite-code"
 						name="inviteCode"
 						type="password"
 						autocomplete="current-password"
+						minlength="12"
 						required
 						maxlength="256"
 						class="mt-2 w-full border-2 border-black bg-white px-3 py-3 shadow-[2px_2px_0_#000] focus:ring-2 focus:ring-[#000080] focus:outline-none"
 					/>
+					<p class="mt-1 text-xs">Minimum 12 characters.</p>
 				</div>
 
 				{#if data.turnstileSiteKey}

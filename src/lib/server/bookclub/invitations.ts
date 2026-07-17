@@ -1,5 +1,5 @@
 import type { D1Database } from '@cloudflare/workers-types';
-import { hashInviteCode, invalidateMemberSessions } from './auth';
+import { hashInviteCode, invalidateMemberSessions, normalizeUsername } from './auth';
 import type { BookclubMember } from './db';
 
 const INVITATION_LIFETIME_MS = 48 * 60 * 60 * 1000;
@@ -12,6 +12,7 @@ export interface BookclubInvitation {
 	memberId: string | null;
 	memberName: string | null;
 	displayName: string | null;
+	username: string | null;
 	createdByName: string;
 	expiresAt: string;
 	consumedAt: string | null;
@@ -31,6 +32,7 @@ interface InvitationRow {
 	member_id: string | null;
 	member_name: string | null;
 	display_name: string | null;
+	username: string | null;
 	created_by_name: string;
 	expires_at: string;
 	consumed_at: string | null;
@@ -44,6 +46,7 @@ interface SetupInvitationRow {
 	member_id: string | null;
 	member_name: string | null;
 	display_name: string | null;
+	username: string | null;
 	expires_at: string;
 }
 
@@ -53,6 +56,7 @@ interface ActiveInvitationRow extends SetupInvitationRow {
 
 interface MemberRow extends BookclubMember {
 	active: number;
+	username: string;
 	created_at: string;
 }
 
@@ -81,6 +85,7 @@ function toInvitation(row: InvitationRow): BookclubInvitation {
 		memberId: row.member_id,
 		memberName: row.member_name,
 		displayName: row.display_name,
+		username: row.username,
 		createdByName: row.created_by_name,
 		expiresAt: row.expires_at,
 		consumedAt: row.consumed_at,
@@ -97,6 +102,7 @@ export async function createInvitation(
 	database: D1Database,
 	createdByMemberId: string,
 	purpose: 'invite',
+	username: string,
 	displayName: string
 ): Promise<CreatedInvitation>;
 export async function createInvitation(
@@ -109,12 +115,14 @@ export async function createInvitation(
 	database: D1Database,
 	createdByMemberId: string,
 	purpose: InvitationPurpose,
-	value: string
+	value: string,
+	displayName?: string
 ): Promise<CreatedInvitation> {
 	const token = encodeBase64Url(crypto.getRandomValues(new Uint8Array(32)));
 	const id = crypto.randomUUID();
 	const expiresAt = invitationExpiry();
 	const tokenHash = await hashToken(token);
+	const normalizedValue = normalizeUsername(value);
 
 	const revokePrevious =
 		purpose === 'reset'
@@ -133,10 +141,10 @@ export async function createInvitation(
 			? database
 					.prepare(
 						`INSERT INTO bookclub_invitations
-						 (id, purpose, token_hash, display_name, created_by_member_id, expires_at)
-						 VALUES (?, 'invite', ?, ?, ?, ?)`
+						 (id, purpose, token_hash, username, display_name, created_by_member_id, expires_at)
+						 VALUES (?, 'invite', ?, ?, ?, ?, ?)`
 					)
-					.bind(id, tokenHash, value, createdByMemberId, expiresAt)
+					.bind(id, tokenHash, normalizedValue, displayName, createdByMemberId, expiresAt)
 			: database
 					.prepare(
 						`INSERT INTO bookclub_invitations
@@ -157,7 +165,8 @@ export async function getInvitationByToken(
 	const tokenHash = await hashToken(token);
 	return database
 		.prepare(
-			`SELECT i.id, i.purpose, i.member_id, m.name AS member_name, i.display_name, i.expires_at
+			`SELECT i.id, i.purpose, i.member_id, m.name AS member_name, i.display_name,
+			        COALESCE(i.username, m.username) AS username, i.expires_at
 			 FROM bookclub_invitations AS i
 			 LEFT JOIN bookclub_members AS m ON m.id = i.member_id
 			 WHERE i.token_hash = ?
@@ -174,6 +183,7 @@ export async function getInvitationSummaries(database: D1Database): Promise<Book
 	const result = await database
 		.prepare(
 			`SELECT i.id, i.purpose, i.member_id, m.name AS member_name, i.display_name,
+			        COALESCE(i.username, m.username) AS username,
 			        creator.name AS created_by_name, i.expires_at, i.consumed_at, i.revoked_at, i.created_at
 			 FROM bookclub_invitations AS i
 			 INNER JOIN bookclub_members AS creator ON creator.id = i.created_by_member_id
@@ -189,12 +199,13 @@ export async function getInvitationSummaries(database: D1Database): Promise<Book
 export async function getMemberSummaries(database: D1Database): Promise<BookclubMemberSummary[]> {
 	const result = await database
 		.prepare(
-			'SELECT id, name, role, active, created_at FROM bookclub_members ORDER BY created_at, name'
+			'SELECT id, username, name, role, active, created_at FROM bookclub_members ORDER BY created_at, name'
 		)
 		.all<MemberRow>();
 
 	return result.results.map((member) => ({
 		id: member.id,
+		username: member.username,
 		name: member.name,
 		role: member.role,
 		active: Boolean(member.active),
@@ -227,7 +238,7 @@ export async function consumeInvitation(
 	const invitation = await database
 		.prepare(
 			`SELECT i.id, i.purpose, i.token_hash, i.member_id, m.name AS member_name,
-			        i.display_name, i.expires_at
+			        i.display_name, COALESCE(i.username, m.username) AS username, i.expires_at
 			 FROM bookclub_invitations AS i
 			 LEFT JOIN bookclub_members AS m ON m.id = i.member_id
 			 WHERE i.token_hash = ?
@@ -249,8 +260,8 @@ export async function consumeInvitation(
 		const results = await database.batch([
 			database
 				.prepare(
-					`INSERT INTO bookclub_members (id, name, invite_code_hash, role)
-					 SELECT ?, display_name, ?, 'member'
+					`INSERT INTO bookclub_members (id, username, name, invite_code_hash, role)
+					 SELECT ?, username, display_name, ?, 'member'
 					 FROM bookclub_invitations
 					 WHERE id = ? AND consumed_at IS NULL AND revoked_at IS NULL AND expires_at > ?`
 				)
@@ -265,7 +276,12 @@ export async function consumeInvitation(
 
 		if (!results[0].meta.changes) throw new Error('This setup link is invalid or expired.');
 
-		return { id: memberId, name: invitation.display_name ?? 'Book club member', role: 'member' };
+		return {
+			id: memberId,
+			username: invitation.username ?? 'member',
+			name: invitation.display_name ?? 'Book club member',
+			role: 'member'
+		};
 	}
 
 	if (!invitation.member_id) throw new Error('This setup link is invalid or expired.');
@@ -296,6 +312,7 @@ export async function consumeInvitation(
 
 	return {
 		id: invitation.member_id,
+		username: invitation.username ?? 'member',
 		name: invitation.member_name ?? 'Book club member',
 		role: 'member'
 	};
@@ -312,6 +329,19 @@ export async function setMemberActive(
 		.run();
 
 	if (result.meta.changes && !active) await invalidateMemberSessions(database, memberId);
+
+	return Boolean(result.meta.changes);
+}
+
+export async function setMemberUsername(
+	database: D1Database,
+	memberId: string,
+	username: string
+): Promise<boolean> {
+	const result = await database
+		.prepare('UPDATE bookclub_members SET username = ? WHERE id = ?')
+		.bind(normalizeUsername(username), memberId)
+		.run();
 
 	return Boolean(result.meta.changes);
 }

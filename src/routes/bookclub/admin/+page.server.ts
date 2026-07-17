@@ -1,12 +1,18 @@
 import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
-import { requireBookclubMember, invalidateMemberSessions } from '$lib/server/bookclub/auth';
+import {
+	invalidateMemberSessions,
+	isValidUsername,
+	normalizeUsername,
+	requireBookclubMember
+} from '$lib/server/bookclub/auth';
 import { getBookclubDatabase } from '$lib/server/bookclub/db';
 import {
 	createInvitation,
 	getInvitationSummaries,
 	getMemberSummaries,
 	revokeInvitation,
-	setMemberActive
+	setMemberActive,
+	setMemberUsername
 } from '$lib/server/bookclub/invitations';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -37,22 +43,34 @@ export const actions: Actions = {
 	createInvitation: async (event) => {
 		const member = await requireAdmin(event);
 		const form = await event.request.formData();
+		const username = form.get('username');
 		const displayName = form.get('displayName');
 
 		if (
+			typeof username !== 'string' ||
+			!isValidUsername(normalizeUsername(username)) ||
 			typeof displayName !== 'string' ||
 			displayName.trim().length === 0 ||
 			displayName.trim().length > 80
 		) {
-			return fail(400, { error: 'Give the new member a display name under 80 characters.' });
+			return fail(400, {
+				error:
+					'Use a unique username of 3-32 letters, numbers, dots, dashes, or underscores, plus a display name under 80 characters.'
+			});
 		}
 
-		const invitation = await createInvitation(
-			getBookclubDatabase(event.platform),
-			member.id,
-			'invite',
-			displayName.trim()
-		);
+		let invitation;
+		try {
+			invitation = await createInvitation(
+				getBookclubDatabase(event.platform),
+				member.id,
+				'invite',
+				normalizeUsername(username),
+				displayName.trim()
+			);
+		} catch {
+			return fail(400, { error: 'That username is already assigned or has a pending invitation.' });
+		}
 
 		return {
 			success: 'Invitation created. Send the private setup link to the member.',
@@ -139,6 +157,34 @@ export const actions: Actions = {
 		}
 
 		return { success: active ? 'Member reactivated.' : 'Member deactivated.' };
+	},
+
+	setUsername: async (event) => {
+		await requireAdmin(event);
+		const form = await event.request.formData();
+		const memberId = form.get('memberId');
+		const username = form.get('username');
+
+		if (
+			typeof memberId !== 'string' ||
+			memberId.length === 0 ||
+			typeof username !== 'string' ||
+			!isValidUsername(normalizeUsername(username))
+		) {
+			return fail(400, {
+				error: 'Use a username of 3-32 letters, numbers, dots, dashes, or underscores.'
+			});
+		}
+
+		try {
+			if (!(await setMemberUsername(getBookclubDatabase(event.platform), memberId, username))) {
+				return fail(404, { error: 'That member no longer exists.' });
+			}
+		} catch {
+			return fail(400, { error: 'That username is already assigned.' });
+		}
+
+		return { success: 'Username updated.' };
 	},
 
 	logoutAll: async (event) => {

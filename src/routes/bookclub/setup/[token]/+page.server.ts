@@ -5,7 +5,7 @@ import { consumeInvitation, getInvitationByToken } from '$lib/server/bookclub/in
 import type { Actions, PageServerLoad } from './$types';
 
 function validateCode(value: FormDataEntryValue | null): value is string {
-	return typeof value === 'string' && value.length >= 16 && value.length <= 256;
+	return typeof value === 'string' && value.length >= 12 && value.length <= 256;
 }
 
 export const load: PageServerLoad = async (event) => {
@@ -23,6 +23,7 @@ export const load: PageServerLoad = async (event) => {
 		invitation: invitation
 			? {
 					purpose: invitation.purpose,
+					username: invitation.username,
 					memberName: invitation.member_name ?? invitation.display_name
 				}
 			: null

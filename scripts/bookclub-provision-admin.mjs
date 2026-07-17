@@ -4,6 +4,8 @@ import {
 	ask,
 	askSecret,
 	hashInviteCode,
+	isValidUsername,
+	normalizeUsername,
 	runWrangler,
 	sqlString
 } from './bookclub-provisioning.mjs';
@@ -42,6 +44,15 @@ async function main() {
 		);
 	}
 
+	const usernameInput = await ask('Admin username: ');
+	const username = normalizeUsername(usernameInput);
+
+	if (!isValidUsername(username)) {
+		throw new Error(
+			'Use a username of 3-32 lowercase letters, numbers, dots, dashes, or underscores.'
+		);
+	}
+
 	const name = await ask('Admin display name: ');
 
 	if (name.length === 0 || name.length > 100) {
@@ -50,9 +61,9 @@ async function main() {
 
 	const inviteCode = await askSecret('Invite code (hidden): ');
 
-	if (inviteCode.length < 16 || inviteCode.length > 256) {
+	if (inviteCode.length < 12 || inviteCode.length > 256) {
 		throw new Error(
-			'Use an invite code between 16 and 256 characters; 24+ random characters is recommended.'
+			'Use a login code between 12 and 256 characters; 16+ random characters is recommended.'
 		);
 	}
 
@@ -64,15 +75,15 @@ async function main() {
 
 	const id = randomUUID();
 	const inviteCodeHash = await hashInviteCode(inviteCode);
-	const insert = `INSERT INTO bookclub_members (id, name, invite_code_hash, role, active)
-SELECT ${sqlString(id)}, ${sqlString(name)}, ${sqlString(inviteCodeHash)}, 'admin', 1
+	const insert = `INSERT INTO bookclub_members (id, username, name, invite_code_hash, role, active)
+SELECT ${sqlString(id)}, ${sqlString(username)}, ${sqlString(name)}, ${sqlString(inviteCodeHash)}, 'admin', 1
 WHERE NOT EXISTS (SELECT 1 FROM bookclub_members);`;
 
 	console.log('Creating the admin record remotely...');
 	await runWrangler(insert);
 
 	const verify = await runWrangler(
-		`SELECT id, name, role FROM bookclub_members WHERE id = ${sqlString(id)};`,
+		`SELECT id, username, name, role FROM bookclub_members WHERE id = ${sqlString(id)};`,
 		true
 	);
 	readInsertedMember(verify, id);

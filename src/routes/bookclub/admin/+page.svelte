@@ -78,6 +78,16 @@
 							INVITE A NEW MEMBER
 						</div>
 						<form method="POST" action="?/createInvitation" use:enhance class="space-y-3 p-4">
+							<label for="username" class="block font-bold">USERNAME</label>
+							<input
+								id="username"
+								name="username"
+								maxlength="32"
+								required
+								placeholder="e.g. alex"
+								class="w-full border-2 border-black bg-white px-2 py-2 focus:ring-2 focus:ring-[#000080] focus:outline-none"
+							/>
+							<p class="text-xs leading-5">This is the unique name they will use to log in.</p>
 							<label for="display-name" class="block font-bold">DISPLAY NAME</label>
 							<input
 								id="display-name"
@@ -137,6 +147,7 @@
 						<table class="w-full min-w-[680px] border-2 border-black bg-white text-left text-xs">
 							<thead class="bg-[#c0c0c0] font-bold">
 								<tr>
+									<th class="border border-black px-2 py-2">USERNAME</th>
 									<th class="border border-black px-2 py-2">NAME</th>
 									<th class="border border-black px-2 py-2">ROLE</th>
 									<th class="border border-black px-2 py-2">STATUS</th>
@@ -146,6 +157,7 @@
 							<tbody>
 								{#each data.members as member (member.id)}
 									<tr>
+										<td class="border border-black px-2 py-2">{member.username}</td>
 										<td class="border border-black px-2 py-2 font-bold">{member.name}</td>
 										<td class="border border-black px-2 py-2">{member.role.toUpperCase()}</td>
 										<td class="border border-black px-2 py-2"
@@ -153,6 +165,22 @@
 										>
 										<td class="border border-black px-2 py-2">
 											<div class="flex flex-wrap gap-2">
+												<form method="POST" action="?/setUsername" use:enhance class="flex gap-1">
+													<input type="hidden" name="memberId" value={member.id} />
+													<input
+														name="username"
+														value={member.username}
+														maxlength="32"
+														aria-label={`Username for ${member.name}`}
+														class="w-32 border border-black px-1 py-1"
+													/>
+													<button
+														type="submit"
+														class="border border-black bg-[#d4d0c8] px-2 py-1 font-bold hover:bg-white focus:ring-2 focus:ring-[#000080] focus:outline-none"
+													>
+														SAVE USERNAME
+													</button>
+												</form>
 												{#if member.id !== data.member.id}
 													<form method="POST" action="?/setMemberActive" use:enhance>
 														<input type="hidden" name="memberId" value={member.id} />
@@ -209,7 +237,7 @@
 											>{invitation.purpose.toUpperCase()}</td
 										>
 										<td class="border border-black px-2 py-2">
-											{invitation.memberName ?? invitation.displayName}
+											{invitation.username}: {invitation.memberName ?? invitation.displayName}
 										</td>
 										<td class="border border-black px-2 py-2">{invitationLabel(invitation)}</td>
 										<td class="border border-black px-2 py-2">{formatDate(invitation.expiresAt)}</td

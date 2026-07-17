@@ -21,7 +21,7 @@ async function main() {
 	// Reset only changes the selected admin hash; it does not create, deactivate, or delete members.
 	const admins = readAdmins(
 		await runWrangler(
-			`SELECT id, name, role FROM bookclub_members WHERE role = 'admin' AND active = 1 ORDER BY created_at;`,
+			`SELECT id, username, name, role FROM bookclub_members WHERE role = 'admin' AND active = 1 ORDER BY created_at;`,
 			true
 		)
 	);
@@ -31,7 +31,7 @@ async function main() {
 	if (admins.length > 1) {
 		console.log('Active admins:');
 		for (const candidate of admins) {
-			console.log(`- ${candidate.name} (${candidate.id})`);
+			console.log(`- ${candidate.username} / ${candidate.name} (${candidate.id})`);
 		}
 
 		const id = await ask('Enter the admin ID to reset: ');
@@ -45,9 +45,9 @@ async function main() {
 	console.log(`Resetting the invite code for ${JSON.stringify(admin.name)}.`);
 	const inviteCode = await askSecret('New invite code (hidden): ');
 
-	if (inviteCode.length < 16 || inviteCode.length > 256) {
+	if (inviteCode.length < 12 || inviteCode.length > 256) {
 		throw new Error(
-			'Use an invite code between 16 and 256 characters; 24+ random characters is recommended.'
+			'Use a login code between 12 and 256 characters; 16+ random characters is recommended.'
 		);
 	}
 

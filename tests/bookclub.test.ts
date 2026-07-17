@@ -3,7 +3,7 @@ import { env } from 'cloudflare:test';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
 	createSession,
-	findMemberByInviteCode,
+	findMemberByUsernameAndInviteCode,
 	hashInviteCode
 } from '../src/lib/server/bookclub/auth';
 import {
@@ -37,6 +37,7 @@ const database = env.BOOKCLUB_DB;
 
 interface TestMember {
 	id: string;
+	username: string;
 	name: string;
 	role: 'member' | 'admin';
 }
@@ -63,13 +64,16 @@ async function createTestMember(
 ): Promise<TestMember> {
 	const member = {
 		id: crypto.randomUUID(),
+		username: name.toLowerCase(),
 		name,
 		role
 	};
 
 	await database
-		.prepare('INSERT INTO bookclub_members (id, name, role, invite_code_hash) VALUES (?, ?, ?, ?)')
-		.bind(member.id, member.name, member.role, await hashInviteCode(code))
+		.prepare(
+			'INSERT INTO bookclub_members (id, username, name, role, invite_code_hash) VALUES (?, ?, ?, ?, ?)'
+		)
+		.bind(member.id, member.username, member.name, member.role, await hashInviteCode(code))
 		.run();
 
 	return member;
@@ -107,8 +111,22 @@ describe('book-club authentication', () => {
 	it('finds a member from a valid invite code but not an invalid one', async () => {
 		const member = await createTestMember('Ramis', 'admin', 'correct-code');
 
-		expect(await findMemberByInviteCode(database, 'wrong-code')).toBeNull();
-		expect(await findMemberByInviteCode(database, 'correct-code')).toEqual(member);
+		expect(await findMemberByUsernameAndInviteCode(database, 'Ramis', 'wrong-code')).toBeNull();
+		expect(await findMemberByUsernameAndInviteCode(database, 'RAMIS', 'correct-code')).toEqual(
+			member
+		);
+	});
+
+	it('uses the username to disambiguate members with the same login code', async () => {
+		const first = await createTestMember('Alex', 'member', 'shared-code');
+		const second = await createTestMember('Blair', 'member', 'shared-code');
+
+		expect(
+			await findMemberByUsernameAndInviteCode(database, first.username, 'shared-code')
+		).toEqual(first);
+		expect(
+			await findMemberByUsernameAndInviteCode(database, second.username, 'shared-code')
+		).toEqual(second);
 	});
 
 	it('stores only a session token hash and creates a usable session token', async () => {
@@ -128,7 +146,7 @@ describe('book-club authentication', () => {
 describe('book-club invitations', () => {
 	it('creates a one-use member invitation and consumes it into a member account', async () => {
 		const admin = await createTestMember('Ramis', 'admin');
-		const invitation = await createInvitation(database, admin.id, 'invite', 'Alex');
+		const invitation = await createInvitation(database, admin.id, 'invite', 'alex', 'Alex');
 
 		expect(invitation.token).not.toContain('$');
 		expect(
@@ -139,19 +157,32 @@ describe('book-club invitations', () => {
 		).not.toMatchObject({ token_hash: invitation.token });
 		expect(await getInvitationByToken(database, invitation.token)).toMatchObject({
 			purpose: 'invite',
-			display_name: 'Alex'
+			display_name: 'Alex',
+			username: 'alex'
 		});
 
 		await expect(
-			consumeInvitation(database, invitation.token, 'a'.repeat(16))
+			consumeInvitation(database, invitation.token, 'a'.repeat(12))
 		).resolves.toMatchObject({
 			name: 'Alex',
+			username: 'alex',
 			role: 'member'
 		});
-		expect(await findMemberByInviteCode(database, 'a'.repeat(16))).toMatchObject({ name: 'Alex' });
-		await expect(consumeInvitation(database, invitation.token, 'b'.repeat(16))).rejects.toThrow(
+		expect(await findMemberByUsernameAndInviteCode(database, 'alex', 'a'.repeat(12))).toMatchObject(
+			{ name: 'Alex' }
+		);
+		await expect(consumeInvitation(database, invitation.token, 'b'.repeat(12))).rejects.toThrow(
 			'invalid or expired'
 		);
+	});
+
+	it('allows only one active invitation for a username', async () => {
+		const admin = await createTestMember('Ramis', 'admin');
+		await createInvitation(database, admin.id, 'invite', 'alex', 'Alex');
+
+		await expect(
+			createInvitation(database, admin.id, 'invite', 'alex', 'Another Alex')
+		).rejects.toThrow();
 	});
 
 	it('revokes invitations and replaces previous reset links', async () => {
@@ -179,8 +210,10 @@ describe('book-club invitations', () => {
 				.bind(member.id)
 				.first<{ count: number }>()
 		).toMatchObject({ count: 0 });
-		expect(await findMemberByInviteCode(database, 'member-code')).toBeNull();
-		expect(await findMemberByInviteCode(database, 'new-member-code')).toMatchObject({
+		expect(await findMemberByUsernameAndInviteCode(database, 'alex', 'member-code')).toBeNull();
+		expect(
+			await findMemberByUsernameAndInviteCode(database, 'alex', 'new-member-code')
+		).toMatchObject({
 			name: 'Alex'
 		});
 	});

@@ -12,6 +12,16 @@ interface StoredMember extends BookclubMember {
 	invite_code_hash: string;
 }
 
+const USERNAME_PATTERN = /^[a-z0-9][a-z0-9._-]{2,31}$/;
+
+export function normalizeUsername(username: string): string {
+	return username.trim().toLowerCase();
+}
+
+export function isValidUsername(username: string): boolean {
+	return USERNAME_PATTERN.test(username);
+}
+
 function encodeBase64Url(bytes: Uint8Array): string {
 	let binary = '';
 
@@ -117,29 +127,24 @@ async function verifyInviteCode(inviteCode: string, encodedHash: string): Promis
 	}
 }
 
-export async function findMemberByInviteCode(
+export async function findMemberByUsernameAndInviteCode(
 	database: D1Database,
+	username: string,
 	inviteCode: string
 ): Promise<BookclubMember | null> {
-	// The club has only a handful of members. Verifying each salted hash avoids storing a fast,
-	// directly searchable hash of a low-entropy invite code.
-	const members = await database
+	const member = await database
 		.prepare(
-			`SELECT id, name, role, invite_code_hash
+			`SELECT id, username, name, role, invite_code_hash
 			 FROM bookclub_members
-			 WHERE active = 1`
+			 WHERE username = ? AND active = 1
+			 LIMIT 1`
 		)
-		.all<StoredMember>();
+		.bind(normalizeUsername(username))
+		.first<StoredMember>();
 
-	let match: BookclubMember | null = null;
+	if (!member || !(await verifyInviteCode(inviteCode, member.invite_code_hash))) return null;
 
-	for (const member of members.results) {
-		if (await verifyInviteCode(inviteCode, member.invite_code_hash)) {
-			match = { id: member.id, name: member.name, role: member.role };
-		}
-	}
-
-	return match;
+	return { id: member.id, username: member.username, name: member.name, role: member.role };
 }
 
 export async function createSession(database: D1Database, memberId: string): Promise<string> {
@@ -188,7 +193,7 @@ export async function getSessionMember(event: RequestEvent): Promise<BookclubMem
 	const now = new Date().toISOString();
 	const result = await database
 		.prepare(
-			`SELECT m.id, m.name, m.role
+			`SELECT m.id, m.username, m.name, m.role
 			 FROM bookclub_sessions AS s
 			 INNER JOIN bookclub_members AS m ON m.id = s.member_id
 			 WHERE s.token_hash = ?

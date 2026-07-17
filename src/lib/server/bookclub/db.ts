@@ -5,6 +5,7 @@ export type BookclubRole = 'member' | 'admin';
 
 export interface BookclubMember {
 	id: string;
+	username: string;
 	name: string;
 	role: BookclubRole;
 }
