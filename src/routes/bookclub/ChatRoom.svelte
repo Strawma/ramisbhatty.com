@@ -32,6 +32,19 @@
 	function formatMessageTime(value: string): string {
 		return new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 	}
+
+	function formatMessageDate(value: string): string {
+		return new Date(value).toLocaleDateString([], {
+			weekday: 'long',
+			year: 'numeric',
+			month: 'long',
+			day: 'numeric'
+		});
+	}
+
+	function messageDateKey(value: string): string {
+		return new Date(value).toLocaleDateString();
+	}
 </script>
 
 <details
@@ -52,7 +65,16 @@
 			{#if messages.length === 0}
 				<p>&gt; no messages yet. Say something about a book.</p>
 			{:else}
-				{#each messages as message (message.id)}
+				{#each messages as message, index (message.id)}
+					{@const previousMessage = messages[index - 1]}
+					{#if !previousMessage || messageDateKey(previousMessage.createdAt) !== messageDateKey(message.createdAt)}
+						<div
+							role="separator"
+							class="my-2 border-y border-green-800 py-1 text-center font-bold text-green-500"
+						>
+							{formatMessageDate(message.createdAt)}
+						</div>
+					{/if}
 					<div class="flex gap-2">
 						<time class="shrink-0 text-green-700" datetime={message.createdAt}
 							>[{formatMessageTime(message.createdAt)}]</time

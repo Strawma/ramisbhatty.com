@@ -2,6 +2,7 @@ import type { D1Database } from '@cloudflare/workers-types';
 
 const CHAT_MESSAGE_LIMIT = 50;
 const CHAT_MESSAGE_COOLDOWN_MS = 5_000;
+const CHAT_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 
 export class ChatCooldownError extends Error {
 	constructor() {
@@ -31,6 +32,11 @@ export async function getChatMessages(
 	database: D1Database,
 	memberId: string
 ): Promise<BookclubChatMessage[]> {
+	await database
+		.prepare('DELETE FROM bookclub_chat_messages WHERE created_at < ?')
+		.bind(new Date(Date.now() - CHAT_RETENTION_MS).toISOString())
+		.run();
+
 	const messages = await database
 		.prepare(
 			`SELECT chat.id, chat.member_id, members.name AS member_name, chat.body, chat.created_at
