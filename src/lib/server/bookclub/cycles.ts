@@ -291,18 +291,17 @@ export async function closeCycle(database: D1Database, cycleId: string): Promise
 export async function drawCycle(
 	database: D1Database,
 	cycleId: string,
-	drawnByMemberId: string,
-	allowIncomplete: boolean
+	drawnByMemberId: string
 ): Promise<BookclubBook> {
 	const cycle = await database
 		.prepare(
-			`SELECT id, status, suggestion_limit
+			`SELECT id, status
 			 FROM bookclub_cycles
 			 WHERE id = ?
 			 LIMIT 1`
 		)
 		.bind(cycleId)
-		.first<{ id: string; status: BookclubCycle['status']; suggestion_limit: number }>();
+		.first<{ id: string; status: BookclubCycle['status'] }>();
 
 	if (!cycle || !['open', 'closed'].includes(cycle.status)) {
 		throw new Error('This session is no longer available for drawing.');
@@ -320,19 +319,6 @@ export async function drawCycle(
 
 	if (suggestions.results.length === 0) {
 		throw new Error('Add at least one suggestion before drawing.');
-	}
-
-	if (!allowIncomplete) {
-		const activeMembers = await database
-			.prepare('SELECT COUNT(*) AS count FROM bookclub_members WHERE active = 1')
-			.first<{ count: number }>();
-		const required = (activeMembers?.count ?? 0) * cycle.suggestion_limit;
-
-		if (suggestions.results.length < required) {
-			throw new Error(
-				'Every active member must use all suggestion slots, or choose the admin override.'
-			);
-		}
 	}
 
 	const winner =

@@ -347,7 +347,7 @@ describe('book-club cycles and suggestions', () => {
 			saveSuggestion(database, cycleId, members[0].id, 1, 'Too Late', 'Author')
 		).rejects.toThrow('no longer open');
 
-		await drawCycle(database, cycleId, members[0].id, false);
+		await drawCycle(database, cycleId, members[0].id);
 		expect(
 			(await getChatMessages(database, members[0].id)).some((message) =>
 				message.body.startsWith('CURRENT BOOK:')
@@ -369,22 +369,22 @@ describe('book-club cycles and suggestions', () => {
 		expect(result?.title).toMatch(/^Book (Ramis|Alex) [123]$/);
 		expect(result?.suggestion_id).toBeTruthy();
 		expect((await getDashboard(database, members[0])).currentBook?.title).toBe(result?.title);
-		await expect(drawCycle(database, cycleId, members[0].id, false)).rejects.toThrow(
+		await expect(drawCycle(database, cycleId, members[0].id)).rejects.toThrow(
 			'no longer available'
 		);
 	});
 
-	it('requires a complete suggestion pool unless the admin override is used', async () => {
+	it('draws from a partially filled suggestion pool', async () => {
 		const members = [await createTestMember('Ramis'), await createTestMember('Alex')];
 		await createCycle(database, 'Session 03');
 		const cycleId = await getOpenCycleId();
 		await saveSuggestion(database, cycleId, members[0].id, 1, 'Only Book', 'Only Author');
 		await closeCycle(database, cycleId);
 
-		await expect(drawCycle(database, cycleId, members[0].id, false)).rejects.toThrow(
-			'Every active member must use all suggestion slots'
-		);
-		await drawCycle(database, cycleId, members[0].id, true);
+		await expect(drawCycle(database, cycleId, members[0].id)).resolves.toMatchObject({
+			title: 'Only Book',
+			author: 'Only Author'
+		});
 	});
 });
 

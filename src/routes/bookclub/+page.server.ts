@@ -275,12 +275,9 @@ export const actions: Actions = {
 			return fail(400, { error: 'There is no session ready to draw.' });
 		}
 
-		const form = await event.request.formData();
-		const allowIncomplete = form.get('allowIncomplete') === 'on';
-
 		let book;
 		try {
-			book = await drawCycle(database, cycle.id, member.id, allowIncomplete);
+			book = await drawCycle(database, cycle.id, member.id);
 		} catch (error) {
 			return fail(400, {
 				error: error instanceof Error ? error.message : 'The draw could not be completed.'

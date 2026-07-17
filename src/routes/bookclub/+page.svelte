@@ -69,8 +69,8 @@
 							</p>
 						{/if}
 						<p class="mt-3 max-w-3xl leading-6">
-							Welcome to the Bournemouth Mini Book Meet Thing (Working Title). The shelves are still being arranged, but the extremely
-							serious reading operations can begin here.
+							Welcome to the Bournemouth Mini Book Meet Thing (Working Title). The shelves are still
+							being arranged, but the extremely serious reading operations can begin here.
 						</p>
 						<div class="mt-4 grid gap-2 sm:grid-cols-3">
 							<div class="border-2 border-black bg-white p-3">
@@ -181,7 +181,8 @@
 							</h2>
 							<p class="mt-3 leading-6">
 								{#if data.dashboard.currentBook}
-									By {data.dashboard.currentBook.author}. More stuff will appear here when I can be bothered to implement it.
+									By {data.dashboard.currentBook.author}. More stuff will appear here when I can be
+									bothered to implement it.
 								{:else}
 									Once an admin runs the draw, this panel will show the winning book and author.
 								{/if}
@@ -320,11 +321,7 @@
 												0
 											)} tickets submitted. The suggestion pool is locked. This draw cannot be rerun.
 										</p>
-										<form method="POST" action="?/draw" use:enhance class="mt-3 space-y-2">
-											<label class="flex items-start gap-2 text-xs">
-												<input type="checkbox" name="allowIncomplete" class="mt-0.5" />
-												<span>Allow the current pool even if some members have empty slots.</span>
-											</label>
+										<form method="POST" action="?/draw" use:enhance class="mt-3">
 											<button
 												type="submit"
 												class="border-2 border-black bg-[#d4d0c8] px-3 py-2 font-bold shadow-[2px_2px_0_#000] hover:bg-white"
