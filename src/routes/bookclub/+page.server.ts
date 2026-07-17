@@ -1,6 +1,11 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { requireBookclubMember } from '$lib/server/bookclub/auth';
-import { ChatCooldownError, createChatMessage, deleteChatMessage } from '$lib/server/bookclub/chat';
+import {
+	ChatCooldownError,
+	createChatMessage,
+	tombstoneChatMessageByAdmin,
+	tombstoneOwnChatMessage
+} from '$lib/server/bookclub/chat';
 import { findBookCover } from '$lib/server/bookclub/covers';
 import { getBookclubDatabase } from '$lib/server/bookclub/db';
 import {
@@ -248,7 +253,7 @@ export const actions: Actions = {
 		const member = await requireBookclubMember(event);
 
 		if (member.role !== 'admin') {
-			return fail(403, { error: 'Only the club admin can delete chat messages.' });
+			return fail(403, { error: 'Only the club admin can moderate chat messages.' });
 		}
 
 		const form = await event.request.formData();
@@ -258,8 +263,29 @@ export const actions: Actions = {
 			return fail(400, { error: 'The message could not be identified.' });
 		}
 
-		await deleteChatMessage(getBookclubDatabase(event.platform), messageId);
-		return { success: 'Message deleted.' };
+		if (!(await tombstoneChatMessageByAdmin(getBookclubDatabase(event.platform), messageId))) {
+			return fail(400, { error: 'Only undeleted user messages can be moderated.' });
+		}
+
+		return { success: 'Message tombstoned.' };
+	},
+
+	deleteOwnMessage: async (event) => {
+		const member = await requireBookclubMember(event);
+		const form = await event.request.formData();
+		const messageId = form.get('messageId');
+
+		if (typeof messageId !== 'string' || messageId.length === 0) {
+			return fail(400, { error: 'The message could not be identified.' });
+		}
+
+		if (
+			!(await tombstoneOwnChatMessage(getBookclubDatabase(event.platform), messageId, member.id))
+		) {
+			return fail(400, { error: 'Only your own undeleted messages can be removed.' });
+		}
+
+		return { success: 'Message tombstoned.' };
 	},
 
 	draw: async (event) => {

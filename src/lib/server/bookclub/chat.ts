@@ -19,6 +19,7 @@ export interface BookclubChatMessage {
 	createdAt: string;
 	isOwn: boolean;
 	isAnnouncement: boolean;
+	isDeleted: boolean;
 }
 
 interface ChatMessageRow {
@@ -28,6 +29,7 @@ interface ChatMessageRow {
 	body: string;
 	created_at: string;
 	message_type: 'user' | 'announcement';
+	deleted_at: string | null;
 }
 
 export async function getChatMessages(
@@ -37,7 +39,7 @@ export async function getChatMessages(
 	const messages = await database
 		.prepare(
 			`SELECT chat.id, chat.member_id, members.name AS member_name, chat.body, chat.created_at,
-			        chat.message_type
+			        chat.message_type, chat.deleted_at
 			 FROM bookclub_chat_messages AS chat
 			 INNER JOIN bookclub_members AS members ON members.id = chat.member_id
 			 WHERE chat.created_at >= ?
@@ -54,7 +56,8 @@ export async function getChatMessages(
 		body: message.body,
 		createdAt: message.created_at,
 		isOwn: message.member_id === memberId,
-		isAnnouncement: message.message_type === 'announcement'
+		isAnnouncement: message.message_type === 'announcement',
+		isDeleted: Boolean(message.deleted_at)
 	}));
 }
 
@@ -91,6 +94,35 @@ export async function createChatMessage(
 	}
 }
 
-export async function deleteChatMessage(database: D1Database, messageId: string): Promise<void> {
-	await database.prepare('DELETE FROM bookclub_chat_messages WHERE id = ?').bind(messageId).run();
+export async function tombstoneChatMessageByAdmin(
+	database: D1Database,
+	messageId: string
+): Promise<boolean> {
+	const result = await database
+		.prepare(
+			`UPDATE bookclub_chat_messages
+			 SET body = '[DELETED BY ADMIN]', deleted_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+			 WHERE id = ? AND message_type = 'user' AND deleted_at IS NULL`
+		)
+		.bind(messageId)
+		.run();
+
+	return Boolean(result.meta.changes);
+}
+
+export async function tombstoneOwnChatMessage(
+	database: D1Database,
+	messageId: string,
+	memberId: string
+): Promise<boolean> {
+	const result = await database
+		.prepare(
+			`UPDATE bookclub_chat_messages
+			 SET body = '[DELETED BY MEMBER]', deleted_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+			 WHERE id = ? AND member_id = ? AND message_type = 'user' AND deleted_at IS NULL`
+		)
+		.bind(messageId, memberId)
+		.run();
+
+	return Boolean(result.meta.changes);
 }

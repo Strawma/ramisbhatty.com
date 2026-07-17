@@ -9,7 +9,9 @@ import {
 import {
 	ChatCooldownError,
 	createChatMessage,
-	getChatMessages
+	getChatMessages,
+	tombstoneChatMessageByAdmin,
+	tombstoneOwnChatMessage
 } from '../src/lib/server/bookclub/chat';
 import { cleanupBookclubData } from '../src/lib/server/bookclub/maintenance';
 import { findBookCover } from '../src/lib/server/bookclub/covers';
@@ -389,6 +391,75 @@ describe('book-club cycles and suggestions', () => {
 });
 
 describe('book-club chat and meetings', () => {
+	it('tombstones user messages without deleting announcements or other members messages', async () => {
+		const admin = await createTestMember('Ramis', 'admin');
+		const member = await createTestMember('Alex');
+		const otherMember = await createTestMember('Blair');
+
+		await createChatMessage(database, member.id, 'Member message');
+		await database
+			.prepare(
+				`INSERT INTO bookclub_chat_messages (id, member_id, body, message_type)
+				 VALUES (?, ?, ?, 'announcement')`
+			)
+			.bind(crypto.randomUUID(), admin.id, 'SYSTEM: Important club notice')
+			.run();
+		await database
+			.prepare(
+				`INSERT INTO bookclub_chat_messages (id, member_id, body)
+				 VALUES (?, ?, ?)`
+			)
+			.bind(crypto.randomUUID(), otherMember.id, 'Other member message')
+			.run();
+
+		const before = await getChatMessages(database, member.id);
+		const memberMessage = before.find((message) => message.body === 'Member message');
+		const announcement = before.find((message) => message.isAnnouncement);
+		const otherMessage = before.find((message) => message.body === 'Other member message');
+
+		expect(memberMessage).toBeTruthy();
+		expect(announcement).toBeTruthy();
+		expect(otherMessage).toBeTruthy();
+
+		await expect(tombstoneChatMessageByAdmin(database, memberMessage?.id ?? '')).resolves.toBe(
+			true
+		);
+		expect(await tombstoneChatMessageByAdmin(database, announcement?.id ?? '')).toBe(false);
+		expect(await tombstoneOwnChatMessage(database, otherMessage?.id ?? '', member.id)).toBe(false);
+		expect(await tombstoneChatMessageByAdmin(database, memberMessage?.id ?? '')).toBe(false);
+
+		const afterAdminDelete = await getChatMessages(database, member.id);
+		expect(afterAdminDelete.find((message) => message.id === memberMessage?.id)).toMatchObject({
+			body: '[DELETED BY ADMIN]',
+			isDeleted: true
+		});
+		expect(afterAdminDelete.find((message) => message.id === announcement?.id)).toMatchObject({
+			body: 'SYSTEM: Important club notice',
+			isDeleted: false
+		});
+
+		const ownMessageId = crypto.randomUUID();
+		await database
+			.prepare(
+				`INSERT INTO bookclub_chat_messages (id, member_id, body)
+				 VALUES (?, ?, ?)`
+			)
+			.bind(ownMessageId, member.id, 'Own message to remove')
+			.run();
+
+		expect(await tombstoneOwnChatMessage(database, ownMessageId, member.id)).toBe(true);
+		expect(await tombstoneOwnChatMessage(database, ownMessageId, member.id)).toBe(false);
+		expect(await getChatMessages(database, member.id)).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({
+					id: ownMessageId,
+					body: '[DELETED BY MEMBER]',
+					isDeleted: true
+				})
+			])
+		);
+	});
+
 	it('enforces the chat cooldown and cleans messages older than seven days', async () => {
 		const member = await createTestMember('Ramis');
 		await createChatMessage(database, member.id, 'Fresh message');

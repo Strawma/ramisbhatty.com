@@ -10,6 +10,7 @@
 		createdAt: string;
 		isOwn: boolean;
 		isAnnouncement: boolean;
+		isDeleted: boolean;
 	};
 
 	let { messages, isAdmin }: { messages: Message[]; isAdmin: boolean } = $props();
@@ -196,21 +197,24 @@
 							<span class="min-w-0 truncate font-bold text-cyan-300" title={message.memberName}
 								>{message.memberName}:</span
 							>
-							<span class="col-span-3 row-start-2 min-w-0 break-words sm:col-span-1 sm:row-auto"
+							<span
+								class:text-gray-500={message.isDeleted}
+								class:italic={message.isDeleted}
+								class="col-span-3 row-start-2 min-w-0 break-words sm:col-span-1 sm:row-auto"
 								>{message.body}</span
 							>
 						{/if}
-						{#if isAdmin}
+						{#if !message.isAnnouncement && !message.isDeleted && (isAdmin || message.isOwn)}
 							<form
 								method="POST"
-								action="?/deleteMessage"
+								action={isAdmin ? '?/deleteMessage' : '?/deleteOwnMessage'}
 								use:enhance
 								class="col-start-3 row-start-1 ml-auto shrink-0 sm:col-auto sm:row-auto"
 							>
 								<input type="hidden" name="messageId" value={message.id} />
 								<button
 									type="submit"
-									aria-label="Delete message"
+									aria-label={isAdmin ? 'Tombstone message as admin' : 'Tombstone your message'}
 									class="text-red-400 underline hover:text-white"
 								>
 									[x]
