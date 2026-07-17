@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
+
 	let { data, form } = $props();
 	let isReset = $derived(data.invitation?.purpose === 'reset');
 </script>
@@ -39,7 +41,7 @@
 					</p>
 				</div>
 
-				<form method="POST" class="mt-5 space-y-4">
+				<form method="POST" use:enhance class="mt-5 space-y-4">
 					<div>
 						<label for="invite-code" class="block font-bold text-[#000080]">NEW LOGIN CODE</label>
 						<input
