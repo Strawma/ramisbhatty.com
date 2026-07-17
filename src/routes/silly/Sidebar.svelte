@@ -15,6 +15,7 @@
 	let currentTime = $state(new Date().toLocaleString());
 
 	onMount(() => {
+		// Both values are decorative client-side state; stop the interval when navigating away.
 		const interval = setInterval(() => {
 			currentTime = new Date().toLocaleString();
 		}, 3000);

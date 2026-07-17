@@ -1,6 +1,7 @@
 import { askSecret, runWrangler, verifyInviteCode } from './bookclub-provisioning.mjs';
 
 async function main() {
+	// This command is read-only and helps separate a bad code from a deployed-runtime issue.
 	const output = await runWrangler(
 		`SELECT id, name, role, invite_code_hash FROM bookclub_members WHERE active = 1;`,
 		true

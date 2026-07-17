@@ -6,6 +6,8 @@ export const DATABASE_NAME = 'ramis-bookclub';
 const INVITE_HASH_ITERATIONS = 100_000;
 const MAX_INVITE_HASH_ITERATIONS = 1_000_000;
 
+// These scripts pass only escaped SQL literals to Wrangler. Raw invite codes are read from the
+// terminal and are never included in a command argument.
 export function sqlString(value) {
 	return `'${value.replaceAll("'", "''")}'`;
 }
@@ -43,6 +45,7 @@ export function askSecret(question) {
 			if (error) {
 				reject(error);
 			} else {
+				// Some terminals wrap pasted text in bracketed-paste markers while raw mode is active.
 				resolve(value.replaceAll('\u001b[200~', '').replaceAll('\u001b[201~', ''));
 			}
 		};

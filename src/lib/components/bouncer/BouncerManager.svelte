@@ -1,4 +1,6 @@
 <script lang="ts">
+	// The manager owns the browser-only canvas loop. Child Bouncer components register their
+	// configuration through context so physics and cleanup stay in one lifecycle.
 	import { onMount, setContext, type Snippet } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
 
@@ -44,6 +46,7 @@
 	const imageCache = new SvelteMap<string, HTMLImageElement>();
 
 	function loadImage(src: string): Promise<HTMLImageElement> {
+		// Several bouncers often share one image, so load it once and reuse the decoded element.
 		const cached = imageCache.get(src);
 		if (cached) return Promise.resolve(cached);
 
@@ -212,6 +215,8 @@
 
 		function loop(timestamp: number) {
 			animFrame = requestAnimationFrame(loop);
+			// requestAnimationFrame follows the display refresh rate; this interval keeps the simulation
+			// deliberately cheap and preserves the intentionally choppy retro effect.
 			if (timestamp - lastTime < frameInterval) return;
 			lastTime = timestamp;
 			updatePhysics();

@@ -1,5 +1,5 @@
 <script lang="ts">
-	// 1. Define Props
+	// MIDI is loaded lazily because the audio library and files are only useful after user input.
 	let {
 		midiFiles,
 		class: tailwind = ''
@@ -8,19 +8,17 @@
 		class?: string;
 	} = $props();
 
-	// 2. Interfaces
 	interface TinySynth {
 		getAudioContext: () => AudioContext;
 		loadMIDI: (data: Uint8Array) => void;
 		playMIDI: () => void;
 		stopMIDI: () => void;
 		locateMIDI: (tick: number) => void;
-		setMasterVol: (vol: number) => void; // <--- The function we need
+		setMasterVol: (vol: number) => void;
 		getPlayStatus: () => { play: boolean; curTick: number; maxTick: number };
 		ready: () => Promise<void>;
 	}
 
-	// 3. State Management
 	let synth = $state<TinySynth | null>(null);
 	let currentMidiUrl = $state<string | null>(null);
 	let isPlaying = $state<boolean>(false);
@@ -36,7 +34,6 @@
 		}))
 	);
 
-	// 4. Initialization
 	async function initSynth() {
 		if (synth) return synth;
 
@@ -88,7 +85,7 @@
 			if (ac.state === 'suspended') await ac.resume();
 
 			s.stopMIDI();
-			// Ensure volume is enforced on every load (just in case)
+			// Loading a new MIDI can reset synth state, so reapply the current volume.
 			s.setMasterVol(volume);
 
 			s.loadMIDI(new Uint8Array(arrayBuffer));
@@ -105,6 +102,8 @@
 	}
 
 	function startMonitoring(s: TinySynth) {
+		// TinySynth does not expose a completion event, so poll its tick position and choose the next
+		// track when the current one reaches its end.
 		playbackInterval = window.setInterval(() => {
 			const status = s.getPlayStatus();
 			if (isPlaying !== status.play) isPlaying = status.play;
@@ -152,6 +151,7 @@
 
 	$effect(() => {
 		return () => {
+			// Audio and polling must stop when the route is destroyed or the player is replaced.
 			stopMonitoring();
 			if (synth) synth.stopMIDI();
 		};

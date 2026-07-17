@@ -8,7 +8,7 @@
 	import WindowsBottomSRC from '$lib/assets/images/windows-xp-bottom.webp';
 	import JimSRC from '$lib/assets/images/jim.webp';
 
-	// Pool of quotes to display in the sliding bar
+	// Keep the quote pool in JSON so the streaming scene can be edited without changing its timer.
 	const quotes = brb_quotes;
 	const brbText = 'Be Right Back!';
 	const quoteTime = 8000; // Time in milliseconds to display each quote
@@ -29,6 +29,8 @@
 
 	onMount(() => {
 		quoteVisible = true;
+		// The quote alternates between a long visible period and a short hidden period. Clearing the
+		// active timeout on teardown prevents navigation from updating an unmounted page.
 		function scheduleNextToggle() {
 			// Calculate delay based on current visibility state
 			const delay = quoteVisible ? quoteTime : quoteTime / 5;

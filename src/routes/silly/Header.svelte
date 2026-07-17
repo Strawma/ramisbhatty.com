@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
+	// This is deliberately fictional display copy, not a visitor counter or analytics measurement.
 	let visitorCount = $state(Math.floor(Math.random() * 999999));
 
 	onMount(() => {

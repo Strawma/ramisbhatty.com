@@ -31,6 +31,8 @@ function readInsertedMember(output, id) {
 }
 
 async function main() {
+	// Bootstrap is intentionally limited to an empty member table. Later members should be added
+	// through an authenticated admin workflow rather than by rerunning this command.
 	console.log(`Checking ${DATABASE_NAME} before creating the first admin...`);
 	const countOutput = await runWrangler('SELECT COUNT(*) AS count FROM bookclub_members;', true);
 

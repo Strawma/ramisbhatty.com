@@ -32,6 +32,7 @@ export const actions: Actions = {
 			return fail(400, { error: 'Enter your invite code.' });
 		}
 
+		// Verify the bot challenge before reading member hashes or creating a session.
 		const turnstileToken = form.get('cf-turnstile-response');
 		const turnstileSecret = event.platform?.env.TURNSTILE_SECRET_KEY;
 

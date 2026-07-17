@@ -6,6 +6,7 @@ interface TurnstileVerificationResponse {
 	action?: string;
 }
 
+/** Verify a one-use Turnstile response before allowing an expensive D1 lookup. */
 export async function verifyTurnstileToken(
 	token: string,
 	secret: string,

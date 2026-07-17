@@ -10,12 +10,15 @@
 	import FactGenerator from './FactGenerator.svelte';
 	import Welcome from './Welcome.svelte';
 
+	// Vite turns the bundled MIDI files into URLs. The player fetches the selected file only after
+	// the visitor explicitly starts audio playback.
 	const midiFiles = import.meta.glob('$lib/assets/midi/*.mid', {
 		eager: true,
 		query: '?url',
 		import: 'default'
 	});
 
+	// These are decorative and intentionally randomized per page load, not persisted visitor data.
 	const bouncerConfigs = Array.from({ length: 15 }, () => ({
 		size: 0.02 + Math.random() * 0.08, // 2%–10% of viewport
 		speed: Math.floor(Math.random() * 600) + 300

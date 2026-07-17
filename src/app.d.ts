@@ -10,6 +10,7 @@ declare global {
 		// interface PageState {}
 		interface Platform {
 			env: {
+				// These names must stay aligned with the production Pages bindings and vars.
 				BOOKCLUB_DB: D1Database;
 				TURNSTILE_SITE_KEY?: string;
 				TURNSTILE_SECRET_KEY?: string;

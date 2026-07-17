@@ -5,6 +5,8 @@
 	let currentFact = $state('');
 	let isLoading = $state(false);
 
+	// The retro page intentionally uses the external facts service. Keep failure visible in the
+	// panel so the rest of the page remains usable when that service is unavailable.
 	async function generateFact() {
 		isLoading = true;
 		currentFact = '';

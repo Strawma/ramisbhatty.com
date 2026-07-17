@@ -4,6 +4,7 @@ import { getBookclubDatabase, type BookclubMember } from './db';
 
 export const BOOKCLUB_SESSION_COOKIE = 'bookclub_session';
 const SESSION_LIFETIME_SECONDS = 60 * 60 * 24 * 14;
+// Cloudflare Workers rejects PBKDF2 requests above 100,000 iterations.
 const INVITE_HASH_ITERATIONS = 100_000;
 const MAX_INVITE_HASH_ITERATIONS = 1_000_000;
 
@@ -74,6 +75,8 @@ export async function hashInviteCode(inviteCode: string): Promise<string> {
 }
 
 async function verifyInviteCode(inviteCode: string, encodedHash: string): Promise<boolean> {
+	// Stored hashes include their algorithm, cost, salt, and digest so future cost changes can be
+	// recognized without changing the database column format.
 	const [algorithm, iterationsValue, saltValue, digestValue] = encodedHash.split('$');
 	const iterations = Number(iterationsValue);
 
@@ -118,6 +121,8 @@ export async function findMemberByInviteCode(
 	database: D1Database,
 	inviteCode: string
 ): Promise<BookclubMember | null> {
+	// The club has only a handful of members. Verifying each salted hash avoids storing a fast,
+	// directly searchable hash of a low-entropy invite code.
 	const members = await database
 		.prepare(
 			`SELECT id, name, role, invite_code_hash
@@ -161,6 +166,7 @@ export async function getSessionMember(event: RequestEvent): Promise<BookclubMem
 	}
 
 	const database = getBookclubDatabase(event.platform);
+	// The cookie contains the raw token, but D1 only receives its digest if the database is leaked.
 	const tokenHash = await sha256(token);
 	const now = new Date().toISOString();
 	const result = await database

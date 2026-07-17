@@ -17,7 +17,8 @@
 	const context = getContext<BouncerManagerContext>('bouncerManager');
 
 	onMount(() => {
-		// Just register config — manager handles positioning
+		// The manager owns mutable physics state; this component contributes a config and unregisters it
+		// when the component leaves the page.
 		return context.registerBouncer({
 			id: crypto.randomUUID(),
 			size,

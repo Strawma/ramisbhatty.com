@@ -9,6 +9,7 @@ export interface BookclubMember {
 	role: BookclubRole;
 }
 
+/** Return the configured D1 binding or fail with a useful service error. */
 export function getBookclubDatabase(platform: App.Platform | undefined): D1Database {
 	const database = platform?.env.BOOKCLUB_DB;
 

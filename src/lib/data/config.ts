@@ -1,4 +1,4 @@
-// src/lib/config.ts
+// Keep public contact details and navigation destinations in one place so routes do not drift.
 
 export const contact = {
 	name: 'Ramis Bhatty',

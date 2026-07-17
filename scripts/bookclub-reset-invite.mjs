@@ -18,6 +18,7 @@ function readAdmins(output) {
 }
 
 async function main() {
+	// Reset only changes the selected admin hash; it does not create, deactivate, or delete members.
 	const admins = readAdmins(
 		await runWrangler(
 			`SELECT id, name, role FROM bookclub_members WHERE role = 'admin' AND active = 1 ORDER BY created_at;`,
