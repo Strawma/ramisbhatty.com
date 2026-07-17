@@ -1,10 +1,34 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import ChatRoom from './ChatRoom.svelte';
 	import ClubNav from './ClubNav.svelte';
 
 	let { data, form } = $props();
+	let timezoneOffset = $state(0);
+
+	onMount(() => {
+		timezoneOffset = new Date().getTimezoneOffset();
+	});
 
 	function suggestionAt(position: number) {
 		return data.dashboard.mySuggestions.find((suggestion) => suggestion.position === position);
+	}
+
+	function formatMeetingDate(value: string): string {
+		return new Date(value).toLocaleString([], {
+			weekday: 'short',
+			month: 'short',
+			day: 'numeric',
+			hour: 'numeric',
+			minute: '2-digit'
+		});
+	}
+
+	function meetingInputValue(value: string | null): string {
+		if (!value) return '';
+		const date = new Date(value);
+		const offset = date.getTimezoneOffset() * 60000;
+		return new Date(date.getTime() - offset).toISOString().slice(0, 16);
 	}
 </script>
 
@@ -62,6 +86,19 @@
 								<p class="mt-2 font-bold">Please insert literature.</p>
 							</div>
 						</div>
+						<div class="mt-4 border-2 border-black bg-[#ffffcc] p-3">
+							<p class="text-xs font-bold text-[#800000]">NEXT MEETING</p>
+							{#if data.dashboard.nextMeeting}
+								<p class="mt-2 font-bold">
+									{formatMeetingDate(data.dashboard.nextMeeting.scheduledFor)}
+								</p>
+								{#if data.dashboard.nextMeeting.note}
+									<p class="mt-1 text-xs">{data.dashboard.nextMeeting.note}</p>
+								{/if}
+							{:else}
+								<p class="mt-2 font-bold">No meeting scheduled.</p>
+							{/if}
+						</div>
 					</div>
 				</section>
 
@@ -81,7 +118,7 @@
 						</div>
 						<div>
 							<p class="text-xs font-bold text-[#000080] uppercase">
-								Reading session: {data.dashboard.activeCycle?.label ?? 'not opened'}
+								Reading session: {data.dashboard.currentCycle?.label ?? 'not opened'}
 							</p>
 							<h2 class="mt-2 text-2xl font-black">
 								{data.dashboard.currentBook?.title ?? 'The next book is classified.'}
@@ -179,35 +216,7 @@
 						</div>
 					</section>
 
-					<section id="chatroom" class="border-4 border-black bg-[#d4d0c8] shadow-[4px_4px_0_#000]">
-						<div class="border-b-2 border-black bg-[#008080] px-3 py-2 font-bold text-white">
-							RAMIS BOOK CLUB IRC // OFFLINE
-						</div>
-						<div class="flex min-h-56 flex-col p-3">
-							<div
-								class="flex-1 border-2 border-black bg-black p-3 font-mono text-xs text-green-400"
-							>
-								<p>&gt; connecting to reading-zone...</p>
-								<p>&gt; chatroom module not installed</p>
-								<p>&gt; no messages loaded</p>
-							</div>
-							<div class="mt-3 flex gap-2">
-								<input
-									disabled
-									aria-label="Chat message"
-									placeholder="type a message..."
-									class="min-w-0 flex-1 border-2 border-black bg-white px-2 py-2 text-xs"
-								/>
-								<button
-									type="button"
-									disabled
-									class="border-2 border-black bg-[#808080] px-3 py-2 font-bold text-white opacity-60"
-								>
-									SEND
-								</button>
-							</div>
-						</div>
-					</section>
+					<ChatRoom messages={data.dashboard.chatMessages} isAdmin={data.member.role === 'admin'} />
 				</div>
 
 				<div class="mt-5 grid gap-5 lg:grid-cols-2">
@@ -237,10 +246,28 @@
 												0
 											)} tickets submitted.
 										</p>
+										<form method="POST" action="?/closeCycle" class="mt-3">
+											<button
+												type="submit"
+												class="border-2 border-black bg-[#d4d0c8] px-3 py-2 font-bold shadow-[2px_2px_0_#000] hover:bg-white"
+											>
+												CLOSE SUGGESTIONS
+											</button>
+										</form>
+									</div>
+								{:else if data.dashboard.drawReadyCycle}
+									<div class="border-2 border-black bg-white p-3">
+										<p class="font-bold">DRAW READY: {data.dashboard.drawReadyCycle.label}</p>
+										<p class="mt-1 text-xs">
+											{data.dashboard.suggestionProgress.reduce(
+												(total, item) => total + item.count,
+												0
+											)} tickets submitted. The suggestion pool is locked. This draw cannot be rerun.
+										</p>
 										<form method="POST" action="?/draw" class="mt-3 space-y-2">
 											<label class="flex items-start gap-2 text-xs">
 												<input type="checkbox" name="allowIncomplete" class="mt-0.5" />
-												<span>Allow incomplete entries for this test run.</span>
+												<span>Allow the current pool even if some members have empty slots.</span>
 											</label>
 											<button
 												type="submit"
@@ -270,6 +297,56 @@
 										</form>
 									</div>
 								{/if}
+								<div class="border-2 border-black bg-[#ffffcc] p-3">
+									<p class="font-bold">NEXT MEETING</p>
+									{#if data.dashboard.nextMeeting}
+										<p class="mt-1 text-xs">
+											Currently scheduled for {formatMeetingDate(
+												data.dashboard.nextMeeting.scheduledFor
+											)}.
+										</p>
+									{/if}
+									<form method="POST" action="?/scheduleMeeting" class="mt-3 space-y-2">
+										<label class="block text-xs font-bold" for="scheduled-for">DATE AND TIME</label>
+										<input
+											id="scheduled-for"
+											name="scheduledFor"
+											type="datetime-local"
+											required
+											value={meetingInputValue(data.dashboard.nextMeeting?.scheduledFor ?? null)}
+											class="w-full border-2 border-black px-2 py-2 text-xs focus:ring-2 focus:ring-[#000080] focus:outline-none"
+										/>
+										<input type="hidden" name="timezoneOffset" value={timezoneOffset} />
+										<label class="block text-xs font-bold" for="meeting-note">NOTE (OPTIONAL)</label
+										>
+										<input
+											id="meeting-note"
+											name="note"
+											maxlength="160"
+											value={data.dashboard.nextMeeting?.note ?? ''}
+											placeholder="e.g. bring snacks"
+											class="w-full border-2 border-black px-2 py-2 text-xs focus:ring-2 focus:ring-[#000080] focus:outline-none"
+										/>
+										<div class="flex flex-wrap gap-2">
+											<button
+												type="submit"
+												class="border-2 border-black bg-[#d4d0c8] px-3 py-2 font-bold shadow-[2px_2px_0_#000] hover:bg-white"
+											>
+												SCHEDULE
+											</button>
+											{#if data.dashboard.nextMeeting}
+												<button
+													type="submit"
+													formaction="?/clearMeeting"
+													formnovalidate
+													class="border-2 border-black bg-[#fff0f0] px-3 py-2 font-bold text-[#800000] shadow-[2px_2px_0_#000] hover:bg-white"
+												>
+													CLEAR
+												</button>
+											{/if}
+										</div>
+									</form>
+								</div>
 							{:else}
 								<p class="leading-6">This panel is reserved for the club administrator.</p>
 							{/if}

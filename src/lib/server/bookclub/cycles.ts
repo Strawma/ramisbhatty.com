@@ -1,5 +1,7 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import type { BookclubMember } from './db';
+import { getChatMessages, type BookclubChatMessage } from './chat';
+import { getNextMeeting, type BookclubMeeting } from './meetings';
 
 const SUGGESTION_LIMIT = 3;
 
@@ -35,9 +37,13 @@ export interface SuggestionProgress {
 
 export interface BookclubDashboard {
 	currentBook: BookclubBook | null;
+	currentCycle: BookclubCycle | null;
 	activeCycle: BookclubCycle | null;
+	drawReadyCycle: BookclubCycle | null;
 	mySuggestions: BookclubSuggestion[];
 	suggestionProgress: SuggestionProgress[];
+	nextMeeting: BookclubMeeting | null;
+	chatMessages: BookclubChatMessage[];
 }
 
 interface BookRow {
@@ -108,7 +114,16 @@ export async function getDashboard(
 	database: D1Database,
 	member: BookclubMember
 ): Promise<BookclubDashboard> {
-	const [currentBook, cycle, mySuggestions, suggestionProgress] = await Promise.all([
+	const [
+		currentBook,
+		currentCycle,
+		activeCycle,
+		drawReadyCycle,
+		mySuggestions,
+		suggestionProgress,
+		nextMeeting,
+		chatMessages
+	] = await Promise.all([
 		database
 			.prepare(
 				`SELECT id, title, author, started_at
@@ -123,7 +138,28 @@ export async function getDashboard(
 				        b.title AS book_title, b.author AS book_author, b.started_at AS book_started_at
 				 FROM bookclub_cycles AS c
 				 LEFT JOIN bookclub_books AS b ON b.id = c.book_id
+				 ORDER BY c.created_at DESC
+				 LIMIT 1`
+			)
+			.all<CycleRow>(),
+		database
+			.prepare(
+				`SELECT c.id, c.label, c.status, c.suggestion_limit, c.book_id,
+				        b.title AS book_title, b.author AS book_author, b.started_at AS book_started_at
+				 FROM bookclub_cycles AS c
+				 LEFT JOIN bookclub_books AS b ON b.id = c.book_id
 				 WHERE c.status = 'open'
+				 ORDER BY c.created_at DESC
+				 LIMIT 1`
+			)
+			.all<CycleRow>(),
+		database
+			.prepare(
+				`SELECT c.id, c.label, c.status, c.suggestion_limit, c.book_id,
+				        b.title AS book_title, b.author AS book_author, b.started_at AS book_started_at
+				 FROM bookclub_cycles AS c
+				 LEFT JOIN bookclub_books AS b ON b.id = c.book_id
+				 WHERE c.status = 'closed'
 				 ORDER BY c.created_at DESC
 				 LIMIT 1`
 			)
@@ -148,7 +184,7 @@ export async function getDashboard(
 				   ON s.member_id = m.id
 				  AND s.cycle_id = (
 					  SELECT id FROM bookclub_cycles
-					  WHERE status = 'open'
+					  WHERE status IN ('open', 'closed')
 					  ORDER BY created_at DESC
 					  LIMIT 1
 				  )
@@ -156,14 +192,16 @@ export async function getDashboard(
 				 GROUP BY m.id, m.name
 				 ORDER BY m.name`
 			)
-			.all<ProgressRow>()
+			.all<ProgressRow>(),
+		getNextMeeting(database),
+		getChatMessages(database, member.id)
 	]);
-
-	const cycleRow = cycle.results[0] ?? null;
 
 	return {
 		currentBook: toBook(currentBook.results[0] ?? null),
-		activeCycle: toCycle(cycleRow),
+		currentCycle: toCycle(currentCycle.results[0] ?? null),
+		activeCycle: toCycle(activeCycle.results[0] ?? null),
+		drawReadyCycle: toCycle(drawReadyCycle.results[0] ?? null),
 		mySuggestions: mySuggestions.results.map((suggestion) => ({
 			id: suggestion.id,
 			position: suggestion.position,
@@ -176,7 +214,9 @@ export async function getDashboard(
 			memberId: progress.member_id,
 			memberName: progress.member_name,
 			count: progress.count
-		}))
+		})),
+		nextMeeting,
+		chatMessages
 	};
 }
 
@@ -243,6 +283,21 @@ export async function deleteSuggestion(
 		.run();
 }
 
+export async function closeCycle(database: D1Database, cycleId: string): Promise<void> {
+	const result = await database
+		.prepare(
+			`UPDATE bookclub_cycles
+			 SET status = 'closed', closed_at = COALESCE(closed_at, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+			 WHERE id = ? AND status = 'open'`
+		)
+		.bind(cycleId)
+		.run();
+
+	if (!result.meta.changes) {
+		throw new Error('This cycle is no longer open.');
+	}
+}
+
 export async function drawCycle(
 	database: D1Database,
 	cycleId: string,
@@ -259,8 +314,8 @@ export async function drawCycle(
 		.bind(cycleId)
 		.first<{ id: string; status: BookclubCycle['status']; suggestion_limit: number }>();
 
-	if (!cycle || cycle.status !== 'open') {
-		throw new Error('This cycle is no longer open.');
+	if (!cycle || !['open', 'closed'].includes(cycle.status)) {
+		throw new Error('This cycle is no longer available for drawing.');
 	}
 
 	const suggestions = await database
@@ -305,8 +360,8 @@ export async function drawCycle(
 		database
 			.prepare(
 				`UPDATE bookclub_cycles
-				 SET status = 'drawn', book_id = ?, closed_at = COALESCE(closed_at, ?)
-				 WHERE id = ? AND status = 'open'`
+					 SET status = 'drawn', book_id = ?, closed_at = COALESCE(closed_at, ?)
+					 WHERE id = ? AND status IN ('open', 'closed')`
 			)
 			.bind(bookId, now, cycleId),
 		database

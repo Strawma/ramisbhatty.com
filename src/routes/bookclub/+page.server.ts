@@ -1,17 +1,21 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { requireBookclubMember } from '$lib/server/bookclub/auth';
+import { createChatMessage, deleteChatMessage } from '$lib/server/bookclub/chat';
 import { getBookclubDatabase } from '$lib/server/bookclub/db';
 import {
+	closeCycle,
 	createCycle,
 	deleteSuggestion,
 	drawCycle,
 	getDashboard,
 	saveSuggestion
 } from '$lib/server/bookclub/cycles';
+import { clearNextMeeting, scheduleNextMeeting } from '$lib/server/bookclub/meetings';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
 	event.setHeaders({ 'cache-control': 'no-store' });
+	event.depends('bookclub:chat');
 	const member = await requireBookclubMember(event);
 	const database = getBookclubDatabase(event.platform);
 
@@ -31,15 +35,19 @@ export const actions: Actions = {
 		const form = await event.request.formData();
 		const label = form.get('label');
 
-		if (dashboard.activeCycle) {
-			return fail(400, { error: 'Close or draw the current cycle before opening another.' });
+		if (dashboard.activeCycle || dashboard.drawReadyCycle) {
+			return fail(400, { error: 'Close and draw the current cycle before opening another.' });
 		}
 
 		if (typeof label !== 'string' || label.trim().length === 0 || label.trim().length > 80) {
 			return fail(400, { error: 'Give the new cycle a short label.' });
 		}
 
-		await createCycle(database, label.trim());
+		try {
+			await createCycle(database, label.trim());
+		} catch {
+			return fail(400, { error: 'A cycle is already open.' });
+		}
 		return { success: 'A new suggestion cycle is open.' };
 	},
 
@@ -109,6 +117,116 @@ export const actions: Actions = {
 		return { success: 'Suggestion removed.' };
 	},
 
+	closeCycle: async (event) => {
+		const member = await requireBookclubMember(event);
+
+		if (member.role !== 'admin') {
+			return fail(403, { error: 'Only the club admin can close a cycle.' });
+		}
+
+		const database = getBookclubDatabase(event.platform);
+		const dashboard = await getDashboard(database, member);
+
+		if (!dashboard.activeCycle) {
+			return fail(400, { error: 'There is no open cycle to close.' });
+		}
+
+		try {
+			await closeCycle(database, dashboard.activeCycle.id);
+		} catch (error) {
+			return fail(400, {
+				error: error instanceof Error ? error.message : 'The cycle could not be closed.'
+			});
+		}
+
+		return { success: 'The suggestion cycle is closed and ready for the draw.' };
+	},
+
+	scheduleMeeting: async (event) => {
+		const member = await requireBookclubMember(event);
+
+		if (member.role !== 'admin') {
+			return fail(403, { error: 'Only the club admin can schedule a meeting.' });
+		}
+
+		const database = getBookclubDatabase(event.platform);
+		const form = await event.request.formData();
+		const scheduledFor = form.get('scheduledFor');
+		const timezoneOffset = Number(form.get('timezoneOffset'));
+		const note = form.get('note');
+
+		if (
+			typeof scheduledFor !== 'string' ||
+			!/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}$/.test(scheduledFor) ||
+			!Number.isInteger(timezoneOffset) ||
+			Math.abs(timezoneOffset) > 840
+		) {
+			return fail(400, { error: 'Choose a date and time for the next meeting.' });
+		}
+
+		const localMeetingDate = new Date(`${scheduledFor}:00.000Z`);
+		const meetingDate = new Date(localMeetingDate.getTime() + timezoneOffset * 60_000);
+		if (!Number.isFinite(meetingDate.getTime()) || meetingDate.getTime() <= Date.now()) {
+			return fail(400, { error: 'The next meeting must be in the future.' });
+		}
+
+		if (typeof note !== 'string' || note.trim().length > 160) {
+			return fail(400, { error: 'Keep the meeting note under 160 characters.' });
+		}
+
+		await scheduleNextMeeting(database, member.id, meetingDate.toISOString(), note.trim() || null);
+		return { success: 'The next meeting is on the calendar.' };
+	},
+
+	clearMeeting: async (event) => {
+		const member = await requireBookclubMember(event);
+
+		if (member.role !== 'admin') {
+			return fail(403, { error: 'Only the club admin can clear the next meeting.' });
+		}
+
+		await clearNextMeeting(getBookclubDatabase(event.platform));
+		return { success: 'The next meeting was cleared.' };
+	},
+
+	sendMessage: async (event) => {
+		const member = await requireBookclubMember(event);
+		const form = await event.request.formData();
+		const body = form.get('body');
+
+		if (typeof body !== 'string' || body.trim().length === 0 || body.trim().length > 500) {
+			return fail(400, { error: 'Messages must be between 1 and 500 characters.' });
+		}
+
+		try {
+			await createChatMessage(getBookclubDatabase(event.platform), member.id, body.trim());
+		} catch (error) {
+			return fail(429, {
+				error: error instanceof Error ? error.message : 'The message could not be sent.'
+			});
+		}
+
+		return { success: 'Message sent.' };
+	},
+
+	deleteMessage: async (event) => {
+		const member = await requireBookclubMember(event);
+
+		if (member.role !== 'admin') {
+			return fail(403, { error: 'Only the club admin can delete chat messages.' });
+		}
+
+		const form = await event.request.formData();
+		const messageId = form.get('messageId');
+
+		if (typeof messageId !== 'string' || messageId.length === 0) {
+			return fail(400, { error: 'The message could not be identified.' });
+		}
+
+		await deleteChatMessage(getBookclubDatabase(event.platform), messageId);
+		return { success: 'Message deleted.' };
+	},
+
 	draw: async (event) => {
 		const member = await requireBookclubMember(event);
 
@@ -119,15 +237,17 @@ export const actions: Actions = {
 		const database = getBookclubDatabase(event.platform);
 		const dashboard = await getDashboard(database, member);
 
-		if (!dashboard.activeCycle) {
-			return fail(400, { error: 'There is no open cycle to draw.' });
+		const cycle = dashboard.drawReadyCycle ?? dashboard.activeCycle;
+
+		if (!cycle) {
+			return fail(400, { error: 'There is no cycle ready to draw.' });
 		}
 
 		const form = await event.request.formData();
 		const allowIncomplete = form.get('allowIncomplete') === 'on';
 
 		try {
-			await drawCycle(database, dashboard.activeCycle.id, member.id, allowIncomplete);
+			await drawCycle(database, cycle.id, member.id, allowIncomplete);
 		} catch (error) {
 			return fail(400, {
 				error: error instanceof Error ? error.message : 'The draw could not be completed.'
