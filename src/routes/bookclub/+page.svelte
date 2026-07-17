@@ -1,7 +1,11 @@
 <script lang="ts">
 	import ClubNav from './ClubNav.svelte';
 
-	let { data } = $props();
+	let { data, form } = $props();
+
+	function suggestionAt(position: number) {
+		return data.dashboard.mySuggestions.find((suggestion) => suggestion.position === position);
+	}
 </script>
 
 <svelte:head>
@@ -29,6 +33,15 @@
 					<div class="p-4 sm:p-5">
 						<p class="text-xs font-bold text-[#000080] uppercase">Club bulletin</p>
 						<h2 class="mt-2 text-2xl font-black sm:text-4xl">Hello, {data.member.name}.</h2>
+						{#if form?.error || form?.success}
+							<p
+								class:text-green-700={form?.success}
+								class="mt-3 border-2 border-black bg-white px-3 py-2 font-bold text-[#800000]"
+								role={form?.error ? 'alert' : 'status'}
+							>
+								{form.error ?? form.success}
+							</p>
+						{/if}
 						<p class="mt-3 max-w-3xl leading-6">
 							The clubhouse is online. The shelves are still being arranged, but the extremely
 							serious reading operations can begin here.
@@ -36,7 +49,9 @@
 						<div class="mt-4 grid gap-2 sm:grid-cols-3">
 							<div class="border-2 border-black bg-white p-3">
 								<p class="text-xs font-bold text-[#000080]">CURRENT MISSION</p>
-								<p class="mt-2 font-bold">No book selected yet.</p>
+								<p class="mt-2 font-bold">
+									{data.dashboard.currentBook?.title ?? 'No book selected yet.'}
+								</p>
 							</div>
 							<div class="border-2 border-black bg-white p-3">
 								<p class="text-xs font-bold text-[#000080]">CLUB MORALE</p>
@@ -55,7 +70,7 @@
 					class="mt-5 border-4 border-black bg-[#d4d0c8] shadow-[4px_4px_0_#000]"
 				>
 					<div class="border-b-2 border-black bg-[#000080] px-3 py-2 font-bold text-white">
-						CURRENT BOOK // NOT CONFIGURED
+						CURRENT BOOK // {data.dashboard.currentBook ? 'ACTIVE' : 'NOT CONFIGURED'}
 					</div>
 					<div class="grid gap-4 p-4 sm:grid-cols-[140px_1fr] sm:p-5">
 						<div
@@ -65,11 +80,19 @@
 							<br />COMING SOON
 						</div>
 						<div>
-							<p class="text-xs font-bold text-[#000080] uppercase">Reading session: not opened</p>
-							<h2 class="mt-2 text-2xl font-black">The next book is classified.</h2>
+							<p class="text-xs font-bold text-[#000080] uppercase">
+								Reading session: {data.dashboard.activeCycle?.label ?? 'not opened'}
+							</p>
+							<h2 class="mt-2 text-2xl font-black">
+								{data.dashboard.currentBook?.title ?? 'The next book is classified.'}
+							</h2>
 							<p class="mt-3 leading-6">
-								Once an admin selects a book, this panel will show the author, dates, reading
-								status, and links to the club's reviews.
+								{#if data.dashboard.currentBook}
+									By {data.dashboard.currentBook.author}. The club's reviews and reading status will
+									appear here as those features come online.
+								{:else}
+									Once an admin runs the draw, this panel will show the winning book and author.
+								{/if}
 							</p>
 						</div>
 					</div>
@@ -81,27 +104,78 @@
 						class="border-4 border-black bg-[#d4d0c8] shadow-[4px_4px_0_#000]"
 					>
 						<div class="border-b-2 border-black bg-[#800080] px-3 py-2 font-bold text-white">
-							SUGGESTION BOX // 0 OF 3 USED
+							SUGGESTION BOX // {data.dashboard.mySuggestions.length} OF {data.dashboard.activeCycle
+								?.suggestionLimit ?? 3} USED
 						</div>
 						<div class="space-y-2 p-4">
 							<p class="leading-6">
-								Submit three literary gambling tickets when the next selection cycle opens.
+								{data.dashboard.activeCycle
+									? 'Submit three literary gambling tickets before the cycle closes.'
+									: 'No suggestion cycle is open. Await further literary instructions.'}
 							</p>
 							{#each [1, 2, 3] as slot (slot)}
-								<div
-									class="flex items-center justify-between border-2 border-black bg-white px-3 py-2"
+								{@const suggestion = suggestionAt(slot)}
+								<form
+									method="POST"
+									action="?/saveSuggestion"
+									class="border-2 border-black bg-white p-3"
 								>
-									<span class="font-bold">SLOT {slot}</span>
-									<span class="text-xs text-gray-600">EMPTY</span>
-								</div>
+									<input type="hidden" name="position" value={slot} />
+									{#if suggestion}
+										<input type="hidden" name="suggestionId" value={suggestion.id} />
+									{/if}
+									<div class="flex items-center justify-between gap-2">
+										<span class="font-bold">SLOT {slot}</span>
+										<span class="text-xs text-gray-600">{suggestion ? 'FILLED' : 'EMPTY'}</span>
+									</div>
+									<div class="mt-2 grid gap-2 sm:grid-cols-2">
+										<input
+											name="title"
+											value={suggestion?.title ?? ''}
+											placeholder="Book title"
+											required
+											disabled={!data.dashboard.activeCycle}
+											maxlength="200"
+											class="border-2 border-black px-2 py-2 text-xs focus:ring-2 focus:ring-[#000080] focus:outline-none"
+										/>
+										<input
+											name="author"
+											value={suggestion?.author ?? ''}
+											placeholder="Author"
+											required
+											disabled={!data.dashboard.activeCycle}
+											maxlength="120"
+											class="border-2 border-black px-2 py-2 text-xs focus:ring-2 focus:ring-[#000080] focus:outline-none"
+										/>
+									</div>
+									<div class="mt-2 flex flex-wrap gap-2">
+										<button
+											type="submit"
+											disabled={!data.dashboard.activeCycle}
+											class="border-2 border-black bg-[#d4d0c8] px-2 py-1 text-xs font-bold shadow-[2px_2px_0_#000] hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+										>
+											{suggestion ? 'UPDATE' : 'SAVE'}
+										</button>
+										{#if suggestion}
+											<button
+												type="submit"
+												formaction="?/deleteSuggestion"
+												class="border-2 border-black bg-[#fff0f0] px-2 py-1 text-xs font-bold text-[#800000] shadow-[2px_2px_0_#000] hover:bg-white"
+											>
+												DELETE
+											</button>
+										{/if}
+									</div>
+								</form>
 							{/each}
-							<button
-								type="button"
-								disabled
-								class="mt-2 border-2 border-black bg-[#808080] px-3 py-2 font-bold text-white opacity-60"
-							>
-								ADD SUGGESTION (SOON)
-							</button>
+							{#if data.dashboard.activeCycle}
+								<div class="mt-4 border-2 border-black bg-black p-3 text-xs text-lime-300">
+									<p class="font-bold text-white">MEMBER PROGRESS</p>
+									{#each data.dashboard.suggestionProgress as progress (progress.memberId)}
+										<p class="mt-1">{progress.memberName}: {progress.count}/3 tickets</p>
+									{/each}
+								</div>
+							{/if}
 						</div>
 					</section>
 
@@ -152,12 +226,53 @@
 						<div class="border-b-2 border-black bg-[#800000] px-3 py-2 font-bold text-white">
 							ADMIN CONSOLE // {data.member.role === 'admin' ? 'AVAILABLE' : 'RESTRICTED'}
 						</div>
-						<div class="p-4">
-							<p class="leading-6">
-								{data.member.role === 'admin'
-									? 'Cycle controls, member management, and the draw console will appear here.'
-									: 'This panel is reserved for the club administrator.'}
-							</p>
+						<div class="space-y-4 p-4">
+							{#if data.member.role === 'admin'}
+								{#if data.dashboard.activeCycle}
+									<div class="border-2 border-black bg-white p-3">
+										<p class="font-bold">OPEN CYCLE: {data.dashboard.activeCycle.label}</p>
+										<p class="mt-1 text-xs">
+											{data.dashboard.suggestionProgress.reduce(
+												(total, item) => total + item.count,
+												0
+											)} tickets submitted.
+										</p>
+										<form method="POST" action="?/draw" class="mt-3 space-y-2">
+											<label class="flex items-start gap-2 text-xs">
+												<input type="checkbox" name="allowIncomplete" class="mt-0.5" />
+												<span>Allow incomplete entries for this test run.</span>
+											</label>
+											<button
+												type="submit"
+												class="border-2 border-black bg-[#d4d0c8] px-3 py-2 font-bold shadow-[2px_2px_0_#000] hover:bg-white"
+											>
+												SPIN THE BOOK MACHINE
+											</button>
+										</form>
+									</div>
+								{:else}
+									<div class="border-2 border-black bg-white p-3">
+										<p class="font-bold">OPEN A NEW WEEK</p>
+										<form method="POST" action="?/createCycle" class="mt-3 flex gap-2">
+											<input
+												name="label"
+												placeholder="e.g. Week 01"
+												required
+												maxlength="80"
+												class="min-w-0 flex-1 border-2 border-black px-2 py-2 text-xs focus:ring-2 focus:ring-[#000080] focus:outline-none"
+											/>
+											<button
+												type="submit"
+												class="border-2 border-black bg-[#d4d0c8] px-3 py-2 font-bold shadow-[2px_2px_0_#000] hover:bg-white"
+											>
+												OPEN
+											</button>
+										</form>
+									</div>
+								{/if}
+							{:else}
+								<p class="leading-6">This panel is reserved for the club administrator.</p>
+							{/if}
 						</div>
 					</section>
 				</div>
