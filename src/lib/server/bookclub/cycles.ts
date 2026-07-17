@@ -47,14 +47,6 @@ export interface BookclubDashboard {
 	chatMessages: BookclubChatMessage[];
 }
 
-interface BookRow {
-	id: string;
-	title: string;
-	author: string;
-	cover_url: string | null;
-	started_at: string | null;
-}
-
 interface CycleRow {
 	id: string;
 	label: string;
@@ -82,18 +74,6 @@ interface ProgressRow {
 	count: number;
 }
 
-function toBook(row: BookRow | null): BookclubBook | null {
-	if (!row) return null;
-
-	return {
-		id: row.id,
-		title: row.title,
-		author: row.author,
-		coverUrl: row.cover_url,
-		startedAt: row.started_at
-	};
-}
-
 function toCycle(row: CycleRow | null): BookclubCycle | null {
 	if (!row) return null;
 
@@ -119,74 +99,46 @@ export async function getDashboard(
 	database: D1Database,
 	member: BookclubMember
 ): Promise<BookclubDashboard> {
-	const [
-		currentBook,
-		currentCycle,
-		activeCycle,
-		drawReadyCycle,
-		mySuggestions,
-		suggestionProgress,
-		nextMeeting,
-		chatMessages
-	] = await Promise.all([
-		database
-			.prepare(
-				`SELECT id, title, author, cover_url, started_at
-				 FROM bookclub_books
-				 ORDER BY created_at DESC
-				 LIMIT 1`
-			)
-			.all<BookRow>(),
-		database
-			.prepare(
-				`SELECT c.id, c.label, c.status, c.suggestion_limit, c.book_id,
+	const [currentCycle, actionCycle, mySuggestions, suggestionProgress, nextMeeting, chatMessages] =
+		await Promise.all([
+			database
+				.prepare(
+					`SELECT c.id, c.label, c.status, c.suggestion_limit, c.book_id,
 				        b.title AS book_title, b.author AS book_author, b.cover_url AS book_cover_url,
 				        b.started_at AS book_started_at
 				 FROM bookclub_cycles AS c
 				 LEFT JOIN bookclub_books AS b ON b.id = c.book_id
 				 ORDER BY c.created_at DESC
 				 LIMIT 1`
-			)
-			.all<CycleRow>(),
-		database
-			.prepare(
-				`SELECT c.id, c.label, c.status, c.suggestion_limit, c.book_id,
+				)
+				.all<CycleRow>(),
+			database
+				.prepare(
+					`SELECT c.id, c.label, c.status, c.suggestion_limit, c.book_id,
 				        b.title AS book_title, b.author AS book_author, b.cover_url AS book_cover_url,
 				        b.started_at AS book_started_at
 				 FROM bookclub_cycles AS c
 				 LEFT JOIN bookclub_books AS b ON b.id = c.book_id
-				 WHERE c.status = 'open'
+				 WHERE c.status IN ('open', 'closed')
 				 ORDER BY c.created_at DESC
 				 LIMIT 1`
-			)
-			.all<CycleRow>(),
-		database
-			.prepare(
-				`SELECT c.id, c.label, c.status, c.suggestion_limit, c.book_id,
-				        b.title AS book_title, b.author AS book_author, b.cover_url AS book_cover_url,
-				        b.started_at AS book_started_at
-				 FROM bookclub_cycles AS c
-				 LEFT JOIN bookclub_books AS b ON b.id = c.book_id
-				 WHERE c.status = 'closed'
-				 ORDER BY c.created_at DESC
-				 LIMIT 1`
-			)
-			.all<CycleRow>(),
-		database
-			.prepare(
-				`SELECT s.id, s.position, s.title, s.author,
+				)
+				.all<CycleRow>(),
+			database
+				.prepare(
+					`SELECT s.id, s.position, s.title, s.author,
 				        s.member_id, m.name AS member_name
 				 FROM bookclub_suggestions AS s
 				 INNER JOIN bookclub_members AS m ON m.id = s.member_id
 				 INNER JOIN bookclub_cycles AS c ON c.id = s.cycle_id
 				 WHERE s.member_id = ? AND c.status = 'open'
 				 ORDER BY s.position`
-			)
-			.bind(member.id)
-			.all<SuggestionRow>(),
-		database
-			.prepare(
-				`SELECT m.id AS member_id, m.name AS member_name, COUNT(s.id) AS count
+				)
+				.bind(member.id)
+				.all<SuggestionRow>(),
+			database
+				.prepare(
+					`SELECT m.id AS member_id, m.name AS member_name, COUNT(s.id) AS count
 				 FROM bookclub_members AS m
 				 LEFT JOIN bookclub_suggestions AS s
 				   ON s.member_id = m.id
@@ -199,17 +151,20 @@ export async function getDashboard(
 				 WHERE m.active = 1
 				 GROUP BY m.id, m.name
 				 ORDER BY m.name`
-			)
-			.all<ProgressRow>(),
-		getNextMeeting(database),
-		getChatMessages(database, member.id)
-	]);
+				)
+				.all<ProgressRow>(),
+			getNextMeeting(database),
+			getChatMessages(database, member.id)
+		]);
+
+	const currentCycleValue = toCycle(currentCycle.results[0] ?? null);
+	const actionCycleValue = toCycle(actionCycle.results[0] ?? null);
 
 	return {
-		currentBook: toBook(currentBook.results[0] ?? null),
-		currentCycle: toCycle(currentCycle.results[0] ?? null),
-		activeCycle: toCycle(activeCycle.results[0] ?? null),
-		drawReadyCycle: toCycle(drawReadyCycle.results[0] ?? null),
+		currentBook: currentCycleValue?.book ?? null,
+		currentCycle: currentCycleValue,
+		activeCycle: actionCycleValue?.status === 'open' ? actionCycleValue : null,
+		drawReadyCycle: actionCycleValue?.status === 'closed' ? actionCycleValue : null,
 		mySuggestions: mySuggestions.results.map((suggestion) => ({
 			id: suggestion.id,
 			position: suggestion.position,
@@ -226,6 +181,23 @@ export async function getDashboard(
 		nextMeeting,
 		chatMessages
 	};
+}
+
+export async function getLatestActionCycle(database: D1Database): Promise<BookclubCycle | null> {
+	const cycle = await database
+		.prepare(
+			`SELECT c.id, c.label, c.status, c.suggestion_limit, c.book_id,
+			        b.title AS book_title, b.author AS book_author, b.cover_url AS book_cover_url,
+			        b.started_at AS book_started_at
+			 FROM bookclub_cycles AS c
+			 LEFT JOIN bookclub_books AS b ON b.id = c.book_id
+			 WHERE c.status IN ('open', 'closed')
+			 ORDER BY c.created_at DESC
+			 LIMIT 1`
+		)
+		.first<CycleRow>();
+
+	return toCycle(cycle);
 }
 
 export async function createCycle(database: D1Database, label: string): Promise<void> {

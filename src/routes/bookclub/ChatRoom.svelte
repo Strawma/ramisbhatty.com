@@ -1,7 +1,5 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { invalidate } from '$app/navigation';
-	import { onMount } from 'svelte';
 
 	type Message = {
 		id: string;
@@ -14,20 +12,31 @@
 	};
 
 	let { messages, isAdmin }: { messages: Message[]; isAdmin: boolean } = $props();
+	let polledMessages = $state<Message[] | null>(null);
+	let visibleMessages = $derived(polledMessages ?? messages);
 	let isOpen = $state(true);
+
+	async function refreshMessages(): Promise<void> {
+		try {
+			const response = await fetch('/bookclub/chat', {
+				headers: { accept: 'application/json' },
+				credentials: 'same-origin'
+			});
+
+			if (response.ok) polledMessages = (await response.json()) as Message[];
+		} catch {
+			// Keep the last successful chat state when a poll fails.
+		}
+	}
 
 	$effect(() => {
 		if (!isOpen) return;
 
 		const interval = window.setInterval(() => {
-			void invalidate('bookclub:chat');
+			void refreshMessages();
 		}, 5000);
 
 		return () => window.clearInterval(interval);
-	});
-
-	onMount(() => {
-		void invalidate('bookclub:chat');
 	});
 
 	function formatMessageTime(value: string): string {
@@ -63,11 +72,11 @@
 			aria-live="polite"
 			class="flex max-h-72 min-h-40 flex-1 flex-col gap-1 overflow-y-auto border-2 border-black bg-black p-3 font-mono text-xs text-green-400"
 		>
-			{#if messages.length === 0}
+			{#if visibleMessages.length === 0}
 				<p>&gt; no messages yet. Say something about a book.</p>
 			{:else}
-				{#each messages as message, index (message.id)}
-					{@const previousMessage = messages[index - 1]}
+				{#each visibleMessages as message, index (message.id)}
+					{@const previousMessage = visibleMessages[index - 1]}
 					{#if !previousMessage || messageDateKey(previousMessage.createdAt) !== messageDateKey(message.createdAt)}
 						<div
 							role="separator"

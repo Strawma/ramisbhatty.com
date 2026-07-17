@@ -180,13 +180,26 @@ describe('book-club invitations', () => {
 		);
 	});
 
-	it('allows only one active invitation for a username', async () => {
+	it('replaces a previous invitation for the same username', async () => {
 		const admin = await createTestMember('Ramis', 'admin');
-		await createInvitation(database, admin.id, 'invite', 'alex', 'Alex');
+		const first = await createInvitation(database, admin.id, 'invite', 'alex', 'Alex');
+
+		const second = await createInvitation(database, admin.id, 'invite', 'alex', 'Another Alex');
+
+		expect(await getInvitationByToken(database, first.token)).toBeNull();
+		expect(await getInvitationByToken(database, second.token)).toMatchObject({
+			username: 'alex',
+			display_name: 'Another Alex'
+		});
+	});
+
+	it('does not create an invitation for an existing username', async () => {
+		const admin = await createTestMember('Ramis', 'admin');
+		await createTestMember('Alex');
 
 		await expect(
-			createInvitation(database, admin.id, 'invite', 'alex', 'Another Alex')
-		).rejects.toThrow();
+			createInvitation(database, admin.id, 'invite', 'alex', 'New Alex')
+		).rejects.toThrow('already assigned');
 	});
 
 	it('revokes invitations and replaces previous reset links', async () => {
@@ -354,6 +367,7 @@ describe('book-club cycles and suggestions', () => {
 		expect(result?.book_id).toBeTruthy();
 		expect(result?.title).toMatch(/^Book (Ramis|Alex) [123]$/);
 		expect(result?.suggestion_id).toBeTruthy();
+		expect((await getDashboard(database, members[0])).currentBook?.title).toBe(result?.title);
 		await expect(drawCycle(database, cycleId, members[0].id, false)).rejects.toThrow(
 			'no longer available'
 		);

@@ -9,6 +9,7 @@ import {
 	deleteSuggestion,
 	drawCycle,
 	getDashboard,
+	getLatestActionCycle,
 	saveSuggestion,
 	setBookCover
 } from '$lib/server/bookclub/cycles';
@@ -18,7 +19,6 @@ import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
 	event.setHeaders({ 'cache-control': 'no-store' });
-	event.depends('bookclub:chat');
 	const member = await requireBookclubMember(event);
 	const database = getBookclubDatabase(event.platform);
 
@@ -34,11 +34,11 @@ export const actions: Actions = {
 		}
 
 		const database = getBookclubDatabase(event.platform);
-		const dashboard = await getDashboard(database, member);
+		const actionCycle = await getLatestActionCycle(database);
 		const form = await event.request.formData();
 		const label = form.get('label');
 
-		if (dashboard.activeCycle || dashboard.drawReadyCycle) {
+		if (actionCycle) {
 			return fail(400, { error: 'Close and draw the current cycle before opening another.' });
 		}
 
@@ -57,14 +57,14 @@ export const actions: Actions = {
 	saveSuggestion: async (event) => {
 		const member = await requireBookclubMember(event);
 		const database = getBookclubDatabase(event.platform);
-		const dashboard = await getDashboard(database, member);
+		const activeCycle = await getLatestActionCycle(database);
 		const form = await event.request.formData();
 		const position = Number(form.get('position'));
 		const suggestionId = form.get('suggestionId');
 		const title = form.get('title');
 		const author = form.get('author');
 
-		if (!dashboard.activeCycle) {
+		if (!activeCycle || activeCycle.status !== 'open') {
 			return fail(400, { error: 'There is no open suggestion cycle.' });
 		}
 
@@ -83,17 +83,10 @@ export const actions: Actions = {
 			return fail(400, { error: 'Enter a title and author within the allowed lengths.' });
 		}
 
-		if (
-			typeof suggestionId !== 'string' &&
-			dashboard.mySuggestions.some((item) => item.position === position)
-		) {
-			return fail(400, { error: 'That suggestion slot is already occupied.' });
-		}
-
 		try {
 			await saveSuggestion(
 				database,
-				dashboard.activeCycle.id,
+				activeCycle.id,
 				member.id,
 				position,
 				title.trim(),
@@ -137,14 +130,14 @@ export const actions: Actions = {
 		}
 
 		const database = getBookclubDatabase(event.platform);
-		const dashboard = await getDashboard(database, member);
+		const activeCycle = await getLatestActionCycle(database);
 
-		if (!dashboard.activeCycle) {
+		if (!activeCycle || activeCycle.status !== 'open') {
 			return fail(400, { error: 'There is no open cycle to close.' });
 		}
 
 		try {
-			await closeCycle(database, dashboard.activeCycle.id);
+			await closeCycle(database, activeCycle.id);
 		} catch (error) {
 			return fail(400, {
 				error: error instanceof Error ? error.message : 'The cycle could not be closed.'
@@ -276,9 +269,7 @@ export const actions: Actions = {
 		}
 
 		const database = getBookclubDatabase(event.platform);
-		const dashboard = await getDashboard(database, member);
-
-		const cycle = dashboard.drawReadyCycle ?? dashboard.activeCycle;
+		const cycle = await getLatestActionCycle(database);
 
 		if (!cycle) {
 			return fail(400, { error: 'There is no cycle ready to draw.' });

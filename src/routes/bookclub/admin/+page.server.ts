@@ -89,14 +89,12 @@ export const actions: Actions = {
 		}
 
 		const database = getBookclubDatabase(event.platform);
-		const target = await database
-			.prepare('SELECT id FROM bookclub_members WHERE id = ? LIMIT 1')
-			.bind(memberId)
-			.first<{ id: string }>();
-
-		if (!target) return fail(404, { error: 'That member no longer exists.' });
-
-		const invitation = await createInvitation(database, member.id, 'reset', memberId);
+		let invitation;
+		try {
+			invitation = await createInvitation(database, member.id, 'reset', memberId);
+		} catch {
+			return fail(404, { error: 'That member no longer exists.' });
+		}
 		return {
 			success: 'Reset link created. Send it privately to the member.',
 			invitationUrl: new URL(`/bookclub/setup/${invitation.token}`, event.url).toString()
@@ -135,9 +133,15 @@ export const actions: Actions = {
 
 		const database = getBookclubDatabase(event.platform);
 		const target = await database
-			.prepare('SELECT id, role, active FROM bookclub_members WHERE id = ? LIMIT 1')
+			.prepare('SELECT id, username, name, role, active FROM bookclub_members WHERE id = ? LIMIT 1')
 			.bind(memberId)
-			.first<{ id: string; role: 'member' | 'admin'; active: number }>();
+			.first<{
+				id: string;
+				username: string;
+				name: string;
+				role: 'member' | 'admin';
+				active: number;
+			}>();
 
 		if (!target) return fail(404, { error: 'That member no longer exists.' });
 
@@ -153,7 +157,13 @@ export const actions: Actions = {
 			}
 		}
 
-		if (!(await setMemberActive(database, memberId, active, member.id))) {
+		if (
+			!(await setMemberActive(database, memberId, active, member.id, {
+				username: target.username,
+				name: target.name,
+				active: target.active
+			}))
+		) {
 			return fail(400, { error: 'That member status did not change.' });
 		}
 

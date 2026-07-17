@@ -66,6 +66,12 @@ export interface BookclubMemberSummary extends BookclubMember {
 	createdAt: string;
 }
 
+export interface MemberStatusTarget {
+	username: string;
+	name: string;
+	active: number;
+}
+
 function encodeBase64Url(bytes: Uint8Array): string {
 	let binary = '';
 
@@ -135,7 +141,14 @@ export async function createInvitation(
 						   AND consumed_at IS NULL AND revoked_at IS NULL`
 					)
 					.bind(value)
-			: database.prepare('SELECT 1');
+			: database
+					.prepare(
+						`UPDATE bookclub_invitations
+						 SET revoked_at = COALESCE(revoked_at, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+						 WHERE purpose = 'invite' AND username = ?
+						   AND consumed_at IS NULL AND revoked_at IS NULL`
+					)
+					.bind(normalizedValue);
 
 	const insert =
 		purpose === 'invite'
@@ -143,9 +156,20 @@ export async function createInvitation(
 					.prepare(
 						`INSERT INTO bookclub_invitations
 						 (id, purpose, token_hash, username, display_name, created_by_member_id, expires_at)
-						 VALUES (?, 'invite', ?, ?, ?, ?, ?)`
+						 SELECT ?, 'invite', ?, ?, ?, ?, ?
+						 WHERE NOT EXISTS (
+							 SELECT 1 FROM bookclub_members WHERE username = ?
+						 )`
 					)
-					.bind(id, tokenHash, normalizedValue, displayName, createdByMemberId, expiresAt)
+					.bind(
+						id,
+						tokenHash,
+						normalizedValue,
+						displayName,
+						createdByMemberId,
+						expiresAt,
+						normalizedValue
+					)
 			: database
 					.prepare(
 						`INSERT INTO bookclub_invitations
@@ -154,7 +178,11 @@ export async function createInvitation(
 					)
 					.bind(id, tokenHash, value, createdByMemberId, expiresAt);
 
-	await database.batch([revokePrevious, insert]);
+	const results = await database.batch([revokePrevious, insert]);
+
+	if (purpose === 'invite' && !results[1].meta.changes) {
+		throw new Error('That username is already assigned.');
+	}
 
 	return { id, token, expiresAt };
 }
@@ -328,12 +356,15 @@ export async function setMemberActive(
 	database: D1Database,
 	memberId: string,
 	active: boolean,
-	actorMemberId?: string
+	actorMemberId?: string,
+	knownTarget?: MemberStatusTarget
 ): Promise<boolean> {
-	const target = await database
-		.prepare('SELECT username, name, active FROM bookclub_members WHERE id = ? LIMIT 1')
-		.bind(memberId)
-		.first<{ username: string; name: string; active: number }>();
+	const target =
+		knownTarget ??
+		(await database
+			.prepare('SELECT username, name, active FROM bookclub_members WHERE id = ? LIMIT 1')
+			.bind(memberId)
+			.first<MemberStatusTarget>());
 
 	if (!target || Boolean(target.active) === active) return false;
 

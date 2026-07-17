@@ -75,6 +75,13 @@ Run the book-club test suite against an isolated local D1 database with:
 pnpm test
 ```
 
+When book-club schema changes are added, apply any pending append-only migrations to the remote D1
+database before deploying the corresponding application code:
+
+```bash
+pnpm dlx wrangler d1 migrations apply ramis-bookclub --remote
+```
+
 ### Cloudflare Pages
 
 The site is deployed through Cloudflare Workers/Pages using SvelteKit and Cloudflare Build System

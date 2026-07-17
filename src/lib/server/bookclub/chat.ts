@@ -34,22 +34,22 @@ export async function getChatMessages(
 	database: D1Database,
 	memberId: string
 ): Promise<BookclubChatMessage[]> {
-	await database
-		.prepare('DELETE FROM bookclub_chat_messages WHERE created_at < ?')
-		.bind(new Date(Date.now() - CHAT_RETENTION_MS).toISOString())
-		.run();
-
-	const messages = await database
-		.prepare(
-			`SELECT chat.id, chat.member_id, members.name AS member_name, chat.body, chat.created_at,
-			        chat.message_type
-			 FROM bookclub_chat_messages AS chat
-			 INNER JOIN bookclub_members AS members ON members.id = chat.member_id
-			 ORDER BY chat.created_at DESC
-			 LIMIT ?`
-		)
-		.bind(CHAT_MESSAGE_LIMIT)
-		.all<ChatMessageRow>();
+	const results = await database.batch([
+		database
+			.prepare('DELETE FROM bookclub_chat_messages WHERE created_at < ?')
+			.bind(new Date(Date.now() - CHAT_RETENTION_MS).toISOString()),
+		database
+			.prepare(
+				`SELECT chat.id, chat.member_id, members.name AS member_name, chat.body, chat.created_at,
+				        chat.message_type
+				 FROM bookclub_chat_messages AS chat
+				 INNER JOIN bookclub_members AS members ON members.id = chat.member_id
+				 ORDER BY chat.created_at DESC
+				 LIMIT ?`
+			)
+			.bind(CHAT_MESSAGE_LIMIT)
+	]);
+	const messages = results[1] as { results: ChatMessageRow[] };
 
 	return messages.results.reverse().map((message) => ({
 		id: message.id,
@@ -69,14 +69,6 @@ export function prepareChatAnnouncement(database: D1Database, memberId: string, 
 			 VALUES (?, ?, ?, 'announcement')`
 		)
 		.bind(crypto.randomUUID(), memberId, body);
-}
-
-export async function createChatAnnouncement(
-	database: D1Database,
-	memberId: string,
-	body: string
-): Promise<void> {
-	await prepareChatAnnouncement(database, memberId, body).run();
 }
 
 export async function createChatMessage(
