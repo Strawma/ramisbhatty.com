@@ -158,6 +158,23 @@ export async function createSession(database: D1Database, memberId: string): Pro
 	return token;
 }
 
+export function setBookclubSessionCookie(event: RequestEvent, token: string): void {
+	event.cookies.set(BOOKCLUB_SESSION_COOKIE, token, {
+		httpOnly: true,
+		secure: event.url.protocol === 'https:',
+		sameSite: 'lax',
+		maxAge: SESSION_LIFETIME_SECONDS,
+		path: '/bookclub'
+	});
+}
+
+export async function invalidateMemberSessions(
+	database: D1Database,
+	memberId: string
+): Promise<void> {
+	await database.prepare('DELETE FROM bookclub_sessions WHERE member_id = ?').bind(memberId).run();
+}
+
 export async function getSessionMember(event: RequestEvent): Promise<BookclubMember | null> {
 	const token = event.cookies.get(BOOKCLUB_SESSION_COOKIE);
 

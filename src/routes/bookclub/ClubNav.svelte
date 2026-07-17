@@ -39,6 +39,15 @@
 		</ul>
 	</nav>
 
+	{#if member.role === 'admin'}
+		<a
+			href={resolve('/bookclub/admin')}
+			class="mt-2 block border-2 border-black bg-[#fff0f0] px-2 py-1 text-sm font-bold text-[#800000] underline shadow-[2px_2px_0_#000] hover:bg-white focus:ring-2 focus:ring-[#000080] focus:outline-none"
+		>
+			&gt; Admin panel
+		</a>
+	{/if}
+
 	<div class="mt-4 border-2 border-black bg-black p-2 font-mono text-xs text-lime-300">
 		<p>USER: {member.name}</p>
 		<p>ROLE: {member.role.toUpperCase()}</p>

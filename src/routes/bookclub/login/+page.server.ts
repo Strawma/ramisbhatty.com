@@ -1,9 +1,9 @@
 import { fail, redirect } from '@sveltejs/kit';
 import {
-	BOOKCLUB_SESSION_COOKIE,
 	createSession,
 	findMemberByInviteCode,
-	getSessionMember
+	getSessionMember,
+	setBookclubSessionCookie
 } from '$lib/server/bookclub/auth';
 import { getBookclubDatabase } from '$lib/server/bookclub/db';
 import { verifyTurnstileToken } from '$lib/server/bookclub/turnstile';
@@ -59,13 +59,7 @@ export const actions: Actions = {
 
 		const token = await createSession(database, member.id);
 
-		event.cookies.set(BOOKCLUB_SESSION_COOKIE, token, {
-			httpOnly: true,
-			secure: event.url.protocol === 'https:',
-			sameSite: 'lax',
-			maxAge: 60 * 60 * 24 * 14,
-			path: '/bookclub'
-		});
+		setBookclubSessionCookie(event, token);
 
 		throw redirect(303, '/bookclub');
 	}

@@ -13,6 +13,13 @@ import {
 } from '../src/lib/server/bookclub/chat';
 import { findBookCover } from '../src/lib/server/bookclub/covers';
 import {
+	consumeInvitation,
+	createInvitation,
+	getInvitationByToken,
+	revokeInvitation,
+	setMemberActive
+} from '../src/lib/server/bookclub/invitations';
+import {
 	closeCycle,
 	createCycle,
 	deleteSuggestion,
@@ -38,6 +45,7 @@ async function clearDatabase(): Promise<void> {
 	await database.batch([
 		database.prepare('DELETE FROM bookclub_chat_messages'),
 		database.prepare('DELETE FROM bookclub_meetings'),
+		database.prepare('DELETE FROM bookclub_invitations'),
 		database.prepare('DELETE FROM bookclub_reviews'),
 		database.prepare('DELETE FROM bookclub_draws'),
 		database.prepare('DELETE FROM bookclub_suggestions'),
@@ -114,6 +122,82 @@ describe('book-club authentication', () => {
 		expect(token).toHaveLength(43);
 		expect(session?.token_hash).not.toBe(token);
 		expect(new Date(session?.expires_at ?? 0).getTime()).toBeGreaterThan(Date.now());
+	});
+});
+
+describe('book-club invitations', () => {
+	it('creates a one-use member invitation and consumes it into a member account', async () => {
+		const admin = await createTestMember('Ramis', 'admin');
+		const invitation = await createInvitation(database, admin.id, 'invite', 'Alex');
+
+		expect(invitation.token).not.toContain('$');
+		expect(
+			await database
+				.prepare('SELECT token_hash FROM bookclub_invitations WHERE id = ?')
+				.bind(invitation.id)
+				.first<{ token_hash: string }>()
+		).not.toMatchObject({ token_hash: invitation.token });
+		expect(await getInvitationByToken(database, invitation.token)).toMatchObject({
+			purpose: 'invite',
+			display_name: 'Alex'
+		});
+
+		await expect(
+			consumeInvitation(database, invitation.token, 'a'.repeat(16))
+		).resolves.toMatchObject({
+			name: 'Alex',
+			role: 'member'
+		});
+		expect(await findMemberByInviteCode(database, 'a'.repeat(16))).toMatchObject({ name: 'Alex' });
+		await expect(consumeInvitation(database, invitation.token, 'b'.repeat(16))).rejects.toThrow(
+			'invalid or expired'
+		);
+	});
+
+	it('revokes invitations and replaces previous reset links', async () => {
+		const admin = await createTestMember('Ramis', 'admin');
+		const member = await createTestMember('Alex');
+		const first = await createInvitation(database, admin.id, 'reset', member.id);
+		const second = await createInvitation(database, admin.id, 'reset', member.id);
+
+		expect(await getInvitationByToken(database, first.token)).toBeNull();
+		expect(await getInvitationByToken(database, second.token)).not.toBeNull();
+		expect(await revokeInvitation(database, second.id)).toBe(true);
+		expect(await getInvitationByToken(database, second.token)).toBeNull();
+	});
+
+	it('resets a member code and invalidates their existing sessions', async () => {
+		const admin = await createTestMember('Ramis', 'admin');
+		const member = await createTestMember('Alex', 'member', 'member-code');
+		await createSession(database, member.id);
+		const invitation = await createInvitation(database, admin.id, 'reset', member.id);
+
+		await consumeInvitation(database, invitation.token, 'new-member-code');
+		expect(
+			await database
+				.prepare('SELECT COUNT(*) AS count FROM bookclub_sessions WHERE member_id = ?')
+				.bind(member.id)
+				.first<{ count: number }>()
+		).toMatchObject({ count: 0 });
+		expect(await findMemberByInviteCode(database, 'member-code')).toBeNull();
+		expect(await findMemberByInviteCode(database, 'new-member-code')).toMatchObject({
+			name: 'Alex'
+		});
+	});
+
+	it('deactivates a member and clears their sessions', async () => {
+		const member = await createTestMember('Alex');
+		await createSession(database, member.id);
+
+		expect(await setMemberActive(database, member.id, false)).toBe(true);
+		expect(
+			await database
+				.prepare(
+					'SELECT active, COUNT(bookclub_sessions.id) AS sessions FROM bookclub_members LEFT JOIN bookclub_sessions ON bookclub_sessions.member_id = bookclub_members.id WHERE bookclub_members.id = ?'
+				)
+				.bind(member.id)
+				.first<{ active: number; sessions: number }>()
+		).toMatchObject({ active: 0, sessions: 0 });
 	});
 });
 
