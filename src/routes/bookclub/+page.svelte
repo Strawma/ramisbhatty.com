@@ -1,15 +1,21 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { onMount } from 'svelte';
+	import bookclubSystemMessages from '$lib/data/bookclub-system-messages.json';
+	import BackgroundMusic from '$lib/components/bookclub/BackgroundMusic.svelte';
 	import ChatRoom from './ChatRoom.svelte';
 	import ClubNav from './ClubNav.svelte';
 
 	let { data, form } = $props();
 	let timezoneOffset = $state(0);
 	let coverFailed = $state(false);
+	let systemMessage = $state(bookclubSystemMessages[0] ?? 'Please insert literature.');
 
 	onMount(() => {
 		timezoneOffset = new Date().getTimezoneOffset();
+		systemMessage =
+			bookclubSystemMessages[Math.floor(Math.random() * bookclubSystemMessages.length)] ??
+			systemMessage;
 	});
 
 	function suggestionAt(position: number) {
@@ -31,6 +37,42 @@
 		const date = new Date(value);
 		const offset = date.getTimezoneOffset() * 60000;
 		return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+	}
+
+	function getClubMorale(): { label: string; detail: string } {
+		const submitted = data.dashboard.suggestionProgress.reduce(
+			(total, progress) => total + progress.count,
+			0
+		);
+
+		if (data.dashboard.activeCycle) {
+			return {
+				label: 'SUGGESTION FRENZY',
+				detail: `${submitted} literary ticket${submitted === 1 ? '' : 's'} submitted.`
+			};
+		}
+
+		if (data.dashboard.drawReadyCycle) {
+			return { label: 'DRAW FEVER', detail: 'The book machine is warmed up.' };
+		}
+
+		if (data.dashboard.currentBook && data.dashboard.nextMeeting) {
+			return { label: 'FULLY BOOKED', detail: 'A book and a social appointment. Excellent.' };
+		}
+
+		if (data.dashboard.currentBook) {
+			return { label: 'READING QUIETLY', detail: 'The current book is doing most of the work.' };
+		}
+
+		return { label: 'AWAITING LITERATURE', detail: 'Morale will improve when a book appears.' };
+	}
+
+	function formatLastUpdate(value: string): string {
+		return new Date(value).toLocaleTimeString([], {
+			hour: '2-digit',
+			minute: '2-digit',
+			second: '2-digit'
+		});
 	}
 </script>
 
@@ -81,11 +123,12 @@
 							</div>
 							<div class="border-2 border-black bg-white p-3">
 								<p class="text-xs font-bold text-[#000080]">CLUB MORALE</p>
-								<p class="mt-2 font-bold text-green-700">PROMISING</p>
+								<p class="mt-2 font-bold text-green-700">{getClubMorale().label}</p>
+								<p class="mt-1 text-xs">{getClubMorale().detail}</p>
 							</div>
 							<div class="border-2 border-black bg-white p-3">
 								<p class="text-xs font-bold text-[#000080]">SYSTEM MESSAGE</p>
-								<p class="mt-2 font-bold">Please insert literature.</p>
+								<p class="mt-2 font-bold">{systemMessage}</p>
 							</div>
 						</div>
 						<div class="mt-4 border-2 border-black bg-[#ffffcc] p-3">
@@ -101,6 +144,7 @@
 								<p class="mt-2 font-bold">No meeting scheduled.</p>
 							{/if}
 						</div>
+						<BackgroundMusic />
 					</div>
 				</section>
 
@@ -408,7 +452,7 @@
 		</div>
 
 		<footer class="border-t-4 border-black bg-[#808080] px-3 py-2 text-xs text-white">
-			BMBMT // ALL SYSTEMS NOMINALLY OPERATIONAL // LAST UPDATE: NOW-ish
+			BMBMT // ALL SYSTEMS NOMINALLY OPERATIONAL // LAST UPDATE: {formatLastUpdate(data.loadedAt)} LOCAL
 		</footer>
 	</div>
 </main>

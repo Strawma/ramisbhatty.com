@@ -21,8 +21,9 @@ export const load: PageServerLoad = async (event) => {
 	event.setHeaders({ 'cache-control': 'no-store' });
 	const member = await requireBookclubMember(event);
 	const database = getBookclubDatabase(event.platform);
+	const dashboard = await getDashboard(database, member);
 
-	return { member, dashboard: await getDashboard(database, member) };
+	return { member, dashboard, loadedAt: new Date().toISOString() };
 };
 
 export const actions: Actions = {

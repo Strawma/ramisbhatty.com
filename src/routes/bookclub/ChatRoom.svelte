@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { SvelteSet } from 'svelte/reactivity';
 
 	type Message = {
 		id: string;
@@ -15,6 +16,11 @@
 	let polledMessages = $state<Message[] | null>(null);
 	let visibleMessages = $derived(polledMessages ?? messages);
 	let isOpen = $state(true);
+	let soundsEnabled = $state(false);
+	let soundUnavailable = $state(false);
+	let audioContext: AudioContext | null = null;
+	let hasSeenMessages = false;
+	const seenMessageIds = new SvelteSet<string>();
 
 	async function refreshMessages(): Promise<void> {
 		try {
@@ -38,6 +44,78 @@
 
 		return () => window.clearInterval(interval);
 	});
+
+	$effect(() => {
+		const currentMessages = visibleMessages;
+		const newMessages = currentMessages.filter((message) => !seenMessageIds.has(message.id));
+
+		for (const message of currentMessages) seenMessageIds.add(message.id);
+
+		if (!hasSeenMessages) {
+			hasSeenMessages = true;
+			return;
+		}
+
+		if (soundsEnabled) {
+			for (const message of newMessages) {
+				if (!message.isOwn) playMessageSound(message);
+			}
+		}
+	});
+
+	function getAudioContext(): AudioContext {
+		return (audioContext ??= new AudioContext());
+	}
+
+	function playTone(
+		frequency: number,
+		duration: number,
+		delay: number,
+		type: OscillatorType
+	): void {
+		if (!audioContext || audioContext.state !== 'running') return;
+
+		const start = audioContext.currentTime + delay;
+		const oscillator = audioContext.createOscillator();
+		const gain = audioContext.createGain();
+		oscillator.type = type;
+		oscillator.frequency.setValueAtTime(frequency, start);
+		gain.gain.setValueAtTime(0.0001, start);
+		gain.gain.exponentialRampToValueAtTime(0.045, start + 0.01);
+		gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+		oscillator.connect(gain).connect(audioContext.destination);
+		oscillator.start(start);
+		oscillator.stop(start + duration + 0.02);
+	}
+
+	function playMessageSound(message: Message): void {
+		if (message.isAnnouncement) {
+			if (message.body.startsWith('MEMBER REMOVED:')) {
+				playTone(240, 0.12, 0, 'sawtooth');
+				playTone(150, 0.2, 0.12, 'sawtooth');
+				return;
+			}
+
+			playTone(520, 0.1, 0, 'triangle');
+			playTone(780, 0.16, 0.1, 'triangle');
+			return;
+		}
+
+		playTone(660, 0.12, 0, 'sine');
+	}
+
+	async function toggleSounds(): Promise<void> {
+		try {
+			const context = getAudioContext();
+			if (context.state === 'suspended') await context.resume();
+			soundsEnabled = !soundsEnabled;
+			soundUnavailable = false;
+			if (soundsEnabled) playTone(660, 0.12, 0, 'sine');
+		} catch {
+			soundsEnabled = false;
+			soundUnavailable = true;
+		}
+	}
 
 	function formatMessageTime(value: string): string {
 		return new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -67,6 +145,25 @@
 		BMBMT IRC // {isOpen ? 'ONLINE' : 'PAUSED'}
 	</summary>
 	<div class="flex min-h-56 flex-col p-3">
+		<div class="mb-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-gray-600">
+			<span>Incoming messages use browser-generated tones.</span>
+			<button
+				type="button"
+				onclick={toggleSounds}
+				class="border-2 border-black bg-[#d4d0c8] px-2 py-1 font-bold text-black hover:bg-white focus:ring-2 focus:ring-[#000080] focus:outline-none"
+				aria-pressed={soundsEnabled}
+			>
+				{soundsEnabled ? 'SOUNDS: ON' : 'SOUNDS: OFF'}
+			</button>
+		</div>
+		{#if soundUnavailable}
+			<p
+				class="mb-3 border-2 border-black bg-[#fff0f0] px-2 py-1 text-[10px] text-[#800000]"
+				role="status"
+			>
+				Browser audio is unavailable.
+			</p>
+		{/if}
 		<div
 			aria-live="polite"
 			class="flex max-h-72 min-h-40 flex-1 flex-col gap-1 overflow-y-auto border-2 border-black bg-black p-3 font-mono text-xs text-green-400"
