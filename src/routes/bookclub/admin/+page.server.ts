@@ -12,8 +12,11 @@ import {
 	getMemberSummaries,
 	revokeInvitation,
 	setMemberActive,
+	setMemberChatColor,
+	setMemberDisplayName,
 	setMemberUsername
 } from '$lib/server/bookclub/invitations';
+import { isValidChatColor, normalizeChatColor } from '$lib/server/bookclub/colors';
 import type { Actions, PageServerLoad } from './$types';
 
 async function requireAdmin(event: RequestEvent) {
@@ -40,6 +43,55 @@ export const load: PageServerLoad = async (event) => {
 };
 
 export const actions: Actions = {
+	changeDisplayName: async (event) => {
+		const member = await requireAdmin(event);
+		const form = await event.request.formData();
+		const displayName = form.get('displayName');
+
+		if (
+			typeof displayName !== 'string' ||
+			displayName.trim().length === 0 ||
+			displayName.trim().length > 24 ||
+			/[\r\n]/.test(displayName)
+		) {
+			return fail(400, { error: 'Choose a display name between 1 and 24 characters.' });
+		}
+
+		if (
+			!(await setMemberDisplayName(
+				getBookclubDatabase(event.platform),
+				member.id,
+				displayName.trim()
+			))
+		) {
+			return fail(400, { error: 'That is already your display name.' });
+		}
+
+		return { success: 'Display name updated.' };
+	},
+
+	changeChatColor: async (event) => {
+		const member = await requireAdmin(event);
+		const form = await event.request.formData();
+		const chatColor = form.get('chatColor');
+
+		if (typeof chatColor !== 'string' || !isValidChatColor(normalizeChatColor(chatColor))) {
+			return fail(400, { error: 'Choose a valid six-digit chat color.' });
+		}
+
+		if (
+			!(await setMemberChatColor(
+				getBookclubDatabase(event.platform),
+				member.id,
+				normalizeChatColor(chatColor)
+			))
+		) {
+			return fail(400, { error: 'That chat color is already in use.' });
+		}
+
+		return { success: 'Chat color updated.' };
+	},
+
 	createInvitation: async (event) => {
 		const member = await requireAdmin(event);
 		const form = await event.request.formData();

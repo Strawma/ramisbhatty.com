@@ -4,6 +4,7 @@
 	import bookclubSystemMessages from '$lib/data/bookclub-system-messages.json';
 	import DashboardPanel from '$lib/components/bookclub/DashboardPanel.svelte';
 	import ClubhouseBackdrop from '$lib/components/bookclub/ClubhouseBackdrop.svelte';
+	import ProfileSettings from '$lib/components/bookclub/ProfileSettings.svelte';
 	import {
 		completeOrder,
 		loadDashboardPreferences,
@@ -471,6 +472,32 @@
 										Past books and reviews will appear here after the first reading session.
 									</p>
 								</div>
+							</section>
+						</DashboardPanel>
+					{:else if panelId === 'profile'}
+						<DashboardPanel
+							panelId="profile"
+							title="PROFILE"
+							position={dashboardOrder.indexOf(panelId)}
+							total={visiblePanelIds.length}
+							collapsed={inTray}
+							tray={inTray}
+							wide={shouldSpanPanel('profile', inTray)}
+							onToggleCollapsed={() => togglePanel('profile')}
+							onMove={(direction) => movePanel('profile', direction)}
+							onDragStart={(event) => handleDragStart('profile', event)}
+							onDragOver={handleDragOver}
+							onDrop={(event) => handleDrop('profile', event)}
+							onDragEnd={handleDragEnd}
+						>
+							<section
+								id="profile"
+								class="border-4 border-black bg-[#d4d0c8] shadow-[4px_4px_0_#000]"
+							>
+								<div class="border-b-2 border-black bg-[#008080] px-3 py-2 font-bold text-white">
+									PROFILE // CLUB IDENTITY
+								</div>
+								<ProfileSettings member={data.member} />
 							</section>
 						</DashboardPanel>
 					{:else if panelId === 'admin' && data.member.role === 'admin'}

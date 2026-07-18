@@ -5,6 +5,7 @@ export const DASHBOARD_PANEL_IDS = [
 	'suggestions',
 	'chatroom',
 	'archive',
+	'profile',
 	'admin'
 ] as const;
 
@@ -59,7 +60,13 @@ export function saveDashboardPreferences(preferences: DashboardPreferences): voi
 }
 
 export function completeOrder(order: DashboardPanelId[]): DashboardPanelId[] {
-	return [...new Set([...order, ...DASHBOARD_PANEL_IDS])];
+	const completedOrder = [...new Set([...order, ...DASHBOARD_PANEL_IDS])];
+	if (order.includes('profile')) return completedOrder;
+
+	const profileIndex = completedOrder.indexOf('profile');
+	completedOrder.splice(profileIndex, 1);
+	completedOrder.splice(completedOrder.indexOf('admin'), 0, 'profile');
+	return completedOrder;
 }
 
 function isPanelId(value: unknown): value is DashboardPanelId {

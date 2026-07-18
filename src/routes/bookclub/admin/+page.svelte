@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import ProfileSettings from '$lib/components/bookclub/ProfileSettings.svelte';
 	import ClubNav from '../ClubNav.svelte';
 
 	let { data, form } = $props();
@@ -40,6 +41,12 @@
 			<ClubNav member={data.member} />
 
 			<div class="min-w-0 flex-1 bg-[#008080] p-3 sm:p-5">
+				<section class="mb-5 border-4 border-black bg-[#d4d0c8] shadow-[4px_4px_0_#000]">
+					<div class="border-b-2 border-black bg-[#008080] px-3 py-2 font-bold text-white">
+						PROFILE // CLUB IDENTITY
+					</div>
+					<ProfileSettings member={data.member} />
+				</section>
 				<section class="border-4 border-black bg-[#d4d0c8] shadow-[4px_4px_0_#000]">
 					<div class="border-b-2 border-black bg-[#800000] px-3 py-2 font-bold text-white">
 						ADMIN CONSOLE // MEMBER OPERATIONS
