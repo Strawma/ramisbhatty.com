@@ -8,6 +8,7 @@ export interface BookclubMember {
 	username: string;
 	name: string;
 	role: BookclubRole;
+	chatColor: string;
 }
 
 /** Return the configured D1 binding or fail with a useful service error. */

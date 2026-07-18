@@ -15,6 +15,7 @@ export interface BookclubChatMessage {
 	id: string;
 	memberId: string;
 	memberName: string;
+	memberColor: string;
 	body: string;
 	createdAt: string;
 	isOwn: boolean;
@@ -26,6 +27,7 @@ interface ChatMessageRow {
 	id: string;
 	member_id: string;
 	member_name: string;
+	member_color: string;
 	body: string;
 	created_at: string;
 	message_type: 'user' | 'announcement';
@@ -38,7 +40,8 @@ export async function getChatMessages(
 ): Promise<BookclubChatMessage[]> {
 	const messages = await database
 		.prepare(
-			`SELECT chat.id, chat.member_id, members.name AS member_name, chat.body, chat.created_at,
+			`SELECT chat.id, chat.member_id, members.name AS member_name, members.chat_color AS member_color,
+			        chat.body, chat.created_at,
 			        chat.message_type, chat.deleted_at
 			 FROM bookclub_chat_messages AS chat
 			 INNER JOIN bookclub_members AS members ON members.id = chat.member_id
@@ -53,6 +56,7 @@ export async function getChatMessages(
 		id: message.id,
 		memberId: message.member_id,
 		memberName: message.member_name,
+		memberColor: message.member_color,
 		body: message.body,
 		createdAt: message.created_at,
 		isOwn: message.member_id === memberId,

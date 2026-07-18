@@ -11,6 +11,7 @@
 		id: string;
 		memberId: string;
 		memberName: string;
+		memberColor: string;
 		body: string;
 		createdAt: string;
 		isOwn: boolean;
@@ -259,8 +260,10 @@
 								>SYSTEM: {message.body}</span
 							>
 						{:else}
-							<span class="min-w-0 truncate font-bold text-cyan-300" title={message.memberName}
-								>{message.memberName}:</span
+							<span
+								style:color={message.memberColor}
+								class="min-w-0 truncate font-bold"
+								title={message.memberName}>{message.memberName}:</span
 							>
 							<span
 								class:text-gray-500={message.isDeleted}

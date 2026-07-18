@@ -10,6 +10,7 @@ const MAX_INVITE_HASH_ITERATIONS = 1_000_000;
 
 interface StoredMember extends BookclubMember {
 	invite_code_hash: string;
+	chat_color: string;
 }
 
 const USERNAME_PATTERN = /^[a-z0-9][a-z0-9._-]{2,31}$/;
@@ -134,7 +135,7 @@ export async function findMemberByUsernameAndInviteCode(
 ): Promise<BookclubMember | null> {
 	const member = await database
 		.prepare(
-			`SELECT id, username, name, role, invite_code_hash
+			`SELECT id, username, name, role, chat_color, invite_code_hash
 			 FROM bookclub_members
 			 WHERE username = ? AND active = 1
 			 LIMIT 1`
@@ -144,7 +145,13 @@ export async function findMemberByUsernameAndInviteCode(
 
 	if (!member || !(await verifyInviteCode(inviteCode, member.invite_code_hash))) return null;
 
-	return { id: member.id, username: member.username, name: member.name, role: member.role };
+	return {
+		id: member.id,
+		username: member.username,
+		name: member.name,
+		role: member.role,
+		chatColor: member.chat_color
+	};
 }
 
 export async function createSession(database: D1Database, memberId: string): Promise<string> {
@@ -193,7 +200,7 @@ export async function getSessionMember(event: RequestEvent): Promise<BookclubMem
 	const now = new Date().toISOString();
 	const result = await database
 		.prepare(
-			`SELECT m.id, m.username, m.name, m.role
+			`SELECT m.id, m.username, m.name, m.role, m.chat_color AS chatColor
 			 FROM bookclub_sessions AS s
 			 INNER JOIN bookclub_members AS m ON m.id = s.member_id
 			 WHERE s.token_hash = ?

@@ -6,6 +6,7 @@
 	type Member = {
 		name: string;
 		role: 'member' | 'admin';
+		chatColor: string;
 	};
 
 	let { member }: { member: Member } = $props();
@@ -80,6 +81,33 @@
 				class="w-full border-2 border-black bg-[#d4d0c8] px-2 py-1 text-xs font-bold shadow-[2px_2px_0_#000] hover:bg-white focus:ring-2 focus:ring-[#000080] focus:outline-none"
 			>
 				SAVE NAME
+			</button>
+		</form>
+	</details>
+
+	<details class="mt-3 border-2 border-black bg-[#d4d0c8]">
+		<summary
+			class="cursor-pointer px-2 py-1 text-sm font-bold underline hover:bg-white focus:ring-2 focus:ring-[#000080] focus:outline-none"
+		>
+			EDIT CHAT COLOR
+		</summary>
+		<form method="POST" action="/bookclub?/changeChatColor" use:enhance class="space-y-2 p-2">
+			<label for="sidebar-chat-color" class="block text-xs font-bold text-[#000080]"
+				>YOUR CHAT COLOR</label
+			>
+			<input
+				id="sidebar-chat-color"
+				name="chatColor"
+				type="color"
+				value={member.chatColor}
+				class="h-10 w-full cursor-pointer border-2 border-black bg-white p-1"
+			/>
+			<p class="text-[10px] text-gray-600">Your name in new chat messages uses this color.</p>
+			<button
+				type="submit"
+				class="w-full border-2 border-black bg-[#d4d0c8] px-2 py-1 text-xs font-bold shadow-[2px_2px_0_#000] hover:bg-white focus:ring-2 focus:ring-[#000080] focus:outline-none"
+			>
+				SAVE COLOR
 			</button>
 		</form>
 	</details>

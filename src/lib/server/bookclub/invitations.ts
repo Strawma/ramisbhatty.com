@@ -1,6 +1,7 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import { hashInviteCode, invalidateMemberSessions, normalizeUsername } from './auth';
 import { prepareChatAnnouncement } from './chat';
+import { getChatColorAssignment, isValidChatColor, normalizeChatColor } from './colors';
 import type { BookclubMember } from './db';
 
 const INVITATION_LIFETIME_MS = 48 * 60 * 60 * 1000;
@@ -53,11 +54,11 @@ interface SetupInvitationRow {
 
 interface ActiveInvitationRow extends SetupInvitationRow {
 	token_hash: string;
+	member_chat_color: string | null;
 }
 
 interface MemberRow extends BookclubMember {
 	active: number;
-	username: string;
 	created_at: string;
 }
 
@@ -228,7 +229,7 @@ export async function getInvitationSummaries(database: D1Database): Promise<Book
 export async function getMemberSummaries(database: D1Database): Promise<BookclubMemberSummary[]> {
 	const result = await database
 		.prepare(
-			'SELECT id, username, name, role, active, created_at FROM bookclub_members ORDER BY created_at, name'
+			'SELECT id, username, name, role, chat_color AS chatColor, active, created_at FROM bookclub_members ORDER BY created_at, name'
 		)
 		.all<MemberRow>();
 
@@ -237,6 +238,7 @@ export async function getMemberSummaries(database: D1Database): Promise<Bookclub
 		username: member.username,
 		name: member.name,
 		role: member.role,
+		chatColor: member.chatColor,
 		active: Boolean(member.active),
 		createdAt: member.created_at
 	}));
@@ -267,7 +269,8 @@ export async function consumeInvitation(
 	const invitation = await database
 		.prepare(
 			`SELECT i.id, i.purpose, i.token_hash, i.member_id, m.name AS member_name,
-			        i.display_name, COALESCE(i.username, m.username) AS username, i.expires_at
+			        m.chat_color AS member_chat_color, i.display_name,
+			        COALESCE(i.username, m.username) AS username, i.expires_at
 			 FROM bookclub_invitations AS i
 			 LEFT JOIN bookclub_members AS m ON m.id = i.member_id
 			 WHERE i.token_hash = ?
@@ -286,15 +289,16 @@ export async function consumeInvitation(
 
 	if (invitation.purpose === 'invite') {
 		const memberId = invitation.id;
+		const chatColorAssignment = getChatColorAssignment();
 		const results = await database.batch([
 			database
 				.prepare(
-					`INSERT INTO bookclub_members (id, username, name, invite_code_hash, role)
-					 SELECT ?, username, display_name, ?, 'member'
+					`INSERT INTO bookclub_members (id, username, name, invite_code_hash, role, chat_color)
+					 SELECT ?, username, display_name, ?, 'member', ${chatColorAssignment.expression}
 					 FROM bookclub_invitations
 					 WHERE id = ? AND consumed_at IS NULL AND revoked_at IS NULL AND expires_at > ?`
 				)
-				.bind(memberId, inviteCodeHash, invitation.id, now),
+				.bind(memberId, inviteCodeHash, ...chatColorAssignment.bindings, invitation.id, now),
 			prepareChatAnnouncement(
 				database,
 				memberId,
@@ -309,12 +313,19 @@ export async function consumeInvitation(
 		]);
 
 		if (!results[0].meta.changes) throw new Error('This setup link is invalid or expired.');
+		const savedMember = await database
+			.prepare('SELECT chat_color FROM bookclub_members WHERE id = ? LIMIT 1')
+			.bind(memberId)
+			.first<{ chat_color: string }>();
+
+		if (!savedMember) throw new Error('The new member could not be loaded.');
 
 		return {
 			id: memberId,
 			username: invitation.username ?? 'member',
 			name: invitation.display_name ?? 'Book club member',
-			role: 'member'
+			role: 'member',
+			chatColor: savedMember.chat_color
 		};
 	}
 
@@ -348,7 +359,8 @@ export async function consumeInvitation(
 		id: invitation.member_id,
 		username: invitation.username ?? 'member',
 		name: invitation.member_name ?? 'Book club member',
-		role: 'member'
+		role: 'member',
+		chatColor: invitation.member_chat_color ?? '#22d3ee'
 	};
 }
 
@@ -427,4 +439,28 @@ export async function setMemberDisplayName(
 	]);
 
 	return true;
+}
+
+export async function setMemberChatColor(
+	database: D1Database,
+	memberId: string,
+	chatColor: string
+): Promise<boolean> {
+	const normalizedColor = normalizeChatColor(chatColor);
+	if (!isValidChatColor(normalizedColor)) return false;
+
+	const result = await database
+		.prepare(
+			`UPDATE bookclub_members
+			 SET chat_color = ?
+			 WHERE id = ?
+			   AND NOT EXISTS (
+				   SELECT 1 FROM bookclub_members
+				   WHERE id != ? AND chat_color = ?
+			   )`
+		)
+		.bind(normalizedColor, memberId, memberId, normalizedColor)
+		.run();
+
+	return Boolean(result.meta.changes);
 }

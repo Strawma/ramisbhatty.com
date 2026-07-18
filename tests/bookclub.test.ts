@@ -21,6 +21,7 @@ import {
 	getInvitationByToken,
 	revokeInvitation,
 	setMemberActive,
+	setMemberChatColor,
 	setMemberDisplayName
 } from '../src/lib/server/bookclub/invitations';
 import {
@@ -44,6 +45,7 @@ interface TestMember {
 	username: string;
 	name: string;
 	role: 'member' | 'admin';
+	chatColor: string;
 }
 
 async function clearDatabase(): Promise<void> {
@@ -70,7 +72,8 @@ async function createTestMember(
 		id: crypto.randomUUID(),
 		username: name.toLowerCase(),
 		name,
-		role
+		role,
+		chatColor: '#22d3ee'
 	};
 
 	await database
@@ -170,7 +173,8 @@ describe('book-club invitations', () => {
 		).resolves.toMatchObject({
 			name: 'Alex',
 			username: 'alex',
-			role: 'member'
+			role: 'member',
+			chatColor: '#f472b6'
 		});
 		expect(await findMemberByUsernameAndInviteCode(database, 'alex', 'a'.repeat(12))).toMatchObject(
 			{ name: 'Alex' }
@@ -181,6 +185,22 @@ describe('book-club invitations', () => {
 		await expect(consumeInvitation(database, invitation.token, 'b'.repeat(12))).rejects.toThrow(
 			'invalid or expired'
 		);
+	});
+
+	it('assigns unused colors to new members and rejects duplicate custom colors', async () => {
+		const admin = await createTestMember('Ramis', 'admin');
+		const invitation = await createInvitation(database, admin.id, 'invite', 'alex', 'Alex');
+		const member = await consumeInvitation(database, invitation.token, 'a'.repeat(12));
+
+		expect(member.chatColor).toBe('#f472b6');
+		expect(await setMemberChatColor(database, member.id, '#123ABC')).toBe(true);
+		expect(await setMemberChatColor(database, admin.id, '#123abc')).toBe(false);
+		expect(
+			await database
+				.prepare('SELECT chat_color FROM bookclub_members WHERE id = ?')
+				.bind(member.id)
+				.first<{ chat_color: string }>()
+		).toMatchObject({ chat_color: '#123abc' });
 	});
 
 	it('replaces a previous invitation for the same username', async () => {
@@ -420,6 +440,7 @@ describe('book-club chat and meetings', () => {
 		expect(memberMessage).toBeTruthy();
 		expect(announcement).toBeTruthy();
 		expect(otherMessage).toBeTruthy();
+		expect(memberMessage).toMatchObject({ memberColor: '#22d3ee' });
 
 		await expect(tombstoneChatMessageByAdmin(database, memberMessage?.id ?? '')).resolves.toBe(
 			true
