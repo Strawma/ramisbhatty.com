@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import bookclubSystemMessages from '$lib/data/bookclub-system-messages.json';
 	import DashboardPanel from '$lib/components/bookclub/DashboardPanel.svelte';
+	import ClubhouseBackdrop from '$lib/components/bookclub/ClubhouseBackdrop.svelte';
 	import {
 		completeOrder,
 		loadDashboardPreferences,
@@ -165,8 +166,13 @@
 	<meta name="description" content="A private reading group for friends." />
 </svelte:head>
 
-<main class="min-h-screen bg-[#008080] p-2 font-mono text-sm text-black sm:p-4">
-	<div class="mx-auto max-w-7xl border-4 border-black bg-[#d4d0c8] shadow-[6px_6px_0_#000]">
+<main
+	class="relative isolate min-h-screen overflow-hidden bg-[#008080] p-2 font-mono text-sm text-black sm:p-4"
+>
+	<ClubhouseBackdrop />
+	<div
+		class="relative z-10 mx-auto max-w-7xl border-4 border-black bg-[#d4d0c8] shadow-[6px_6px_0_#000]"
+	>
 		<header
 			class="flex flex-wrap items-center justify-between gap-2 border-b-4 border-black bg-[#000080] px-3 py-2 font-bold text-white"
 		>
