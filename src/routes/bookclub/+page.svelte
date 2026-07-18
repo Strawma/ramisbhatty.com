@@ -2,7 +2,6 @@
 	import { enhance } from '$app/forms';
 	import { onMount } from 'svelte';
 	import bookclubSystemMessages from '$lib/data/bookclub-system-messages.json';
-	import BackgroundMusic from '$lib/components/bookclub/BackgroundMusic.svelte';
 	import ChatRoom from './ChatRoom.svelte';
 	import ClubNav from './ClubNav.svelte';
 
@@ -143,7 +142,6 @@
 								<p class="mt-2 font-bold">No meeting scheduled.</p>
 							{/if}
 						</div>
-						<BackgroundMusic />
 					</div>
 				</section>
 

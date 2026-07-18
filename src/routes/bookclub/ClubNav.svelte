@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
+	import BackgroundMusic from '$lib/components/bookclub/BackgroundMusic.svelte';
 
 	type Member = {
 		name: string;
@@ -82,6 +83,8 @@
 			</button>
 		</form>
 	</details>
+
+	<BackgroundMusic />
 
 	<form method="POST" action="/bookclub/logout" class="mt-3">
 		<button

@@ -1,31 +1,28 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import backgroundMusicUrl from '$lib/assets/audio/bmbmt-background.mp3';
 	import {
-		DEFAULT_MUSIC_VOLUME,
-		loadAudioPreferences,
-		saveAudioPreferences
-	} from './audio-preferences';
+		getMusicSnapshot,
+		initializeMusic,
+		setMusicVolume,
+		startMusic,
+		subscribeToMusic,
+		toggleMusic,
+		type MusicSnapshot
+	} from './music-controller';
 
-	let { src = backgroundMusicUrl }: { src?: string } = $props();
-	let audio: HTMLAudioElement | null = null;
-	let musicState = $state<'off' | 'playing' | 'paused' | 'unavailable'>('off');
-	let musicEnabled = $state(false);
-	let musicVolume = $state(DEFAULT_MUSIC_VOLUME);
+	let music = $state<MusicSnapshot>(getMusicSnapshot());
 	let musicButton: HTMLButtonElement | null = null;
 
 	onMount(() => {
-		audio = new Audio(src);
-		audio.loop = true;
-		audio.preload = 'none';
-		audio.addEventListener('error', () => (musicState = 'unavailable'));
-		const preferences = loadAudioPreferences();
-		musicEnabled = preferences.musicEnabled;
-		musicVolume = preferences.musicVolume;
-		audio.volume = musicVolume;
+		initializeMusic();
+		const unsubscribe = subscribeToMusic((nextSnapshot) => (music = nextSnapshot));
 
 		const startOnPageClick = (event: MouseEvent) => {
-			if (!musicEnabled || (event.target instanceof Node && musicButton?.contains(event.target))) {
+			if (
+				!music.enabled ||
+				music.status === 'playing' ||
+				(event.target instanceof Node && musicButton?.contains(event.target))
+			) {
 				return;
 			}
 
@@ -34,79 +31,27 @@
 			});
 		};
 
-		if (musicEnabled) window.addEventListener('click', startOnPageClick);
+		if (music.enabled && music.status !== 'playing') {
+			window.addEventListener('click', startOnPageClick);
+		}
 
 		return () => {
 			window.removeEventListener('click', startOnPageClick);
-			audio?.pause();
-			audio?.removeAttribute('src');
-			audio = null;
+			unsubscribe();
 		};
 	});
 
-	async function toggleMusic(): Promise<void> {
-		if (!audio) return;
-
-		if (musicEnabled && !audio.paused) {
-			audio.pause();
-			musicEnabled = false;
-			musicState = 'paused';
-			savePreferences();
-			return;
-		}
-
-		await startMusic();
-	}
-
-	async function startMusic(): Promise<boolean> {
-		if (!audio) return false;
-
-		try {
-			await audio.play();
-			musicEnabled = true;
-			musicState = 'playing';
-			savePreferences();
-			return true;
-		} catch {
-			// Autoplay can be rejected even when the saved preference is enabled.
-			musicEnabled = true;
-			musicState = 'paused';
-			savePreferences();
-			return false;
-		}
-	}
-
-	function savePreferences(): void {
-		saveAudioPreferences({
-			soundsEnabled: loadAudioPreferences().soundsEnabled,
-			musicEnabled,
-			musicVolume
-		});
-	}
-
-	function updateMusicVolume(event: Event): void {
-		const value = Number((event.currentTarget as HTMLInputElement).value);
-		if (!Number.isFinite(value) || value < 0 || value > 1) return;
-
-		musicVolume = value;
-		if (audio) audio.volume = value;
-		savePreferences();
-	}
-
 	function musicLabel(): string {
-		if (musicState === 'unavailable') return 'MUSIC: NO TAPE';
-		if (musicState === 'playing') return 'MUSIC: ON';
-		if (musicEnabled) return 'MUSIC: READY';
+		if (music.status === 'unavailable') return 'MUSIC: NO TAPE';
+		if (music.status === 'playing') return 'MUSIC: ON';
+		if (music.enabled) return 'MUSIC: READY';
 		return 'MUSIC: OFF';
 	}
 </script>
 
-<div class="mt-4 border-2 border-black bg-black p-3 text-xs text-lime-300">
-	<div class="flex flex-wrap items-center justify-between gap-2">
-		<div>
-			<p class="font-bold text-white">BACKGROUND MUSIC</p>
-			<p class="mt-1">Optional clubhouse ambience.</p>
-		</div>
+<div class="mt-3 border-2 border-black bg-black p-2 text-xs text-lime-300">
+	<div class="flex items-center justify-between gap-2">
+		<span class="font-bold text-white">MUSIC</span>
 		<button
 			type="button"
 			bind:this={musicButton}
@@ -117,20 +62,20 @@
 			{musicLabel()}
 		</button>
 	</div>
-	{#if musicState === 'unavailable'}
-		<p class="mt-2 text-yellow-300">The clubhouse track could not be loaded.</p>
-	{/if}
-	<label for="background-music-volume" class="mt-3 flex items-center gap-2">
-		<span class="shrink-0 font-bold">VOLUME: {Math.round(musicVolume * 100)}%</span>
+	<label for="background-music-volume" class="mt-2 flex items-center gap-2">
+		<span class="shrink-0 font-bold">VOL: {Math.round(music.volume * 100)}%</span>
 		<input
 			id="background-music-volume"
 			type="range"
 			min="0"
 			max="1"
 			step="0.01"
-			value={musicVolume}
-			oninput={updateMusicVolume}
+			value={music.volume}
+			oninput={(event) => setMusicVolume(Number((event.currentTarget as HTMLInputElement).value))}
 			class="min-w-0 flex-1 cursor-pointer accent-lime-300"
 		/>
 	</label>
+	{#if music.status === 'unavailable'}
+		<p class="mt-2 text-yellow-300">The clubhouse track could not be loaded.</p>
+	{/if}
 </div>
