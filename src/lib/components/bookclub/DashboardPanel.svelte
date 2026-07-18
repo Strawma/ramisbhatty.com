@@ -35,7 +35,10 @@
 	} = $props();
 
 	function handlePanelDragStart(event: DragEvent): void {
-		if (event.target instanceof HTMLElement && event.target.closest('button')) {
+		if (
+			event.target instanceof Element &&
+			event.target.closest('button, input, textarea, select, a, [contenteditable="true"]')
+		) {
 			event.preventDefault();
 			return;
 		}
@@ -46,6 +49,7 @@
 
 <div
 	role="group"
+	id={tray ? panelId : undefined}
 	draggable="true"
 	class="min-w-0 {wide && !tray ? 'lg:col-span-2' : ''}"
 	style:order={position}
