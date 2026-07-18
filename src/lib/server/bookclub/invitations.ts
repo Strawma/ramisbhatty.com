@@ -1,7 +1,7 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import { hashInviteCode, invalidateMemberSessions, normalizeUsername } from './auth';
 import { prepareChatAnnouncement } from './chat';
-import { getChatColorAssignment, isReadableChatColor, normalizeChatColor } from './colors';
+import { getChatColorAssignment, isValidChatColor, normalizeChatColor } from './colors';
 import type { BookclubMember } from './db';
 
 const INVITATION_LIFETIME_MS = 48 * 60 * 60 * 1000;
@@ -447,7 +447,7 @@ export async function setMemberChatColor(
 	chatColor: string
 ): Promise<boolean> {
 	const normalizedColor = normalizeChatColor(chatColor);
-	if (!isReadableChatColor(normalizedColor)) return false;
+	if (!isValidChatColor(normalizedColor)) return false;
 
 	const result = await database
 		.prepare(

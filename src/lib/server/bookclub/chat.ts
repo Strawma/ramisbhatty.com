@@ -1,4 +1,5 @@
 import type { D1Database } from '@cloudflare/workers-types';
+import { isReadableChatColor } from './colors';
 
 const CHAT_MESSAGE_LIMIT = 50;
 const CHAT_MESSAGE_COOLDOWN_MS = 5_000;
@@ -16,6 +17,7 @@ export interface BookclubChatMessage {
 	memberId: string;
 	memberName: string;
 	memberColor: string;
+	memberColorNeedsOutline: boolean;
 	body: string;
 	createdAt: string;
 	isOwn: boolean;
@@ -57,6 +59,7 @@ export async function getChatMessages(
 		memberId: message.member_id,
 		memberName: message.member_name,
 		memberColor: message.member_color,
+		memberColorNeedsOutline: !isReadableChatColor(message.member_color),
 		body: message.body,
 		createdAt: message.created_at,
 		isOwn: message.member_id === memberId,

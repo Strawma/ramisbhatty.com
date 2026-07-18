@@ -103,7 +103,7 @@
 				class="h-10 w-full cursor-pointer border-2 border-black bg-white p-1"
 			/>
 			<p class="text-[10px] text-gray-600">
-				Your name in new chat messages uses this color. Choose something bright enough for black.
+				Your name in chat uses this color. Dark colors get a white outline automatically.
 			</p>
 			<button
 				type="submit"

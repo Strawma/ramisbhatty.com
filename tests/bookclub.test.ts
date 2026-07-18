@@ -195,13 +195,13 @@ describe('book-club invitations', () => {
 		expect(member.chatColor).toBe('#f472b6');
 		expect(await setMemberChatColor(database, member.id, '#ff66cc')).toBe(true);
 		expect(await setMemberChatColor(database, admin.id, '#ff66cc')).toBe(false);
-		expect(await setMemberChatColor(database, admin.id, '#123abc')).toBe(false);
+		expect(await setMemberChatColor(database, admin.id, '#123abc')).toBe(true);
 		expect(
 			await database
 				.prepare('SELECT chat_color FROM bookclub_members WHERE id = ?')
-				.bind(member.id)
+				.bind(admin.id)
 				.first<{ chat_color: string }>()
-		).toMatchObject({ chat_color: '#ff66cc' });
+		).toMatchObject({ chat_color: '#123abc' });
 	});
 
 	it('replaces a previous invitation for the same username', async () => {
@@ -417,6 +417,7 @@ describe('book-club chat and meetings', () => {
 		const member = await createTestMember('Alex');
 		const otherMember = await createTestMember('Blair');
 
+		await setMemberChatColor(database, member.id, '#123abc');
 		await createChatMessage(database, member.id, 'Member message');
 		await database
 			.prepare(
@@ -441,7 +442,10 @@ describe('book-club chat and meetings', () => {
 		expect(memberMessage).toBeTruthy();
 		expect(announcement).toBeTruthy();
 		expect(otherMessage).toBeTruthy();
-		expect(memberMessage).toMatchObject({ memberColor: '#22d3ee' });
+		expect(memberMessage).toMatchObject({
+			memberColor: '#123abc',
+			memberColorNeedsOutline: true
+		});
 
 		await expect(tombstoneChatMessageByAdmin(database, memberMessage?.id ?? '')).resolves.toBe(
 			true

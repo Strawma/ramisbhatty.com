@@ -12,6 +12,7 @@
 		memberId: string;
 		memberName: string;
 		memberColor: string;
+		memberColorNeedsOutline: boolean;
 		body: string;
 		createdAt: string;
 		isOwn: boolean;
@@ -262,6 +263,7 @@
 						{:else}
 							<span
 								style:color={message.memberColor}
+								class:chat-name-outline={message.memberColorNeedsOutline}
 								class="min-w-0 truncate font-bold"
 								title={message.memberName}>{message.memberName}:</span
 							>
@@ -315,3 +317,10 @@
 		</p>
 	</div>
 </section>
+
+<style>
+	.chat-name-outline {
+		-webkit-text-stroke: 1px white;
+		paint-order: stroke fill;
+	}
+</style>
