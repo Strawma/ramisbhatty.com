@@ -21,7 +21,6 @@
 	let { messages, isAdmin }: { messages: Message[]; isAdmin: boolean } = $props();
 	let polledMessages = $state<Message[] | null>(null);
 	let visibleMessages = $derived(polledMessages ?? messages);
-	let isOpen = $state(true);
 	let soundsEnabled = $state(false);
 	let soundUnavailable = $state(false);
 	let audioContext: AudioContext | null = null;
@@ -85,8 +84,6 @@
 	}
 
 	$effect(() => {
-		if (!isOpen) return;
-
 		const interval = window.setInterval(() => {
 			void refreshMessages();
 		}, 5000);
@@ -206,16 +203,11 @@
 	}
 </script>
 
-<details
+<section
 	id="chatroom"
-	bind:open={isOpen}
+	aria-label="Book club chatroom"
 	class="border-4 border-black bg-[#d4d0c8] shadow-[4px_4px_0_#000]"
 >
-	<summary
-		class="cursor-pointer border-b-2 border-black bg-[#008080] px-3 py-2 font-bold text-white"
-	>
-		BMBMT IRC // {isOpen ? 'ONLINE' : 'PAUSED'}
-	</summary>
 	<div class="flex min-h-56 flex-col p-3">
 		<div class="mb-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-gray-600">
 			<span>Incoming messages use browser-generated tones.</span>
@@ -315,6 +307,8 @@
 				SEND
 			</button>
 		</form>
-		<p class="mt-2 text-right text-[10px] text-gray-600">Refreshes every 5 seconds while open.</p>
+		<p class="mt-2 text-right text-[10px] text-gray-600">
+			Refreshes every 5 seconds while visible.
+		</p>
 	</div>
-</details>
+</section>
