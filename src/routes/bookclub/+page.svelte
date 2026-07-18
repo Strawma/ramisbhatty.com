@@ -603,12 +603,12 @@
 					{/each}
 				</div>
 			</div>
-
-			<footer class="border-t-4 border-black bg-[#808080] px-3 py-2 text-xs text-white">
-				BMBMT // ALL SYSTEMS NOMINALLY OPERATIONAL // LAST BUILD: {formatBuildTimestamp(
-					data.buildTimestamp
-				)} LOCAL
-			</footer>
 		</div>
+
+		<footer class="border-t-4 border-black bg-[#808080] px-3 py-2 text-xs text-white">
+			BMBMT // ALL SYSTEMS NOMINALLY OPERATIONAL // LAST BUILD: {formatBuildTimestamp(
+				data.buildTimestamp
+			)} LOCAL
+		</footer>
 	</div>
 </main>
