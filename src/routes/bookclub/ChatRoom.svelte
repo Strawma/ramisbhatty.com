@@ -1,6 +1,11 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { onMount } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
+	import {
+		loadAudioPreferences,
+		saveAudioPreferences
+	} from '$lib/components/bookclub/audio-preferences';
 
 	type Message = {
 		id: string;
@@ -20,8 +25,51 @@
 	let soundsEnabled = $state(false);
 	let soundUnavailable = $state(false);
 	let audioContext: AudioContext | null = null;
+	let messageList = $state<HTMLDivElement | null>(null);
+	let stickToBottom = $state(true);
 	let hasSeenMessages = false;
+	let hasInitialisedScroll = false;
 	const seenMessageIds = new SvelteSet<string>();
+
+	onMount(() => {
+		soundsEnabled = loadAudioPreferences().soundsEnabled;
+
+		const activateSounds = () => {
+			if (!soundsEnabled || audioContext?.state === 'running') return;
+
+			try {
+				const context = getAudioContext();
+				void context.resume().catch(() => {
+					soundsEnabled = false;
+					soundUnavailable = true;
+					savePreferences();
+				});
+			} catch {
+				soundsEnabled = false;
+				soundUnavailable = true;
+				savePreferences();
+			}
+		};
+
+		window.addEventListener('pointerdown', activateSounds);
+		window.addEventListener('keydown', activateSounds);
+
+		return () => {
+			window.removeEventListener('pointerdown', activateSounds);
+			window.removeEventListener('keydown', activateSounds);
+			audioContext?.close();
+			audioContext = null;
+		};
+	});
+
+	$effect(() => {
+		void Promise.resolve(visibleMessages).then(() => {
+			if (!messageList || (!stickToBottom && hasInitialisedScroll)) return;
+
+			messageList.scrollTop = messageList.scrollHeight;
+			hasInitialisedScroll = true;
+		});
+	});
 
 	async function refreshMessages(): Promise<void> {
 		try {
@@ -68,6 +116,10 @@
 		return (audioContext ??= new AudioContext());
 	}
 
+	function savePreferences(): void {
+		saveAudioPreferences({ soundsEnabled, musicEnabled: loadAudioPreferences().musicEnabled });
+	}
+
 	function playTone(
 		frequency: number,
 		duration: number,
@@ -82,7 +134,7 @@
 		oscillator.type = type;
 		oscillator.frequency.setValueAtTime(frequency, start);
 		gain.gain.setValueAtTime(0.0001, start);
-		gain.gain.exponentialRampToValueAtTime(0.045, start + 0.01);
+		gain.gain.exponentialRampToValueAtTime(0.09, start + 0.01);
 		gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
 		oscillator.connect(gain).connect(audioContext.destination);
 		oscillator.start(start);
@@ -106,16 +158,30 @@
 	}
 
 	async function toggleSounds(): Promise<void> {
+		if (soundsEnabled) {
+			soundsEnabled = false;
+			savePreferences();
+			return;
+		}
+
 		try {
 			const context = getAudioContext();
 			if (context.state === 'suspended') await context.resume();
-			soundsEnabled = !soundsEnabled;
+			soundsEnabled = true;
 			soundUnavailable = false;
+			savePreferences();
 			if (soundsEnabled) playTone(660, 0.12, 0, 'sine');
 		} catch {
 			soundsEnabled = false;
 			soundUnavailable = true;
+			savePreferences();
 		}
+	}
+
+	function updateScrollPosition(): void {
+		if (!messageList) return;
+		stickToBottom =
+			messageList.scrollHeight - messageList.scrollTop - messageList.clientHeight < 32;
 	}
 
 	function formatMessageTime(value: string): string {
@@ -167,6 +233,8 @@
 		{/if}
 		<div
 			aria-live="polite"
+			bind:this={messageList}
+			onscroll={updateScrollPosition}
 			class="flex max-h-72 min-h-40 flex-1 flex-col gap-1 overflow-y-auto border-2 border-black bg-black p-3 font-mono text-xs text-green-400"
 		>
 			{#if visibleMessages.length === 0}

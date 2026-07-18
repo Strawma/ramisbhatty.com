@@ -148,41 +148,6 @@
 					</div>
 				</section>
 
-				<section class="mt-5 border-4 border-black bg-[#d4d0c8] shadow-[4px_4px_0_#000]">
-					<div class="border-b-2 border-black bg-[#800080] px-3 py-2 font-bold text-white">
-						MEMBER PROFILE // DISPLAY NAME
-					</div>
-					<form
-						method="POST"
-						action="?/changeDisplayName"
-						use:enhance
-						class="flex flex-wrap items-end gap-2 p-4"
-					>
-						<div class="min-w-48 flex-1">
-							<label for="display-name" class="block text-xs font-bold text-[#000080]"
-								>YOUR DISPLAY NAME</label
-							>
-							<input
-								id="display-name"
-								name="displayName"
-								maxlength="24"
-								required
-								value={data.member.name}
-								class="mt-2 w-full border-2 border-black bg-white px-2 py-2 focus:ring-2 focus:ring-[#000080] focus:outline-none"
-							/>
-							<p class="mt-1 text-[10px] text-gray-600">
-								1-24 characters. The system will announce changes.
-							</p>
-						</div>
-						<button
-							type="submit"
-							class="border-2 border-black bg-[#d4d0c8] px-3 py-2 font-bold shadow-[2px_2px_0_#000] hover:bg-white focus:ring-2 focus:ring-[#000080] focus:outline-none"
-						>
-							SAVE NAME
-						</button>
-					</form>
-				</section>
-
 				<section
 					id="current-book"
 					class="mt-5 border-4 border-black bg-[#d4d0c8] shadow-[4px_4px_0_#000]"
