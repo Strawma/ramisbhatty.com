@@ -19,10 +19,10 @@
 		return 'ACTIVE';
 	}
 
-	function confirmSessionDelete(event: SubmitEvent, label: string): void {
+	function confirmBookPollDelete(event: SubmitEvent, title: string): void {
 		if (
 			!window.confirm(
-				`Delete ${label}? This removes its suggestions, draw, book, and reviews permanently.`
+				`Delete ${title || 'this book poll'}? This removes its suggestions, draw, book, and reviews permanently.`
 			)
 		) {
 			event.preventDefault();
@@ -237,11 +237,11 @@
 
 				<section class="mt-5 border-4 border-black bg-[#d4d0c8] shadow-[4px_4px_0_#000]">
 					<div class="border-b-2 border-black bg-[#800000] px-3 py-2 font-bold text-white">
-						READING SESSIONS // {data.sessions.length} RECORDS
+						BOOK POLLS // {data.bookPolls.length} RECORDS
 					</div>
 					<div class="p-4">
 						<p class="border-2 border-black bg-[#fff0f0] p-3 text-xs leading-5 text-[#800000]">
-							Deleting a session is permanent. It removes the session's suggestions, draw, selected
+							Deleting a book poll is permanent. It removes the poll's suggestions, draw, selected
 							book, and any reviews attached to that book.
 						</p>
 						<div class="mt-3 overflow-x-auto">
@@ -256,45 +256,51 @@
 									</tr>
 								</thead>
 								<tbody>
-									{#each data.sessions as session (session.id)}
+									{#each data.bookPolls as poll (poll.id)}
 										<tr>
 											<td class="border border-black px-2 py-2">
-												<p class="font-bold">{session.label}</p>
+												<p class="font-bold">{poll.book?.title ?? 'No book selected'}</p>
 												<p class="mt-1 text-[10px] text-gray-600">
-													{formatDate(session.createdAt)}
+													Opened {formatDate(poll.openedAt)}
 												</p>
 											</td>
 											<td class="border border-black px-2 py-2 font-bold">
-												{session.status.toUpperCase()}
+												{poll.status === 'drawn'
+													? 'BOOK DRAWN'
+													: `POLL ${poll.status.toUpperCase()}`}
 											</td>
 											<td class="border border-black px-2 py-2">
-												{session.book?.title ?? 'No book drawn'}
+												{#if poll.book}
+													{poll.book.title} by {poll.book.author}
+												{:else}
+													No book drawn
+												{/if}
 											</td>
 											<td class="border border-black px-2 py-2">
-												{session.suggestionCount} suggestions / {session.reviewCount} reviews
+												{poll.suggestionCount} suggestions / {poll.reviewCount} reviews
 											</td>
 											<td class="border border-black px-2 py-2">
 												<form
 													method="POST"
-													action="?/deleteSession"
+													action="?/deleteBookPoll"
 													use:enhance
-													onsubmit={(event) => confirmSessionDelete(event, session.label)}
+													onsubmit={(event) => confirmBookPollDelete(event, poll.book?.title ?? '')}
 												>
-													<input type="hidden" name="sessionId" value={session.id} />
+													<input type="hidden" name="pollId" value={poll.id} />
 													<button
 														type="submit"
 														class="border border-black bg-[#fff0f0] px-2 py-1 font-bold text-[#800000] hover:bg-white focus:ring-2 focus:ring-[#000080] focus:outline-none"
 													>
-														DELETE SESSION
+														DELETE BOOK POLL
 													</button>
 												</form>
 											</td>
 										</tr>
 									{/each}
-									{#if data.sessions.length === 0}
+									{#if data.bookPolls.length === 0}
 										<tr>
 											<td colspan="5" class="border border-black px-2 py-4 text-center">
-												No reading sessions exist yet.
+												No book polls exist yet.
 											</td>
 										</tr>
 									{/if}

@@ -16,14 +16,16 @@ export interface BookclubBook {
 	author: string;
 	coverUrl: string | null;
 	startedAt: string | null;
+	completedAt: string | null;
 }
 
 export interface BookclubCycle {
 	id: string;
-	label: string;
 	status: 'open' | 'closed' | 'drawn';
 	suggestionLimit: number;
 	book: BookclubBook | null;
+	openedAt: string;
+	closedAt: string | null;
 }
 
 export interface BookclubSuggestion {
@@ -56,17 +58,16 @@ export interface BookclubDashboard {
 
 export interface BookclubArchiveEntry {
 	id: string;
-	label: string;
-	createdAt: string;
+	openedAt: string;
 	book: BookclubBook;
 	reviewCount: number;
 }
 
-export interface BookclubSessionSummary {
+export interface BookclubBookPollSummary {
 	id: string;
-	label: string;
 	status: BookclubCycle['status'];
-	createdAt: string;
+	openedAt: string;
+	closedAt: string | null;
 	book: BookclubBook | null;
 	suggestionCount: number;
 	reviewCount: number;
@@ -74,7 +75,6 @@ export interface BookclubSessionSummary {
 
 interface CycleRow {
 	id: string;
-	label: string;
 	status: BookclubCycle['status'];
 	suggestion_limit: number;
 	book_id: string | null;
@@ -82,6 +82,9 @@ interface CycleRow {
 	book_author: string | null;
 	book_cover_url: string | null;
 	book_started_at: string | null;
+	book_completed_at: string | null;
+	opened_at: string;
+	closed_at: string | null;
 }
 
 interface SuggestionRow {
@@ -101,18 +104,19 @@ interface ProgressRow {
 
 interface ArchiveRow {
 	id: string;
-	label: string;
-	created_at: string;
+	opened_at: string;
 	book_id: string;
 	book_title: string;
 	book_author: string;
 	book_cover_url: string | null;
 	book_started_at: string | null;
+	book_completed_at: string | null;
 	review_count: number;
 }
 
-interface SessionSummaryRow extends ArchiveRow {
+interface BookPollSummaryRow extends ArchiveRow {
 	status: BookclubCycle['status'];
+	closed_at: string | null;
 	suggestion_count: number;
 }
 
@@ -121,9 +125,10 @@ function toCycle(row: CycleRow | null): BookclubCycle | null {
 
 	return {
 		id: row.id,
-		label: row.label,
 		status: row.status,
 		suggestionLimit: row.suggestion_limit,
+		openedAt: row.opened_at,
+		closedAt: row.closed_at,
 		book:
 			row.book_id && row.book_title && row.book_author
 				? {
@@ -131,7 +136,8 @@ function toCycle(row: CycleRow | null): BookclubCycle | null {
 						title: row.book_title,
 						author: row.book_author,
 						coverUrl: row.book_cover_url,
-						startedAt: row.book_started_at
+						startedAt: row.book_started_at,
+						completedAt: row.book_completed_at
 					}
 				: null
 	};
@@ -140,25 +146,25 @@ function toCycle(row: CycleRow | null): BookclubCycle | null {
 function toArchiveEntry(row: ArchiveRow): BookclubArchiveEntry {
 	return {
 		id: row.id,
-		label: row.label,
-		createdAt: row.created_at,
+		openedAt: row.opened_at,
 		book: {
 			id: row.book_id,
 			title: row.book_title,
 			author: row.book_author,
 			coverUrl: row.book_cover_url,
-			startedAt: row.book_started_at
+			startedAt: row.book_started_at,
+			completedAt: row.book_completed_at
 		},
 		reviewCount: row.review_count
 	};
 }
 
-function toSessionSummary(row: SessionSummaryRow): BookclubSessionSummary {
+function toBookPollSummary(row: BookPollSummaryRow): BookclubBookPollSummary {
 	return {
 		id: row.id,
-		label: row.label,
 		status: row.status,
-		createdAt: row.created_at,
+		openedAt: row.opened_at,
+		closedAt: row.closed_at,
 		book:
 			row.book_id && row.book_title && row.book_author
 				? {
@@ -166,7 +172,8 @@ function toSessionSummary(row: SessionSummaryRow): BookclubSessionSummary {
 						title: row.book_title,
 						author: row.book_author,
 						coverUrl: row.book_cover_url,
-						startedAt: row.book_started_at
+						startedAt: row.book_started_at,
+						completedAt: row.book_completed_at
 					}
 				: null,
 		suggestionCount: row.suggestion_count,
@@ -189,9 +196,10 @@ export async function getDashboard(
 	] = await Promise.all([
 		database
 			.prepare(
-				`SELECT c.id, c.label, c.status, c.suggestion_limit, c.book_id,
+				`SELECT c.id, c.status, c.suggestion_limit, c.book_id,
 				        b.title AS book_title, b.author AS book_author, b.cover_url AS book_cover_url,
-				        b.started_at AS book_started_at
+				        b.started_at AS book_started_at, b.completed_at AS book_completed_at,
+				        c.opened_at, c.closed_at
 					 FROM bookclub_cycles AS c
 					 LEFT JOIN bookclub_books AS b ON b.id = c.book_id
 					 WHERE c.status = 'drawn'
@@ -201,9 +209,10 @@ export async function getDashboard(
 			.all<CycleRow>(),
 		database
 			.prepare(
-				`SELECT c.id, c.label, c.status, c.suggestion_limit, c.book_id,
+				`SELECT c.id, c.status, c.suggestion_limit, c.book_id,
 				        b.title AS book_title, b.author AS book_author, b.cover_url AS book_cover_url,
-				        b.started_at AS book_started_at
+				        b.started_at AS book_started_at, b.completed_at AS book_completed_at,
+				        c.opened_at, c.closed_at
 				 FROM bookclub_cycles AS c
 				 LEFT JOIN bookclub_books AS b ON b.id = c.book_id
 				 WHERE c.status IN ('open', 'closed')
@@ -276,9 +285,10 @@ export async function getDashboard(
 export async function getLatestActionCycle(database: D1Database): Promise<BookclubCycle | null> {
 	const cycle = await database
 		.prepare(
-			`SELECT c.id, c.label, c.status, c.suggestion_limit, c.book_id,
+			`SELECT c.id, c.status, c.suggestion_limit, c.book_id,
 			        b.title AS book_title, b.author AS book_author, b.cover_url AS book_cover_url,
-			        b.started_at AS book_started_at
+			        b.started_at AS book_started_at, b.completed_at AS book_completed_at,
+			        c.opened_at, c.closed_at
 			 FROM bookclub_cycles AS c
 			 LEFT JOIN bookclub_books AS b ON b.id = c.book_id
 			 WHERE c.status IN ('open', 'closed')
@@ -291,9 +301,10 @@ export async function getLatestActionCycle(database: D1Database): Promise<Bookcl
 }
 
 const ARCHIVE_BOOK_QUERY = `
-	SELECT c.id, c.label, c.created_at,
+	SELECT c.id, c.opened_at,
 	       b.id AS book_id, b.title AS book_title, b.author AS book_author,
 	       b.cover_url AS book_cover_url, b.started_at AS book_started_at,
+	       b.completed_at AS book_completed_at,
 	       (SELECT COUNT(*) FROM bookclub_reviews AS r WHERE r.book_id = b.id) AS review_count
 	FROM bookclub_cycles AS c
 	INNER JOIN bookclub_books AS b ON b.id = c.book_id
@@ -324,24 +335,27 @@ export async function getArchiveEntry(
 	return row ? toArchiveEntry(row) : null;
 }
 
-export async function getSessionSummaries(database: D1Database): Promise<BookclubSessionSummary[]> {
+export async function getBookPollSummaries(
+	database: D1Database
+): Promise<BookclubBookPollSummary[]> {
 	const result = await database
 		.prepare(
-			`SELECT c.id, c.label, c.status, c.created_at,
+			`SELECT c.id, c.status, c.opened_at, c.closed_at,
 			        b.id AS book_id, b.title AS book_title, b.author AS book_author,
 			        b.cover_url AS book_cover_url, b.started_at AS book_started_at,
+			        b.completed_at AS book_completed_at,
 			        (SELECT COUNT(*) FROM bookclub_suggestions AS s WHERE s.cycle_id = c.id) AS suggestion_count,
 			        (SELECT COUNT(*) FROM bookclub_reviews AS r WHERE r.book_id = b.id) AS review_count
 			 FROM bookclub_cycles AS c
 			 LEFT JOIN bookclub_books AS b ON b.id = c.book_id
 			 ORDER BY c.created_at DESC, c.id DESC`
 		)
-		.all<SessionSummaryRow>();
+		.all<BookPollSummaryRow>();
 
-	return result.results.map(toSessionSummary);
+	return result.results.map(toBookPollSummary);
 }
 
-export async function deleteCycle(database: D1Database, cycleId: string): Promise<boolean> {
+export async function deleteBookPoll(database: D1Database, cycleId: string): Promise<boolean> {
 	const cycle = await database
 		.prepare('SELECT id, book_id FROM bookclub_cycles WHERE id = ? LIMIT 1')
 		.bind(cycleId)
@@ -373,19 +387,29 @@ export async function deleteCycle(database: D1Database, cycleId: string): Promis
 				   AND NOT EXISTS (SELECT 1 FROM bookclub_cycles WHERE book_id = ?)
 				   AND NOT EXISTS (SELECT 1 FROM bookclub_reviews WHERE book_id = ?)`
 			)
-			.bind(cycle.book_id, cycle.book_id, cycle.book_id)
+			.bind(cycle.book_id, cycle.book_id, cycle.book_id),
+		database.prepare(
+			`UPDATE bookclub_books
+				 SET completed_at = NULL
+				 WHERE id = (
+					 SELECT book_id FROM bookclub_cycles
+					 WHERE status = 'drawn'
+					 ORDER BY created_at DESC, id DESC
+					 LIMIT 1
+				 )`
+		)
 	]);
 
 	return true;
 }
 
-export async function createCycle(database: D1Database, label: string): Promise<void> {
+export async function createCycle(database: D1Database): Promise<void> {
 	await database
 		.prepare(
-			`INSERT INTO bookclub_cycles (id, label, status, suggestion_limit)
-			 VALUES (?, ?, 'open', ?)`
+			`INSERT INTO bookclub_cycles (id, status, suggestion_limit)
+			 VALUES (?, 'open', ?)`
 		)
-		.bind(crypto.randomUUID(), label, SUGGESTION_LIMIT)
+		.bind(crypto.randomUUID(), SUGGESTION_LIMIT)
 		.run();
 }
 
@@ -431,7 +455,7 @@ export async function saveSuggestion(
 		.run();
 
 	if (!result.meta.changes) {
-		throw new Error('That suggestion session is no longer open.');
+		throw new Error('That book poll is no longer open.');
 	}
 }
 
@@ -463,7 +487,7 @@ export async function closeCycle(database: D1Database, cycleId: string): Promise
 		.run();
 
 	if (!result.meta.changes) {
-		throw new Error('This session is no longer open.');
+		throw new Error('This book poll is no longer open.');
 	}
 }
 
@@ -482,8 +506,12 @@ export async function drawCycle(
 		.bind(cycleId)
 		.first<{ id: string; status: BookclubCycle['status'] }>();
 
-	if (!cycle || !['open', 'closed'].includes(cycle.status)) {
-		throw new Error('This session is no longer available for drawing.');
+	if (!cycle || cycle.status === 'drawn') {
+		throw new Error('This book poll is no longer available for drawing.');
+	}
+
+	if (cycle.status !== 'closed') {
+		throw new Error('Close the book poll before drawing the next book.');
 	}
 
 	const suggestions = await database
@@ -506,6 +534,18 @@ export async function drawCycle(
 	const now = new Date().toISOString();
 
 	await database.batch([
+		database
+			.prepare(
+				`UPDATE bookclub_books
+				 SET completed_at = ?
+				 WHERE id = (
+					 SELECT book_id FROM bookclub_cycles
+					 WHERE status = 'drawn'
+					 ORDER BY created_at DESC, id DESC
+					 LIMIT 1
+				 ) AND completed_at IS NULL`
+			)
+			.bind(now),
 		database
 			.prepare(
 				`INSERT INTO bookclub_books (id, title, author, started_at)
@@ -537,7 +577,8 @@ export async function drawCycle(
 		title: winner.title,
 		author: winner.author,
 		coverUrl: null,
-		startedAt: now
+		startedAt: now,
+		completedAt: null
 	};
 }
 

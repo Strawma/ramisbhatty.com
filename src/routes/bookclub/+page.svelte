@@ -120,6 +120,13 @@
 		});
 	}
 
+	function formatDateTime(value: string): string {
+		return new Date(value).toLocaleString([], {
+			dateStyle: 'medium',
+			timeStyle: 'short'
+		});
+	}
+
 	function meetingInputValue(value: string | null): string {
 		if (!value) return '';
 		const date = new Date(value);
@@ -309,7 +316,11 @@
 									{/if}
 									<div>
 										<p class="text-xs font-bold text-[#000080] uppercase">
-											Reading session: {data.dashboard.currentCycle?.label ?? 'not opened'}
+											{#if data.dashboard.currentBook?.startedAt}
+												Current book started {formatDateTime(data.dashboard.currentBook.startedAt)}
+											{:else}
+												No book has been drawn yet.
+											{/if}
 										</p>
 										<h2 class="mt-2 text-2xl font-black">
 											{data.dashboard.currentBook?.title ?? 'The next book is classified.'}
@@ -318,6 +329,9 @@
 											{#if data.dashboard.currentBook}
 												By {data.dashboard.currentBook.author}. More stuff will appear here when I
 												can be bothered to implement it.
+												{#if data.dashboard.currentBook.completedAt}
+													Book completed {formatDateTime(data.dashboard.currentBook.completedAt)}.
+												{/if}
 											{:else}
 												Once an admin runs the draw, this panel will show the winning book and
 												author.
@@ -354,8 +368,8 @@
 								<div class="space-y-2 p-4">
 									<p class="leading-6">
 										{data.dashboard.activeCycle
-											? 'Submit three literary gambling tickets before the session closes.'
-											: 'No suggestion session is open. Await further literary instructions.'}
+											? 'Submit three literary gambling tickets before the book poll closes.'
+											: 'No book poll is open. Await further literary instructions.'}
 									</p>
 									{#each [1, 2, 3] as slot (slot)}
 										{@const suggestion = suggestionAt(slot)}
@@ -475,8 +489,7 @@
 								<div class="p-4">
 									{#if data.dashboard.archive.length > 0}
 										<p class="mb-3 text-xs leading-5">
-											The shelves remember previous selections. Open a book to inspect its session
-											page.
+											The shelves remember previous selections. Open a book to inspect its record.
 										</p>
 										<div
 											class="max-h-64 space-y-2 overflow-y-auto border-2 border-black bg-white p-2"
@@ -489,7 +502,7 @@
 													<div class="flex flex-wrap items-start justify-between gap-2">
 														<div>
 															<p class="text-xs font-bold text-[#000080] uppercase">
-																{entry.label}
+																{formatDateTime(entry.openedAt)}
 															</p>
 															<p class="mt-1 font-bold">{entry.book.title}</p>
 															<p class="text-xs">by {entry.book.author}</p>
@@ -504,7 +517,7 @@
 										</div>
 									{:else}
 										<p class="leading-6">
-											Past books will appear here once a newer reading session has been drawn.
+											Past books will appear here once a newer book has been drawn.
 										</p>
 									{/if}
 								</div>
@@ -562,7 +575,11 @@
 								<div class="space-y-4 p-4">
 									{#if data.dashboard.activeCycle}
 										<div class="border-2 border-black bg-white p-3">
-											<p class="font-bold">OPEN SESSION: {data.dashboard.activeCycle.label}</p>
+											<p class="font-bold">BOOK POLL OPEN</p>
+											<p class="mt-1 text-xs">
+												Opened {formatDateTime(data.dashboard.activeCycle.openedAt)}. The current
+												book stays active until the next draw.
+											</p>
 											<p class="mt-1 text-xs">
 												{data.dashboard.suggestionProgress.reduce(
 													(total, item) => total + item.count,
@@ -574,13 +591,19 @@
 													type="submit"
 													class="border-2 border-black bg-[#d4d0c8] px-3 py-2 font-bold shadow-[2px_2px_0_#000] hover:bg-white"
 												>
-													CLOSE SUGGESTIONS
+													CLOSE BOOK POLL
 												</button>
 											</form>
 										</div>
 									{:else if data.dashboard.drawReadyCycle}
 										<div class="border-2 border-black bg-white p-3">
-											<p class="font-bold">DRAW READY: {data.dashboard.drawReadyCycle.label}</p>
+											<p class="font-bold">BOOK POLL CLOSED</p>
+											<p class="mt-1 text-xs">
+												Closed {formatDateTime(
+													data.dashboard.drawReadyCycle.closedAt ??
+														data.dashboard.drawReadyCycle.openedAt
+												)}.
+											</p>
 											<p class="mt-1 text-xs">
 												{data.dashboard.suggestionProgress.reduce(
 													(total, item) => total + item.count,
@@ -592,31 +615,19 @@
 													type="submit"
 													class="border-2 border-black bg-[#d4d0c8] px-3 py-2 font-bold shadow-[2px_2px_0_#000] hover:bg-white"
 												>
-													SPIN THE BOOK MACHINE
+													SPIN NEXT BOOK
 												</button>
 											</form>
 										</div>
 									{:else}
 										<div class="border-2 border-black bg-white p-3">
-											<p class="font-bold">OPEN A NEW SESSION</p>
-											<form
-												method="POST"
-												action="?/createCycle"
-												use:enhance
-												class="mt-3 flex gap-2"
-											>
-												<input
-													name="label"
-													placeholder="e.g. Session 01"
-													required
-													maxlength="80"
-													class="min-w-0 flex-1 border-2 border-black px-2 py-2 text-xs focus:ring-2 focus:ring-[#000080] focus:outline-none"
-												/>
+											<p class="font-bold">START A NEW BOOK POLL</p>
+											<form method="POST" action="?/createCycle" use:enhance class="mt-3">
 												<button
 													type="submit"
 													class="border-2 border-black bg-[#d4d0c8] px-3 py-2 font-bold shadow-[2px_2px_0_#000] hover:bg-white"
 												>
-													OPEN
+													START POLL
 												</button>
 											</form>
 										</div>

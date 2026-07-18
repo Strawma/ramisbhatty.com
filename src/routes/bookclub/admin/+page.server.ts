@@ -17,7 +17,7 @@ import {
 	setMemberUsername
 } from '$lib/server/bookclub/invitations';
 import { isValidChatColor, normalizeChatColor } from '$lib/server/bookclub/colors';
-import { deleteCycle, getSessionSummaries } from '$lib/server/bookclub/cycles';
+import { deleteBookPoll, getBookPollSummaries } from '$lib/server/bookclub/cycles';
 import type { Actions, PageServerLoad } from './$types';
 
 async function requireAdmin(event: RequestEvent) {
@@ -40,7 +40,7 @@ export const load: PageServerLoad = async (event) => {
 		member,
 		members: await getMemberSummaries(database),
 		invitations: await getInvitationSummaries(database),
-		sessions: await getSessionSummaries(database)
+		bookPolls: await getBookPollSummaries(database)
 	};
 };
 
@@ -265,19 +265,19 @@ export const actions: Actions = {
 		return { success: 'All sessions for that member were invalidated.' };
 	},
 
-	deleteSession: async (event) => {
+	deleteBookPoll: async (event) => {
 		await requireAdmin(event);
 		const form = await event.request.formData();
-		const sessionId = form.get('sessionId');
+		const pollId = form.get('pollId');
 
-		if (typeof sessionId !== 'string' || sessionId.length === 0) {
-			return fail(400, { error: 'The reading session could not be identified.' });
+		if (typeof pollId !== 'string' || pollId.length === 0) {
+			return fail(400, { error: 'The book poll could not be identified.' });
 		}
 
-		if (!(await deleteCycle(getBookclubDatabase(event.platform), sessionId))) {
-			return fail(404, { error: 'That reading session no longer exists.' });
+		if (!(await deleteBookPoll(getBookclubDatabase(event.platform), pollId))) {
+			return fail(404, { error: 'That book poll no longer exists.' });
 		}
 
-		return { success: 'Reading session and its associated book-club data were deleted.' };
+		return { success: 'Book poll and its associated book-club data were deleted.' };
 	}
 };

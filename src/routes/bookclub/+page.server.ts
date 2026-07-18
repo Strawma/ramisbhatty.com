@@ -38,28 +38,22 @@ export const actions: Actions = {
 		const member = await requireBookclubMember(event);
 
 		if (member.role !== 'admin') {
-			return fail(403, { error: 'Only the club admin can open a session.' });
+			return fail(403, { error: 'Only the club admin can open a book poll.' });
 		}
 
 		const database = getBookclubDatabase(event.platform);
 		const actionCycle = await getLatestActionCycle(database);
-		const form = await event.request.formData();
-		const label = form.get('label');
 
 		if (actionCycle) {
-			return fail(400, { error: 'Close and draw the current session before opening another.' });
-		}
-
-		if (typeof label !== 'string' || label.trim().length === 0 || label.trim().length > 80) {
-			return fail(400, { error: 'Give the new session a short label.' });
+			return fail(400, { error: 'Close the current book poll and spin the next book first.' });
 		}
 
 		try {
-			await createCycle(database, label.trim());
+			await createCycle(database);
 		} catch {
-			return fail(400, { error: 'A session is already open.' });
+			return fail(400, { error: 'A book poll is already open.' });
 		}
-		return { success: 'A new suggestion session is open.' };
+		return { success: 'A new book poll is open.' };
 	},
 
 	saveSuggestion: async (event) => {
@@ -73,7 +67,7 @@ export const actions: Actions = {
 		const author = form.get('author');
 
 		if (!activeCycle || activeCycle.status !== 'open') {
-			return fail(400, { error: 'There is no open suggestion session.' });
+			return fail(400, { error: 'There is no open book poll.' });
 		}
 
 		if (!Number.isInteger(position) || position < 1 || position > 3) {
@@ -134,25 +128,25 @@ export const actions: Actions = {
 		const member = await requireBookclubMember(event);
 
 		if (member.role !== 'admin') {
-			return fail(403, { error: 'Only the club admin can close a session.' });
+			return fail(403, { error: 'Only the club admin can close a book poll.' });
 		}
 
 		const database = getBookclubDatabase(event.platform);
 		const activeCycle = await getLatestActionCycle(database);
 
 		if (!activeCycle || activeCycle.status !== 'open') {
-			return fail(400, { error: 'There is no open session to close.' });
+			return fail(400, { error: 'There is no open book poll to close.' });
 		}
 
 		try {
 			await closeCycle(database, activeCycle.id);
 		} catch (error) {
 			return fail(400, {
-				error: error instanceof Error ? error.message : 'The session could not be closed.'
+				error: error instanceof Error ? error.message : 'The book poll could not be closed.'
 			});
 		}
 
-		return { success: 'The suggestion session is closed and ready for the draw.' };
+		return { success: 'The book poll is closed and ready to choose the next book.' };
 	},
 
 	scheduleMeeting: async (event) => {
@@ -323,7 +317,7 @@ export const actions: Actions = {
 		const cycle = await getLatestActionCycle(database);
 
 		if (!cycle) {
-			return fail(400, { error: 'There is no session ready to draw.' });
+			return fail(400, { error: 'There is no book poll ready to draw.' });
 		}
 
 		let book;

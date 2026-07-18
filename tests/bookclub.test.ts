@@ -28,12 +28,12 @@ import {
 import {
 	closeCycle,
 	createCycle,
-	deleteCycle,
+	deleteBookPoll,
 	deleteSuggestion,
 	drawCycle,
 	getArchive,
 	getDashboard,
-	getSessionSummaries,
+	getBookPollSummaries,
 	saveSuggestion
 } from '../src/lib/server/bookclub/cycles';
 import {
@@ -327,7 +327,7 @@ describe('book-club cycles and suggestions', () => {
 	it('enforces member-owned suggestion slots and reports progress', async () => {
 		const firstMember = await createTestMember('Ramis');
 		const secondMember = await createTestMember('Alex');
-		await createCycle(database, 'Session 01');
+		await createCycle(database);
 		const cycleId = await getOpenCycleId();
 
 		await saveSuggestion(database, cycleId, firstMember.id, 1, 'Dune', 'Frank Herbert');
@@ -365,7 +365,7 @@ describe('book-club cycles and suggestions', () => {
 
 	it('locks a cycle before drawing and persists one winner', async () => {
 		const members = [await createTestMember('Ramis'), await createTestMember('Alex')];
-		await createCycle(database, 'Session 02');
+		await createCycle(database);
 		const cycleId = await getOpenCycleId();
 		await fillSuggestions(cycleId, members);
 
@@ -403,7 +403,7 @@ describe('book-club cycles and suggestions', () => {
 
 	it('draws from a partially filled suggestion pool', async () => {
 		const members = [await createTestMember('Ramis'), await createTestMember('Alex')];
-		await createCycle(database, 'Session 03');
+		await createCycle(database);
 		const cycleId = await getOpenCycleId();
 		await saveSuggestion(database, cycleId, members[0].id, 1, 'Only Book', 'Only Author');
 		await closeCycle(database, cycleId);
@@ -414,10 +414,10 @@ describe('book-club cycles and suggestions', () => {
 		});
 	});
 
-	it('lists past books and deletes a session with its associated data', async () => {
+	it('lists past books and deletes a book poll with its associated data', async () => {
 		const member = await createTestMember('Ramis');
 
-		await createCycle(database, 'Session 04');
+		await createCycle(database);
 		const firstCycleId = await getOpenCycleId();
 		await saveSuggestion(
 			database,
@@ -437,8 +437,9 @@ describe('book-club cycles and suggestions', () => {
 			.bind(crypto.randomUUID(), firstBook.id, member.id, 5, 'A test review')
 			.run();
 
-		await createCycle(database, 'Session 05');
+		await createCycle(database);
 		const secondCycleId = await getOpenCycleId();
+		expect((await getDashboard(database, member)).currentBook?.id).toBe(firstBook.id);
 		await saveSuggestion(
 			database,
 			secondCycleId,
@@ -448,20 +449,35 @@ describe('book-club cycles and suggestions', () => {
 			'Second Author'
 		);
 		await closeCycle(database, secondCycleId);
+		expect((await getDashboard(database, member)).currentBook?.id).toBe(firstBook.id);
 		await drawCycle(database, secondCycleId, member.id);
+		expect(
+			await database
+				.prepare('SELECT started_at, completed_at FROM bookclub_books WHERE id = ?')
+				.bind(firstBook.id)
+				.first<{ started_at: string; completed_at: string | null }>()
+		).toMatchObject({ started_at: firstBook.startedAt, completed_at: expect.any(String) });
 
 		expect(await getArchive(database)).toMatchObject([
 			{
 				id: firstCycleId,
-				label: 'Session 04',
 				book: { id: firstBook.id, title: 'First Archive Book' },
 				reviewCount: 1
 			}
 		]);
-		expect(await getSessionSummaries(database)).toHaveLength(2);
+		expect(await getBookPollSummaries(database)).toHaveLength(2);
 
-		expect(await deleteCycle(database, firstCycleId)).toBe(true);
-		expect(await deleteCycle(database, firstCycleId)).toBe(false);
+		expect(await deleteBookPoll(database, secondCycleId)).toBe(true);
+		expect((await getDashboard(database, member)).currentBook?.id).toBe(firstBook.id);
+		expect(
+			await database
+				.prepare('SELECT completed_at FROM bookclub_books WHERE id = ?')
+				.bind(firstBook.id)
+				.first<{ completed_at: string | null }>()
+		).toEqual({ completed_at: null });
+
+		expect(await deleteBookPoll(database, firstCycleId)).toBe(true);
+		expect(await deleteBookPoll(database, firstCycleId)).toBe(false);
 		expect(
 			await database
 				.prepare(
@@ -482,8 +498,7 @@ describe('book-club cycles and suggestions', () => {
 				}>()
 		).toEqual({ reviews: 0, draws: 0, suggestions: 0, cycles: 0, books: 0 });
 
-		expect(await deleteCycle(database, secondCycleId)).toBe(true);
-		expect(await getSessionSummaries(database)).toEqual([]);
+		expect(await getBookPollSummaries(database)).toEqual([]);
 	});
 });
 

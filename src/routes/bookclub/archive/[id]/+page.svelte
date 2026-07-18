@@ -15,7 +15,7 @@
 
 <svelte:head>
 	<title>{data.entry.book.title} // BMBMT Archive | Ramis Bhatty</title>
-	<meta name="description" content={`Archived book-club session: ${data.entry.book.title}.`} />
+	<meta name="description" content={`Archived book-club record: ${data.entry.book.title}.`} />
 </svelte:head>
 
 <main class="min-h-screen bg-[#008080] p-2 font-mono text-sm text-black sm:p-4">
@@ -40,7 +40,7 @@
 
 				<section class="mt-4 border-4 border-black bg-[#d4d0c8] shadow-[4px_4px_0_#000]">
 					<div class="border-b-2 border-black bg-[#808080] px-3 py-2 font-bold text-white">
-						{data.entry.label} // ARCHIVED SESSION
+						{data.entry.book.title} // ARCHIVED BOOK
 					</div>
 					<div class="grid gap-5 p-4 sm:grid-cols-[160px_1fr] sm:p-5">
 						{#if data.entry.book.coverUrl && !coverFailed}
@@ -73,10 +73,12 @@
 							<h2 class="mt-2 text-3xl font-black sm:text-5xl">{data.entry.book.title}</h2>
 							<p class="mt-3 text-lg">By {data.entry.book.author}</p>
 							<div class="mt-5 border-2 border-black bg-white p-3 text-xs leading-5">
-								<p><strong>SESSION:</strong> {data.entry.label}</p>
-								<p><strong>RECORDED:</strong> {formatDate(data.entry.createdAt)}</p>
+								<p><strong>POLL OPENED:</strong> {formatDate(data.entry.openedAt)}</p>
 								{#if data.entry.book.startedAt}
-									<p><strong>STARTED:</strong> {formatDate(data.entry.book.startedAt)}</p>
+									<p><strong>BOOK STARTED:</strong> {formatDate(data.entry.book.startedAt)}</p>
+								{/if}
+								{#if data.entry.book.completedAt}
+									<p><strong>BOOK COMPLETED:</strong> {formatDate(data.entry.book.completedAt)}</p>
 								{/if}
 							</div>
 						</div>
@@ -89,8 +91,8 @@
 					</div>
 					<div class="p-4 sm:p-5">
 						<p class="leading-6">
-							This is the permanent record for this reading session. Member reviews, favourite
-							quotes, and other notes will live here when the review desk is switched on.
+							This is the permanent record for this book. Member reviews, favourite quotes, and
+							other notes will live here when the review desk is switched on.
 						</p>
 						<div class="mt-4 border-2 border-dashed border-black bg-[#ffffcc] p-4 text-xs">
 							<p class="font-bold text-[#800000]">REVIEW DESK // NOT YET OPEN</p>
