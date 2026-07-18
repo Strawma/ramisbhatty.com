@@ -207,7 +207,7 @@
 						</p>
 						<div class="mt-4 grid gap-2 sm:grid-cols-3">
 							<div class="border-2 border-black bg-white p-3">
-								<p class="text-xs font-bold text-[#000080]">CURRENT MISSION</p>
+								<p class="text-xs font-bold text-[#000080]">CURRENT BOOK</p>
 								<p class="mt-2 font-bold">
 									{data.dashboard.currentBook?.title ?? 'No book selected yet.'}
 								</p>
