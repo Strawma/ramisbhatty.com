@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href="/bookclub/favicon.svg" type="image/svg+xml" />
+	<link rel="icon" href="/bookclub/favicon.ico" type="image/x-icon" />
 </svelte:head>
 
 {@render children()}
