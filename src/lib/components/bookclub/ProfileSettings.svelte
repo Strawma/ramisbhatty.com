@@ -53,7 +53,7 @@
 			class="h-10 w-full cursor-pointer border-2 border-black bg-white p-1"
 		/>
 		<p class="text-[10px] text-gray-600">
-			Your name in chat uses this color. Dark colors get a white outline automatically.
+			Your name in chat uses this color. Dark colors become high-contrast badges automatically.
 		</p>
 		<button
 			type="submit"

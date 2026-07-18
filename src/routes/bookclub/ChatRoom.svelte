@@ -311,7 +311,7 @@
 							>
 						{:else}
 							<span
-								style:color={message.memberColor}
+								style={`color: ${message.memberColor}; --member-color: ${message.memberColor};`}
 								class:chat-name-outline={message.memberColorNeedsOutline}
 								class="min-w-0 truncate font-bold"
 								title={message.memberName}>{message.memberName}:</span
@@ -395,8 +395,10 @@
 
 <style>
 	.chat-name-outline {
-		text-shadow:
-			0 0 1px white,
-			0 0 3px rgb(255 255 255 / 0.85);
+		color: white !important;
+		background-color: var(--member-color);
+		border: 1px solid white;
+		padding: 0 2px;
+		text-shadow: 1px 1px 0 rgb(0 0 0 / 0.75);
 	}
 </style>
