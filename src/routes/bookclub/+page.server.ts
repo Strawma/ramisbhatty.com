@@ -4,7 +4,7 @@ import { requireBookclubMember } from '$lib/server/bookclub/auth';
 import {
 	ChatCooldownError,
 	createChatMessage,
-	restoreChatMessageByAdmin,
+	restoreChatMessage,
 	tombstoneChatMessageByAdmin,
 	tombstoneOwnChatMessage
 } from '$lib/server/bookclub/chat';
@@ -311,8 +311,15 @@ export const actions: Actions = {
 			return fail(400, { error: 'The message could not be identified.' });
 		}
 
-		if (!(await restoreChatMessageByAdmin(getBookclubDatabase(event.platform), messageId))) {
-			return fail(400, { error: 'Only restorable deleted user messages can be restored.' });
+		if (
+			!(await restoreChatMessage(
+				getBookclubDatabase(event.platform),
+				messageId,
+				member.id,
+				member.role === 'admin'
+			))
+		) {
+			return fail(400, { error: 'You cannot restore that deleted message.' });
 		}
 
 		return { success: 'Message restored.' };

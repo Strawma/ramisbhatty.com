@@ -25,6 +25,7 @@ export interface BookclubChatMessage {
 	isAnnouncement: boolean;
 	isDeleted: boolean;
 	canRestore: boolean;
+	deletedBy: 'member' | 'admin' | null;
 }
 
 export interface BookclubChatMember {
@@ -87,7 +88,8 @@ export async function getChatMessages(
 		isOwn: message.member_id === memberId,
 		isAnnouncement: message.message_type === 'announcement',
 		isDeleted: Boolean(message.deleted_at),
-		canRestore: Boolean(message.deleted_at && message.original_body)
+		canRestore: Boolean(message.deleted_at && message.original_body),
+		deletedBy: message.deleted_by
 	}));
 }
 
@@ -195,17 +197,20 @@ export async function tombstoneOwnChatMessage(
 	return Boolean(result.meta.changes);
 }
 
-export async function restoreChatMessageByAdmin(
+export async function restoreChatMessage(
 	database: D1Database,
-	messageId: string
+	messageId: string,
+	memberId: string,
+	isAdmin: boolean
 ): Promise<boolean> {
 	const result = await database
 		.prepare(
 			`UPDATE bookclub_chat_messages
 			 SET body = original_body, original_body = NULL, deleted_at = NULL, deleted_by = NULL
-			 WHERE id = ? AND message_type = 'user' AND deleted_at IS NOT NULL AND original_body IS NOT NULL`
+			 WHERE id = ? AND message_type = 'user' AND deleted_at IS NOT NULL AND original_body IS NOT NULL
+			   AND ((member_id = ? AND deleted_by = 'member') OR (? = 1 AND deleted_by = 'admin'))`
 		)
-		.bind(messageId)
+		.bind(messageId, memberId, isAdmin ? 1 : 0)
 		.run();
 
 	return Boolean(result.meta.changes);

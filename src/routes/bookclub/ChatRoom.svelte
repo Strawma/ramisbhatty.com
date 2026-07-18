@@ -19,6 +19,7 @@
 		isAnnouncement: boolean;
 		isDeleted: boolean;
 		canRestore: boolean;
+		deletedBy: 'member' | 'admin' | null;
 	};
 
 	type Member = {
@@ -341,7 +342,7 @@
 								</button>
 							</form>
 						{/if}
-						{#if isAdmin && message.isDeleted && message.canRestore}
+						{#if message.isDeleted && message.canRestore && ((message.isOwn && message.deletedBy === 'member') || (isAdmin && message.deletedBy === 'admin'))}
 							<form
 								method="POST"
 								action="?/restoreMessage"

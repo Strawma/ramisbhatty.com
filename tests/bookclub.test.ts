@@ -11,7 +11,7 @@ import {
 	createChatMessage,
 	getChatMembers,
 	getChatMessages,
-	restoreChatMessageByAdmin,
+	restoreChatMessage,
 	tombstoneChatMessageByAdmin,
 	tombstoneOwnChatMessage
 } from '../src/lib/server/bookclub/chat';
@@ -566,8 +566,8 @@ describe('book-club chat and meetings', () => {
 			isDeleted: true,
 			canRestore: true
 		});
-		expect(await restoreChatMessageByAdmin(database, memberMessage?.id ?? '')).toBe(true);
-		expect(await restoreChatMessageByAdmin(database, memberMessage?.id ?? '')).toBe(false);
+		expect(await restoreChatMessage(database, memberMessage?.id ?? '', admin.id, true)).toBe(true);
+		expect(await restoreChatMessage(database, memberMessage?.id ?? '', admin.id, true)).toBe(false);
 		expect(await getChatMessages(database, member.id)).toEqual(
 			expect.arrayContaining([
 				expect.objectContaining({
@@ -593,13 +593,15 @@ describe('book-club chat and meetings', () => {
 			.run();
 
 		expect(await tombstoneOwnChatMessage(database, ownMessageId, member.id)).toBe(true);
-		expect(await tombstoneOwnChatMessage(database, ownMessageId, member.id)).toBe(false);
+		expect(await restoreChatMessage(database, ownMessageId, admin.id, true)).toBe(false);
+		expect(await restoreChatMessage(database, ownMessageId, member.id, false)).toBe(true);
 		expect(await getChatMessages(database, member.id)).toEqual(
 			expect.arrayContaining([
 				expect.objectContaining({
 					id: ownMessageId,
-					body: '[DELETED BY MEMBER]',
-					isDeleted: true
+					body: 'Own message to remove',
+					isDeleted: false,
+					canRestore: false
 				})
 			])
 		);
@@ -613,12 +615,14 @@ describe('book-club chat and meetings', () => {
 			.bind(adminOwnMessageId, admin.id, 'Admin own message')
 			.run();
 		expect(await tombstoneOwnChatMessage(database, adminOwnMessageId, admin.id)).toBe(true);
+		expect(await restoreChatMessage(database, adminOwnMessageId, admin.id, true)).toBe(true);
 		expect(await getChatMessages(database, admin.id)).toEqual(
 			expect.arrayContaining([
 				expect.objectContaining({
 					id: adminOwnMessageId,
-					body: '[DELETED BY MEMBER]',
-					canRestore: true
+					body: 'Admin own message',
+					isDeleted: false,
+					canRestore: false
 				})
 			])
 		);
