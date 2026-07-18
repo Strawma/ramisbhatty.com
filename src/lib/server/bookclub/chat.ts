@@ -4,6 +4,7 @@ import { isReadableChatColor } from './colors';
 const CHAT_MESSAGE_LIMIT = 50;
 const CHAT_MESSAGE_COOLDOWN_MS = 5_000;
 export const CHAT_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
+export const CHAT_PRESENCE_WINDOW_MS = 20_000;
 
 export class ChatCooldownError extends Error {
 	constructor() {
@@ -25,6 +26,18 @@ export interface BookclubChatMessage {
 	isDeleted: boolean;
 }
 
+export interface BookclubChatMember {
+	id: string;
+	name: string;
+	isOwn: boolean;
+	isOnline: boolean;
+}
+
+export interface BookclubChatState {
+	messages: BookclubChatMessage[];
+	members: BookclubChatMember[];
+}
+
 interface ChatMessageRow {
 	id: string;
 	member_id: string;
@@ -34,6 +47,12 @@ interface ChatMessageRow {
 	created_at: string;
 	message_type: 'user' | 'announcement';
 	deleted_at: string | null;
+}
+
+interface ChatMemberRow {
+	id: string;
+	name: string;
+	last_seen_at: string | null;
 }
 
 export async function getChatMessages(
@@ -66,6 +85,41 @@ export async function getChatMessages(
 		isAnnouncement: message.message_type === 'announcement',
 		isDeleted: Boolean(message.deleted_at)
 	}));
+}
+
+export async function getChatMembers(
+	database: D1Database,
+	memberId: string
+): Promise<BookclubChatMember[]> {
+	const cutoff = new Date(Date.now() - CHAT_PRESENCE_WINDOW_MS).toISOString();
+	const members = await database
+		.prepare(
+			`SELECT id, name, last_seen_at
+			 FROM bookclub_members
+			 WHERE active = 1
+			 ORDER BY CASE WHEN last_seen_at >= ? THEN 0 ELSE 1 END, lower(name)`
+		)
+		.bind(cutoff)
+		.all<ChatMemberRow>();
+
+	return members.results.map((member) => ({
+		id: member.id,
+		name: member.name,
+		isOwn: member.id === memberId,
+		isOnline: member.last_seen_at !== null && member.last_seen_at >= cutoff
+	}));
+}
+
+export async function getChatroomState(
+	database: D1Database,
+	memberId: string
+): Promise<BookclubChatState> {
+	const [messages, members] = await Promise.all([
+		getChatMessages(database, memberId),
+		getChatMembers(database, memberId)
+	]);
+
+	return { messages, members };
 }
 
 export function prepareChatAnnouncement(database: D1Database, memberId: string, body: string) {

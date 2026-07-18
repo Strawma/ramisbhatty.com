@@ -20,9 +20,31 @@
 		isDeleted: boolean;
 	};
 
-	let { messages, isAdmin }: { messages: Message[]; isAdmin: boolean } = $props();
-	let polledMessages = $state<Message[] | null>(null);
-	let visibleMessages = $derived(polledMessages ?? messages);
+	type Member = {
+		id: string;
+		name: string;
+		isOwn: boolean;
+		isOnline: boolean;
+	};
+
+	type ChatState = {
+		messages: Message[];
+		members: Member[];
+	};
+
+	let {
+		messages,
+		members,
+		isAdmin
+	}: {
+		messages: Message[];
+		members: Member[];
+		isAdmin: boolean;
+	} = $props();
+	let polledState = $state<ChatState | null>(null);
+	let visibleMessages = $derived(polledState?.messages ?? messages);
+	let visibleMembers = $derived(polledState?.members ?? members);
+	let onlineMemberCount = $derived(visibleMembers.filter((member) => member.isOnline).length);
 	let soundsEnabled = $state(false);
 	let soundUnavailable = $state(false);
 	let audioContext: AudioContext | null = null;
@@ -31,6 +53,8 @@
 	let hasSeenMessages = false;
 	let hasInitialisedScroll = false;
 	const seenMessageIds = new SvelteSet<string>();
+	const previousOnlineMemberIds = new SvelteSet<string>();
+	let hasSeenPresence = false;
 
 	onMount(() => {
 		soundsEnabled = loadAudioPreferences().soundsEnabled;
@@ -79,7 +103,7 @@
 				credentials: 'same-origin'
 			});
 
-			if (response.ok) polledMessages = (await response.json()) as Message[];
+			if (response.ok) polledState = (await response.json()) as ChatState;
 		} catch {
 			// Keep the last successful chat state when a poll fails.
 		}
@@ -91,6 +115,26 @@
 		}, 5000);
 
 		return () => window.clearInterval(interval);
+	});
+
+	$effect(() => {
+		const currentMembers = visibleMembers;
+		const currentOnlineMemberIds = new Set(
+			currentMembers.filter((member) => member.isOnline).map((member) => member.id)
+		);
+
+		if (!hasSeenPresence) {
+			hasSeenPresence = true;
+		} else if (soundsEnabled) {
+			for (const member of currentMembers) {
+				if (member.isOnline && !member.isOwn && !previousOnlineMemberIds.has(member.id)) {
+					playMemberOnlineSound();
+				}
+			}
+		}
+
+		previousOnlineMemberIds.clear();
+		for (const memberId of currentOnlineMemberIds) previousOnlineMemberIds.add(memberId);
 	});
 
 	$effect(() => {
@@ -161,6 +205,11 @@
 		playTone(660, 0.12, 0, 'sine');
 	}
 
+	function playMemberOnlineSound(): void {
+		playTone(740, 0.08, 0, 'sine');
+		playTone(1040, 0.14, 0.08, 'sine');
+	}
+
 	async function toggleSounds(): Promise<void> {
 		if (soundsEnabled) {
 			soundsEnabled = false;
@@ -212,7 +261,7 @@
 >
 	<div class="flex min-h-56 flex-col p-3">
 		<div class="mb-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-gray-600">
-			<span>Incoming messages use browser-generated tones.</span>
+			<span>Incoming messages and new arrivals use browser-generated tones.</span>
 			<button
 				type="button"
 				onclick={toggleSounds}
@@ -294,6 +343,32 @@
 					</div>
 				{/each}
 			{/if}
+		</div>
+		<div class="mt-3 border-2 border-black bg-[#c0c0c0] p-2 text-[10px] text-black">
+			<div class="mb-2 flex items-center justify-between gap-2 font-bold text-[#000080]">
+				<h3>CLUB MEMBERS</h3>
+				<span>{onlineMemberCount}/{visibleMembers.length} ONLINE</span>
+			</div>
+			<ul
+				class="grid max-h-28 gap-1 overflow-y-auto border-2 border-black bg-white p-2 sm:grid-cols-2"
+			>
+				{#each visibleMembers as member (member.id)}
+					<li class="flex min-w-0 items-center gap-2">
+						<span
+							class:bg-green-600={member.isOnline}
+							class:bg-red-700={!member.isOnline}
+							class="h-2 w-2 shrink-0 rounded-full border border-black"
+							aria-hidden="true"
+						></span>
+						<span class="min-w-0 truncate font-bold" title={member.name}
+							>{member.name}{member.isOwn ? ' (YOU)' : ''}</span
+						>
+						<span class="ml-auto shrink-0 text-gray-600"
+							>{member.isOnline ? 'ONLINE' : 'OFFLINE'}</span
+						>
+					</li>
+				{/each}
+			</ul>
 		</div>
 		<form method="POST" action="?/sendMessage" use:enhance class="mt-3 flex gap-2">
 			<label for="chat-message" class="sr-only">Chat message</label>

@@ -441,6 +441,7 @@
 						>
 							<ChatRoom
 								messages={data.dashboard.chatMessages}
+								members={data.dashboard.chatMembers}
 								isAdmin={data.member.role === 'admin'}
 							/>
 						</DashboardPanel>

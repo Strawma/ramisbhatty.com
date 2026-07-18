@@ -1,6 +1,11 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import type { BookclubMember } from './db';
-import { getChatMessages, prepareChatAnnouncement, type BookclubChatMessage } from './chat';
+import {
+	getChatroomState,
+	prepareChatAnnouncement,
+	type BookclubChatMember,
+	type BookclubChatMessage
+} from './chat';
 import { getNextMeeting, type BookclubMeeting } from './meetings';
 
 const SUGGESTION_LIMIT = 3;
@@ -45,6 +50,7 @@ export interface BookclubDashboard {
 	suggestionProgress: SuggestionProgress[];
 	nextMeeting: BookclubMeeting | null;
 	chatMessages: BookclubChatMessage[];
+	chatMembers: BookclubChatMember[];
 }
 
 interface CycleRow {
@@ -99,7 +105,7 @@ export async function getDashboard(
 	database: D1Database,
 	member: BookclubMember
 ): Promise<BookclubDashboard> {
-	const [currentCycle, actionCycle, mySuggestions, suggestionProgress, nextMeeting, chatMessages] =
+	const [currentCycle, actionCycle, mySuggestions, suggestionProgress, nextMeeting, chatroomState] =
 		await Promise.all([
 			database
 				.prepare(
@@ -154,7 +160,7 @@ export async function getDashboard(
 				)
 				.all<ProgressRow>(),
 			getNextMeeting(database),
-			getChatMessages(database, member.id)
+			getChatroomState(database, member.id)
 		]);
 
 	const currentCycleValue = toCycle(currentCycle.results[0] ?? null);
@@ -179,7 +185,8 @@ export async function getDashboard(
 			count: progress.count
 		})),
 		nextMeeting,
-		chatMessages
+		chatMessages: chatroomState.messages,
+		chatMembers: chatroomState.members
 	};
 }
 

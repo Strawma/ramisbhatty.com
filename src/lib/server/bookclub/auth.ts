@@ -219,6 +219,15 @@ export async function getSessionMember(event: RequestEvent): Promise<BookclubMem
 		return null;
 	}
 
+	await database
+		.prepare(
+			`UPDATE bookclub_members
+			 SET last_seen_at = ?
+			 WHERE id = ? AND (last_seen_at IS NULL OR last_seen_at < ?)`
+		)
+		.bind(now, result.id, new Date(Date.now() - 5_000).toISOString())
+		.run();
+
 	return result;
 }
 

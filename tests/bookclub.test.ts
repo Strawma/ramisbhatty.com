@@ -9,6 +9,7 @@ import {
 import {
 	ChatCooldownError,
 	createChatMessage,
+	getChatMembers,
 	getChatMessages,
 	tombstoneChatMessageByAdmin,
 	tombstoneOwnChatMessage
@@ -418,6 +419,10 @@ describe('book-club chat and meetings', () => {
 		const otherMember = await createTestMember('Blair');
 
 		await setMemberChatColor(database, member.id, '#123abc');
+		await database
+			.prepare('UPDATE bookclub_members SET last_seen_at = ? WHERE id = ?')
+			.bind(new Date().toISOString(), member.id)
+			.run();
 		await createChatMessage(database, member.id, 'Member message');
 		await database
 			.prepare(
@@ -446,6 +451,12 @@ describe('book-club chat and meetings', () => {
 			memberColor: '#123abc',
 			memberColorNeedsOutline: true
 		});
+		expect(await getChatMembers(database, member.id)).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({ id: member.id, isOwn: true, isOnline: true }),
+				expect.objectContaining({ id: otherMember.id, isOnline: false })
+			])
+		);
 
 		await expect(tombstoneChatMessageByAdmin(database, memberMessage?.id ?? '')).resolves.toBe(
 			true
