@@ -1,4 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
+import { buildTimestamp } from '$lib/data/build-info';
 import { requireBookclubMember } from '$lib/server/bookclub/auth';
 import {
 	ChatCooldownError,
@@ -28,7 +29,7 @@ export const load: PageServerLoad = async (event) => {
 	const database = getBookclubDatabase(event.platform);
 	const dashboard = await getDashboard(database, member);
 
-	return { member, dashboard, loadedAt: new Date().toISOString() };
+	return { member, dashboard, buildTimestamp };
 };
 
 export const actions: Actions = {
