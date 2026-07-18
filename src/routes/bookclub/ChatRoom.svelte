@@ -395,7 +395,8 @@
 
 <style>
 	.chat-name-outline {
-		-webkit-text-stroke: 1px white;
-		paint-order: stroke fill;
+		text-shadow:
+			0 0 1px white,
+			0 0 3px rgb(255 255 255 / 0.85);
 	}
 </style>
