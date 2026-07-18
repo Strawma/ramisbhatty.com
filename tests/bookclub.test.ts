@@ -11,6 +11,7 @@ import {
 	createChatMessage,
 	getChatMembers,
 	getChatMessages,
+	restoreChatMessageByAdmin,
 	tombstoneChatMessageByAdmin,
 	tombstoneOwnChatMessage
 } from '../src/lib/server/bookclub/chat';
@@ -548,18 +549,35 @@ describe('book-club chat and meetings', () => {
 			])
 		);
 
-		await expect(tombstoneChatMessageByAdmin(database, memberMessage?.id ?? '')).resolves.toBe(
-			true
+		await expect(
+			tombstoneChatMessageByAdmin(database, memberMessage?.id ?? '', admin.id)
+		).resolves.toBe(true);
+		expect(await tombstoneChatMessageByAdmin(database, announcement?.id ?? '', admin.id)).toBe(
+			false
 		);
-		expect(await tombstoneChatMessageByAdmin(database, announcement?.id ?? '')).toBe(false);
 		expect(await tombstoneOwnChatMessage(database, otherMessage?.id ?? '', member.id)).toBe(false);
-		expect(await tombstoneChatMessageByAdmin(database, memberMessage?.id ?? '')).toBe(false);
+		expect(await tombstoneChatMessageByAdmin(database, memberMessage?.id ?? '', admin.id)).toBe(
+			false
+		);
 
 		const afterAdminDelete = await getChatMessages(database, member.id);
 		expect(afterAdminDelete.find((message) => message.id === memberMessage?.id)).toMatchObject({
 			body: '[DELETED BY ADMIN]',
-			isDeleted: true
+			isDeleted: true,
+			canRestore: true
 		});
+		expect(await restoreChatMessageByAdmin(database, memberMessage?.id ?? '')).toBe(true);
+		expect(await restoreChatMessageByAdmin(database, memberMessage?.id ?? '')).toBe(false);
+		expect(await getChatMessages(database, member.id)).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({
+					id: memberMessage?.id,
+					body: 'Member message',
+					isDeleted: false,
+					canRestore: false
+				})
+			])
+		);
 		expect(afterAdminDelete.find((message) => message.id === announcement?.id)).toMatchObject({
 			body: 'SYSTEM: Important club notice',
 			isDeleted: false
@@ -582,6 +600,25 @@ describe('book-club chat and meetings', () => {
 					id: ownMessageId,
 					body: '[DELETED BY MEMBER]',
 					isDeleted: true
+				})
+			])
+		);
+
+		const adminOwnMessageId = crypto.randomUUID();
+		await database
+			.prepare(
+				`INSERT INTO bookclub_chat_messages (id, member_id, body)
+				 VALUES (?, ?, ?)`
+			)
+			.bind(adminOwnMessageId, admin.id, 'Admin own message')
+			.run();
+		expect(await tombstoneOwnChatMessage(database, adminOwnMessageId, admin.id)).toBe(true);
+		expect(await getChatMessages(database, admin.id)).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({
+					id: adminOwnMessageId,
+					body: '[DELETED BY MEMBER]',
+					canRestore: true
 				})
 			])
 		);

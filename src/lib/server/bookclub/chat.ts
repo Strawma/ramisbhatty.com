@@ -24,6 +24,7 @@ export interface BookclubChatMessage {
 	isOwn: boolean;
 	isAnnouncement: boolean;
 	isDeleted: boolean;
+	canRestore: boolean;
 }
 
 export interface BookclubChatMember {
@@ -47,6 +48,8 @@ interface ChatMessageRow {
 	created_at: string;
 	message_type: 'user' | 'announcement';
 	deleted_at: string | null;
+	original_body: string | null;
+	deleted_by: 'member' | 'admin' | null;
 }
 
 interface ChatMemberRow {
@@ -63,7 +66,7 @@ export async function getChatMessages(
 		.prepare(
 			`SELECT chat.id, chat.member_id, members.name AS member_name, members.chat_color AS member_color,
 			        chat.body, chat.created_at,
-			        chat.message_type, chat.deleted_at
+			        chat.message_type, chat.deleted_at, chat.original_body, chat.deleted_by
 			 FROM bookclub_chat_messages AS chat
 			 INNER JOIN bookclub_members AS members ON members.id = chat.member_id
 			 WHERE chat.created_at >= ?
@@ -83,7 +86,8 @@ export async function getChatMessages(
 		createdAt: message.created_at,
 		isOwn: message.member_id === memberId,
 		isAnnouncement: message.message_type === 'announcement',
-		isDeleted: Boolean(message.deleted_at)
+		isDeleted: Boolean(message.deleted_at),
+		canRestore: Boolean(message.deleted_at && message.original_body)
 	}));
 }
 
@@ -157,15 +161,17 @@ export async function createChatMessage(
 
 export async function tombstoneChatMessageByAdmin(
 	database: D1Database,
-	messageId: string
+	messageId: string,
+	adminMemberId: string
 ): Promise<boolean> {
 	const result = await database
 		.prepare(
 			`UPDATE bookclub_chat_messages
-			 SET body = '[DELETED BY ADMIN]', deleted_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
-			 WHERE id = ? AND message_type = 'user' AND deleted_at IS NULL`
+			 SET original_body = body, body = '[DELETED BY ADMIN]', deleted_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+			     deleted_by = 'admin'
+			 WHERE id = ? AND member_id != ? AND message_type = 'user' AND deleted_at IS NULL`
 		)
-		.bind(messageId)
+		.bind(messageId, adminMemberId)
 		.run();
 
 	return Boolean(result.meta.changes);
@@ -179,10 +185,27 @@ export async function tombstoneOwnChatMessage(
 	const result = await database
 		.prepare(
 			`UPDATE bookclub_chat_messages
-			 SET body = '[DELETED BY MEMBER]', deleted_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+			 SET original_body = body, body = '[DELETED BY MEMBER]', deleted_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+			     deleted_by = 'member'
 			 WHERE id = ? AND member_id = ? AND message_type = 'user' AND deleted_at IS NULL`
 		)
 		.bind(messageId, memberId)
+		.run();
+
+	return Boolean(result.meta.changes);
+}
+
+export async function restoreChatMessageByAdmin(
+	database: D1Database,
+	messageId: string
+): Promise<boolean> {
+	const result = await database
+		.prepare(
+			`UPDATE bookclub_chat_messages
+			 SET body = original_body, original_body = NULL, deleted_at = NULL, deleted_by = NULL
+			 WHERE id = ? AND message_type = 'user' AND deleted_at IS NOT NULL AND original_body IS NOT NULL`
+		)
+		.bind(messageId)
 		.run();
 
 	return Boolean(result.meta.changes);

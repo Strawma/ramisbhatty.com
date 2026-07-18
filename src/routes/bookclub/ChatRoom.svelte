@@ -18,6 +18,7 @@
 		isOwn: boolean;
 		isAnnouncement: boolean;
 		isDeleted: boolean;
+		canRestore: boolean;
 	};
 
 	type Member = {
@@ -326,17 +327,34 @@
 						{#if !message.isAnnouncement && !message.isDeleted && (isAdmin || message.isOwn)}
 							<form
 								method="POST"
-								action={isAdmin ? '?/deleteMessage' : '?/deleteOwnMessage'}
+								action={message.isOwn ? '?/deleteOwnMessage' : '?/deleteMessage'}
 								use:enhance
 								class="col-start-3 row-start-1 ml-auto shrink-0 sm:col-auto sm:row-auto"
 							>
 								<input type="hidden" name="messageId" value={message.id} />
 								<button
 									type="submit"
-									aria-label={isAdmin ? 'Tombstone message as admin' : 'Tombstone your message'}
+									aria-label={message.isOwn ? 'Delete your message' : 'Tombstone message as admin'}
 									class="text-red-400 underline hover:text-white"
 								>
 									[x]
+								</button>
+							</form>
+						{/if}
+						{#if isAdmin && message.isDeleted && message.canRestore}
+							<form
+								method="POST"
+								action="?/restoreMessage"
+								use:enhance
+								class="col-start-3 row-start-1 ml-auto shrink-0 sm:col-auto sm:row-auto"
+							>
+								<input type="hidden" name="messageId" value={message.id} />
+								<button
+									type="submit"
+									aria-label="Restore deleted message"
+									class="text-lime-300 underline hover:text-white"
+								>
+									[RESTORE]
 								</button>
 							</form>
 						{/if}

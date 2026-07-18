@@ -4,6 +4,7 @@ import { requireBookclubMember } from '$lib/server/bookclub/auth';
 import {
 	ChatCooldownError,
 	createChatMessage,
+	restoreChatMessageByAdmin,
 	tombstoneChatMessageByAdmin,
 	tombstoneOwnChatMessage
 } from '$lib/server/bookclub/chat';
@@ -281,11 +282,40 @@ export const actions: Actions = {
 			return fail(400, { error: 'The message could not be identified.' });
 		}
 
-		if (!(await tombstoneChatMessageByAdmin(getBookclubDatabase(event.platform), messageId))) {
-			return fail(400, { error: 'Only undeleted user messages can be moderated.' });
+		if (
+			!(await tombstoneChatMessageByAdmin(
+				getBookclubDatabase(event.platform),
+				messageId,
+				member.id
+			))
+		) {
+			return fail(400, {
+				error: "Only another member's undeleted user messages can be moderated."
+			});
 		}
 
 		return { success: 'Message tombstoned.' };
+	},
+
+	restoreMessage: async (event) => {
+		const member = await requireBookclubMember(event);
+
+		if (member.role !== 'admin') {
+			return fail(403, { error: 'Only the club admin can restore chat messages.' });
+		}
+
+		const form = await event.request.formData();
+		const messageId = form.get('messageId');
+
+		if (typeof messageId !== 'string' || messageId.length === 0) {
+			return fail(400, { error: 'The message could not be identified.' });
+		}
+
+		if (!(await restoreChatMessageByAdmin(getBookclubDatabase(event.platform), messageId))) {
+			return fail(400, { error: 'Only restorable deleted user messages can be restored.' });
+		}
+
+		return { success: 'Message restored.' };
 	},
 
 	deleteOwnMessage: async (event) => {
