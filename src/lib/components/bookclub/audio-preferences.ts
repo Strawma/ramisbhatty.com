@@ -1,13 +1,16 @@
 const STORAGE_KEY = 'bookclub-audio-preferences';
+export const DEFAULT_MUSIC_VOLUME = 0.3;
 
 export interface AudioPreferences {
 	soundsEnabled: boolean;
 	musicEnabled: boolean;
+	musicVolume: number;
 }
 
 const defaultPreferences: AudioPreferences = {
 	soundsEnabled: false,
-	musicEnabled: false
+	musicEnabled: false,
+	musicVolume: DEFAULT_MUSIC_VOLUME
 };
 
 export function loadAudioPreferences(): AudioPreferences {
@@ -20,7 +23,14 @@ export function loadAudioPreferences(): AudioPreferences {
 
 		return {
 			soundsEnabled: stored.soundsEnabled === true,
-			musicEnabled: stored.musicEnabled === true
+			musicEnabled: stored.musicEnabled === true,
+			musicVolume:
+				typeof stored.musicVolume === 'number' &&
+				Number.isFinite(stored.musicVolume) &&
+				stored.musicVolume >= 0 &&
+				stored.musicVolume <= 1
+					? stored.musicVolume
+					: DEFAULT_MUSIC_VOLUME
 		};
 	} catch {
 		return { ...defaultPreferences };

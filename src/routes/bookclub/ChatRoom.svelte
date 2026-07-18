@@ -117,7 +117,12 @@
 	}
 
 	function savePreferences(): void {
-		saveAudioPreferences({ soundsEnabled, musicEnabled: loadAudioPreferences().musicEnabled });
+		const preferences = loadAudioPreferences();
+		saveAudioPreferences({
+			soundsEnabled,
+			musicEnabled: preferences.musicEnabled,
+			musicVolume: preferences.musicVolume
+		});
 	}
 
 	function playTone(
