@@ -622,14 +622,8 @@
 					{/if}
 				{/snippet}
 
-				<div class="mt-2 grid gap-5 lg:grid-cols-2">
-					{#each activePanelIds as panelId (panelId)}
-						{@render renderDashboardPanel(panelId, false)}
-					{/each}
-				</div>
-
 				{#if collapsedPanelIds.length > 0}
-					<section class="mt-4 border-2 border-black bg-[#c0c0c0] p-2">
+					<section class="mt-2 border-2 border-black bg-[#c0c0c0] p-2">
 						<div
 							class="mb-2 flex items-center justify-between gap-2 text-xs font-bold text-[#000080]"
 						>
@@ -643,6 +637,12 @@
 						</div>
 					</section>
 				{/if}
+
+				<div class="mt-2 grid gap-5 lg:grid-cols-2">
+					{#each activePanelIds as panelId (panelId)}
+						{@render renderDashboardPanel(panelId, false)}
+					{/each}
+				</div>
 			</div>
 		</div>
 
