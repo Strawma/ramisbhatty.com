@@ -51,6 +51,25 @@ export interface BookclubDashboard {
 	nextMeeting: BookclubMeeting | null;
 	chatMessages: BookclubChatMessage[];
 	chatMembers: BookclubChatMember[];
+	archive: BookclubArchiveEntry[];
+}
+
+export interface BookclubArchiveEntry {
+	id: string;
+	label: string;
+	createdAt: string;
+	book: BookclubBook;
+	reviewCount: number;
+}
+
+export interface BookclubSessionSummary {
+	id: string;
+	label: string;
+	status: BookclubCycle['status'];
+	createdAt: string;
+	book: BookclubBook | null;
+	suggestionCount: number;
+	reviewCount: number;
 }
 
 interface CycleRow {
@@ -80,6 +99,23 @@ interface ProgressRow {
 	count: number;
 }
 
+interface ArchiveRow {
+	id: string;
+	label: string;
+	created_at: string;
+	book_id: string;
+	book_title: string;
+	book_author: string;
+	book_cover_url: string | null;
+	book_started_at: string | null;
+	review_count: number;
+}
+
+interface SessionSummaryRow extends ArchiveRow {
+	status: BookclubCycle['status'];
+	suggestion_count: number;
+}
+
 function toCycle(row: CycleRow | null): BookclubCycle | null {
 	if (!row) return null;
 
@@ -101,26 +137,71 @@ function toCycle(row: CycleRow | null): BookclubCycle | null {
 	};
 }
 
+function toArchiveEntry(row: ArchiveRow): BookclubArchiveEntry {
+	return {
+		id: row.id,
+		label: row.label,
+		createdAt: row.created_at,
+		book: {
+			id: row.book_id,
+			title: row.book_title,
+			author: row.book_author,
+			coverUrl: row.book_cover_url,
+			startedAt: row.book_started_at
+		},
+		reviewCount: row.review_count
+	};
+}
+
+function toSessionSummary(row: SessionSummaryRow): BookclubSessionSummary {
+	return {
+		id: row.id,
+		label: row.label,
+		status: row.status,
+		createdAt: row.created_at,
+		book:
+			row.book_id && row.book_title && row.book_author
+				? {
+						id: row.book_id,
+						title: row.book_title,
+						author: row.book_author,
+						coverUrl: row.book_cover_url,
+						startedAt: row.book_started_at
+					}
+				: null,
+		suggestionCount: row.suggestion_count,
+		reviewCount: row.review_count
+	};
+}
+
 export async function getDashboard(
 	database: D1Database,
 	member: BookclubMember
 ): Promise<BookclubDashboard> {
-	const [currentCycle, actionCycle, mySuggestions, suggestionProgress, nextMeeting, chatroomState] =
-		await Promise.all([
-			database
-				.prepare(
-					`SELECT c.id, c.label, c.status, c.suggestion_limit, c.book_id,
+	const [
+		currentCycle,
+		actionCycle,
+		mySuggestions,
+		suggestionProgress,
+		nextMeeting,
+		chatroomState,
+		archive
+	] = await Promise.all([
+		database
+			.prepare(
+				`SELECT c.id, c.label, c.status, c.suggestion_limit, c.book_id,
 				        b.title AS book_title, b.author AS book_author, b.cover_url AS book_cover_url,
 				        b.started_at AS book_started_at
-				 FROM bookclub_cycles AS c
-				 LEFT JOIN bookclub_books AS b ON b.id = c.book_id
-				 ORDER BY c.created_at DESC
+					 FROM bookclub_cycles AS c
+					 LEFT JOIN bookclub_books AS b ON b.id = c.book_id
+					 WHERE c.status = 'drawn'
+					 ORDER BY c.created_at DESC
 				 LIMIT 1`
-				)
-				.all<CycleRow>(),
-			database
-				.prepare(
-					`SELECT c.id, c.label, c.status, c.suggestion_limit, c.book_id,
+			)
+			.all<CycleRow>(),
+		database
+			.prepare(
+				`SELECT c.id, c.label, c.status, c.suggestion_limit, c.book_id,
 				        b.title AS book_title, b.author AS book_author, b.cover_url AS book_cover_url,
 				        b.started_at AS book_started_at
 				 FROM bookclub_cycles AS c
@@ -128,23 +209,23 @@ export async function getDashboard(
 				 WHERE c.status IN ('open', 'closed')
 				 ORDER BY c.created_at DESC
 				 LIMIT 1`
-				)
-				.all<CycleRow>(),
-			database
-				.prepare(
-					`SELECT s.id, s.position, s.title, s.author,
+			)
+			.all<CycleRow>(),
+		database
+			.prepare(
+				`SELECT s.id, s.position, s.title, s.author,
 				        s.member_id, m.name AS member_name
 				 FROM bookclub_suggestions AS s
 				 INNER JOIN bookclub_members AS m ON m.id = s.member_id
 				 INNER JOIN bookclub_cycles AS c ON c.id = s.cycle_id
 				 WHERE s.member_id = ? AND c.status = 'open'
 				 ORDER BY s.position`
-				)
-				.bind(member.id)
-				.all<SuggestionRow>(),
-			database
-				.prepare(
-					`SELECT m.id AS member_id, m.name AS member_name, COUNT(s.id) AS count
+			)
+			.bind(member.id)
+			.all<SuggestionRow>(),
+		database
+			.prepare(
+				`SELECT m.id AS member_id, m.name AS member_name, COUNT(s.id) AS count
 				 FROM bookclub_members AS m
 				 LEFT JOIN bookclub_suggestions AS s
 				   ON s.member_id = m.id
@@ -157,11 +238,12 @@ export async function getDashboard(
 				 WHERE m.active = 1
 				 GROUP BY m.id, m.name
 				 ORDER BY m.name`
-				)
-				.all<ProgressRow>(),
-			getNextMeeting(database),
-			getChatroomState(database, member.id)
-		]);
+			)
+			.all<ProgressRow>(),
+		getNextMeeting(database),
+		getChatroomState(database, member.id),
+		getArchive(database)
+	]);
 
 	const currentCycleValue = toCycle(currentCycle.results[0] ?? null);
 	const actionCycleValue = toCycle(actionCycle.results[0] ?? null);
@@ -186,7 +268,8 @@ export async function getDashboard(
 		})),
 		nextMeeting,
 		chatMessages: chatroomState.messages,
-		chatMembers: chatroomState.members
+		chatMembers: chatroomState.members,
+		archive
 	};
 }
 
@@ -205,6 +288,95 @@ export async function getLatestActionCycle(database: D1Database): Promise<Bookcl
 		.first<CycleRow>();
 
 	return toCycle(cycle);
+}
+
+const ARCHIVE_BOOK_QUERY = `
+	SELECT c.id, c.label, c.created_at,
+	       b.id AS book_id, b.title AS book_title, b.author AS book_author,
+	       b.cover_url AS book_cover_url, b.started_at AS book_started_at,
+	       (SELECT COUNT(*) FROM bookclub_reviews AS r WHERE r.book_id = b.id) AS review_count
+	FROM bookclub_cycles AS c
+	INNER JOIN bookclub_books AS b ON b.id = c.book_id
+	WHERE c.status = 'drawn'
+	  AND c.id != COALESCE(
+		  (SELECT id FROM bookclub_cycles WHERE status = 'drawn' ORDER BY created_at DESC, id DESC LIMIT 1),
+		  ''
+	  )
+`;
+
+export async function getArchive(database: D1Database): Promise<BookclubArchiveEntry[]> {
+	const result = await database
+		.prepare(`${ARCHIVE_BOOK_QUERY} ORDER BY c.created_at DESC, c.id DESC`)
+		.all<ArchiveRow>();
+
+	return result.results.map(toArchiveEntry);
+}
+
+export async function getArchiveEntry(
+	database: D1Database,
+	cycleId: string
+): Promise<BookclubArchiveEntry | null> {
+	const row = await database
+		.prepare(`${ARCHIVE_BOOK_QUERY} AND c.id = ? LIMIT 1`)
+		.bind(cycleId)
+		.first<ArchiveRow>();
+
+	return row ? toArchiveEntry(row) : null;
+}
+
+export async function getSessionSummaries(database: D1Database): Promise<BookclubSessionSummary[]> {
+	const result = await database
+		.prepare(
+			`SELECT c.id, c.label, c.status, c.created_at,
+			        b.id AS book_id, b.title AS book_title, b.author AS book_author,
+			        b.cover_url AS book_cover_url, b.started_at AS book_started_at,
+			        (SELECT COUNT(*) FROM bookclub_suggestions AS s WHERE s.cycle_id = c.id) AS suggestion_count,
+			        (SELECT COUNT(*) FROM bookclub_reviews AS r WHERE r.book_id = b.id) AS review_count
+			 FROM bookclub_cycles AS c
+			 LEFT JOIN bookclub_books AS b ON b.id = c.book_id
+			 ORDER BY c.created_at DESC, c.id DESC`
+		)
+		.all<SessionSummaryRow>();
+
+	return result.results.map(toSessionSummary);
+}
+
+export async function deleteCycle(database: D1Database, cycleId: string): Promise<boolean> {
+	const cycle = await database
+		.prepare('SELECT id, book_id FROM bookclub_cycles WHERE id = ? LIMIT 1')
+		.bind(cycleId)
+		.first<{ id: string; book_id: string | null }>();
+
+	if (!cycle) return false;
+
+	const bookIsShared = cycle.book_id
+		? `AND NOT EXISTS (
+				SELECT 1 FROM bookclub_cycles WHERE book_id = ? AND id != ?
+			)`
+		: '';
+	const bookBindings = cycle.book_id ? [cycle.book_id, cycle.id] : [];
+
+	await database.batch([
+		database
+			.prepare(
+				`DELETE FROM bookclub_reviews
+				 WHERE book_id = ? ${bookIsShared}`
+			)
+			.bind(cycle.book_id, ...bookBindings),
+		database.prepare('DELETE FROM bookclub_draws WHERE cycle_id = ?').bind(cycle.id),
+		database.prepare('DELETE FROM bookclub_suggestions WHERE cycle_id = ?').bind(cycle.id),
+		database.prepare('DELETE FROM bookclub_cycles WHERE id = ?').bind(cycle.id),
+		database
+			.prepare(
+				`DELETE FROM bookclub_books
+				 WHERE id = ?
+				   AND NOT EXISTS (SELECT 1 FROM bookclub_cycles WHERE book_id = ?)
+				   AND NOT EXISTS (SELECT 1 FROM bookclub_reviews WHERE book_id = ?)`
+			)
+			.bind(cycle.book_id, cycle.book_id, cycle.book_id)
+	]);
+
+	return true;
 }
 
 export async function createCycle(database: D1Database, label: string): Promise<void> {

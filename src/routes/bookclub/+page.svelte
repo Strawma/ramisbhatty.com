@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { onMount } from 'svelte';
 	import bookclubSystemMessages from '$lib/data/bookclub-system-messages.json';
@@ -466,12 +467,46 @@
 								class="border-4 border-black bg-[#d4d0c8] shadow-[4px_4px_0_#000]"
 							>
 								<div class="border-b-2 border-black bg-[#808080] px-3 py-2 font-bold text-white">
-									ARCHIVE // EMPTY SHELVES
+									ARCHIVE // {data.dashboard.archive.length} PAST BOOK{data.dashboard.archive
+										.length === 1
+										? ''
+										: 'S'}
 								</div>
 								<div class="p-4">
-									<p class="leading-6">
-										Past books and reviews will appear here after the first reading session.
-									</p>
+									{#if data.dashboard.archive.length > 0}
+										<p class="mb-3 text-xs leading-5">
+											The shelves remember previous selections. Open a book to inspect its session
+											page.
+										</p>
+										<div
+											class="max-h-64 space-y-2 overflow-y-auto border-2 border-black bg-white p-2"
+										>
+											{#each data.dashboard.archive as entry (entry.id)}
+												<a
+													href={resolve(`/bookclub/archive/${entry.id}`)}
+													class="block border-2 border-black bg-[#ffffcc] p-3 hover:bg-white focus:ring-2 focus:ring-[#000080] focus:outline-none"
+												>
+													<div class="flex flex-wrap items-start justify-between gap-2">
+														<div>
+															<p class="text-xs font-bold text-[#000080] uppercase">
+																{entry.label}
+															</p>
+															<p class="mt-1 font-bold">{entry.book.title}</p>
+															<p class="text-xs">by {entry.book.author}</p>
+														</div>
+														<span class="text-xs font-bold underline">OPEN &gt;</span>
+													</div>
+													<p class="mt-2 text-[10px] text-gray-600">
+														{entry.reviewCount} review{entry.reviewCount === 1 ? '' : 's'} ready for later.
+													</p>
+												</a>
+											{/each}
+										</div>
+									{:else}
+										<p class="leading-6">
+											Past books will appear here once a newer reading session has been drawn.
+										</p>
+									{/if}
 								</div>
 							</section>
 						</DashboardPanel>

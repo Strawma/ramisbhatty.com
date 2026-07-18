@@ -17,6 +17,7 @@ import {
 	setMemberUsername
 } from '$lib/server/bookclub/invitations';
 import { isValidChatColor, normalizeChatColor } from '$lib/server/bookclub/colors';
+import { deleteCycle, getSessionSummaries } from '$lib/server/bookclub/cycles';
 import type { Actions, PageServerLoad } from './$types';
 
 async function requireAdmin(event: RequestEvent) {
@@ -38,7 +39,8 @@ export const load: PageServerLoad = async (event) => {
 	return {
 		member,
 		members: await getMemberSummaries(database),
-		invitations: await getInvitationSummaries(database)
+		invitations: await getInvitationSummaries(database),
+		sessions: await getSessionSummaries(database)
 	};
 };
 
@@ -261,5 +263,21 @@ export const actions: Actions = {
 
 		await invalidateMemberSessions(getBookclubDatabase(event.platform), memberId);
 		return { success: 'All sessions for that member were invalidated.' };
+	},
+
+	deleteSession: async (event) => {
+		await requireAdmin(event);
+		const form = await event.request.formData();
+		const sessionId = form.get('sessionId');
+
+		if (typeof sessionId !== 'string' || sessionId.length === 0) {
+			return fail(400, { error: 'The reading session could not be identified.' });
+		}
+
+		if (!(await deleteCycle(getBookclubDatabase(event.platform), sessionId))) {
+			return fail(404, { error: 'That reading session no longer exists.' });
+		}
+
+		return { success: 'Reading session and its associated book-club data were deleted.' };
 	}
 };

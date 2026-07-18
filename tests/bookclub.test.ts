@@ -28,9 +28,12 @@ import {
 import {
 	closeCycle,
 	createCycle,
+	deleteCycle,
 	deleteSuggestion,
 	drawCycle,
+	getArchive,
 	getDashboard,
+	getSessionSummaries,
 	saveSuggestion
 } from '../src/lib/server/bookclub/cycles';
 import {
@@ -409,6 +412,78 @@ describe('book-club cycles and suggestions', () => {
 			title: 'Only Book',
 			author: 'Only Author'
 		});
+	});
+
+	it('lists past books and deletes a session with its associated data', async () => {
+		const member = await createTestMember('Ramis');
+
+		await createCycle(database, 'Session 04');
+		const firstCycleId = await getOpenCycleId();
+		await saveSuggestion(
+			database,
+			firstCycleId,
+			member.id,
+			1,
+			'First Archive Book',
+			'First Author'
+		);
+		await closeCycle(database, firstCycleId);
+		const firstBook = await drawCycle(database, firstCycleId, member.id);
+		await database
+			.prepare(
+				`INSERT INTO bookclub_reviews (id, book_id, member_id, rating, body)
+				 VALUES (?, ?, ?, ?, ?)`
+			)
+			.bind(crypto.randomUUID(), firstBook.id, member.id, 5, 'A test review')
+			.run();
+
+		await createCycle(database, 'Session 05');
+		const secondCycleId = await getOpenCycleId();
+		await saveSuggestion(
+			database,
+			secondCycleId,
+			member.id,
+			1,
+			'Second Archive Book',
+			'Second Author'
+		);
+		await closeCycle(database, secondCycleId);
+		await drawCycle(database, secondCycleId, member.id);
+
+		expect(await getArchive(database)).toMatchObject([
+			{
+				id: firstCycleId,
+				label: 'Session 04',
+				book: { id: firstBook.id, title: 'First Archive Book' },
+				reviewCount: 1
+			}
+		]);
+		expect(await getSessionSummaries(database)).toHaveLength(2);
+
+		expect(await deleteCycle(database, firstCycleId)).toBe(true);
+		expect(await deleteCycle(database, firstCycleId)).toBe(false);
+		expect(
+			await database
+				.prepare(
+					`SELECT
+					 (SELECT COUNT(*) FROM bookclub_reviews WHERE book_id = ?) AS reviews,
+					 (SELECT COUNT(*) FROM bookclub_draws WHERE cycle_id = ?) AS draws,
+					 (SELECT COUNT(*) FROM bookclub_suggestions WHERE cycle_id = ?) AS suggestions,
+					 (SELECT COUNT(*) FROM bookclub_cycles WHERE id = ?) AS cycles,
+					 (SELECT COUNT(*) FROM bookclub_books WHERE id = ?) AS books`
+				)
+				.bind(firstBook.id, firstCycleId, firstCycleId, firstCycleId, firstBook.id)
+				.first<{
+					reviews: number;
+					draws: number;
+					suggestions: number;
+					cycles: number;
+					books: number;
+				}>()
+		).toEqual({ reviews: 0, draws: 0, suggestions: 0, cycles: 0, books: 0 });
+
+		expect(await deleteCycle(database, secondCycleId)).toBe(true);
+		expect(await getSessionSummaries(database)).toEqual([]);
 	});
 });
 
