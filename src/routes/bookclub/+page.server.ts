@@ -21,7 +21,7 @@ import {
 } from '$lib/server/bookclub/cycles';
 import { clearNextMeeting, scheduleNextMeeting } from '$lib/server/bookclub/meetings';
 import { setMemberChatColor, setMemberDisplayName } from '$lib/server/bookclub/invitations';
-import { isValidChatColor, normalizeChatColor } from '$lib/server/bookclub/colors';
+import { isReadableChatColor, normalizeChatColor } from '$lib/server/bookclub/colors';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
@@ -234,8 +234,8 @@ export const actions: Actions = {
 		const form = await event.request.formData();
 		const chatColor = form.get('chatColor');
 
-		if (typeof chatColor !== 'string' || !isValidChatColor(normalizeChatColor(chatColor))) {
-			return fail(400, { error: 'Choose a valid six-digit chat color.' });
+		if (typeof chatColor !== 'string' || !isReadableChatColor(normalizeChatColor(chatColor))) {
+			return fail(400, { error: 'Choose a bright six-digit color that reads clearly on black.' });
 		}
 
 		if (

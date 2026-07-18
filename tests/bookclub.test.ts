@@ -193,14 +193,15 @@ describe('book-club invitations', () => {
 		const member = await consumeInvitation(database, invitation.token, 'a'.repeat(12));
 
 		expect(member.chatColor).toBe('#f472b6');
-		expect(await setMemberChatColor(database, member.id, '#123ABC')).toBe(true);
+		expect(await setMemberChatColor(database, member.id, '#ff66cc')).toBe(true);
+		expect(await setMemberChatColor(database, admin.id, '#ff66cc')).toBe(false);
 		expect(await setMemberChatColor(database, admin.id, '#123abc')).toBe(false);
 		expect(
 			await database
 				.prepare('SELECT chat_color FROM bookclub_members WHERE id = ?')
 				.bind(member.id)
 				.first<{ chat_color: string }>()
-		).toMatchObject({ chat_color: '#123abc' });
+		).toMatchObject({ chat_color: '#ff66cc' });
 	});
 
 	it('replaces a previous invitation for the same username', async () => {

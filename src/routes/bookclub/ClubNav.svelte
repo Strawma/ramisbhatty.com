@@ -102,7 +102,9 @@
 				value={member.chatColor}
 				class="h-10 w-full cursor-pointer border-2 border-black bg-white p-1"
 			/>
-			<p class="text-[10px] text-gray-600">Your name in new chat messages uses this color.</p>
+			<p class="text-[10px] text-gray-600">
+				Your name in new chat messages uses this color. Choose something bright enough for black.
+			</p>
 			<button
 				type="submit"
 				class="w-full border-2 border-black bg-[#d4d0c8] px-2 py-1 text-xs font-bold shadow-[2px_2px_0_#000] hover:bg-white focus:ring-2 focus:ring-[#000080] focus:outline-none"

@@ -15,6 +15,7 @@ export const BOOKCLUB_CHAT_COLORS = [
 ] as const;
 
 const CHAT_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
+const MINIMUM_BLACK_CONTRAST = 4.5;
 
 export function isValidChatColor(value: string): boolean {
 	return CHAT_COLOR_PATTERN.test(value);
@@ -22,6 +23,23 @@ export function isValidChatColor(value: string): boolean {
 
 export function normalizeChatColor(value: string): string {
 	return value.toLowerCase();
+}
+
+function relativeLuminance(value: string): number {
+	const channels = [0, 2, 4].map(
+		(offset) => Number.parseInt(value.slice(offset + 1, offset + 3), 16) / 255
+	);
+	const linearChannels = channels.map((channel) =>
+		channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4
+	);
+
+	return 0.2126 * linearChannels[0] + 0.7152 * linearChannels[1] + 0.0722 * linearChannels[2];
+}
+
+export function isReadableChatColor(value: string): boolean {
+	return (
+		isValidChatColor(value) && (relativeLuminance(value) + 0.05) / 0.05 >= MINIMUM_BLACK_CONTRAST
+	);
 }
 
 /** Build an atomic SQL expression that picks the first palette color not already in use. */
