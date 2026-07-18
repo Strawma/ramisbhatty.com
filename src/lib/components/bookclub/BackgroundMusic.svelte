@@ -7,6 +7,7 @@
 	let audio: HTMLAudioElement | null = null;
 	let musicState = $state<'off' | 'playing' | 'paused' | 'unavailable'>('off');
 	let musicEnabled = $state(false);
+	let musicButton: HTMLButtonElement | null = null;
 
 	onMount(() => {
 		audio = new Audio(src);
@@ -16,7 +17,20 @@
 		audio.addEventListener('error', () => (musicState = 'unavailable'));
 		musicEnabled = loadAudioPreferences().musicEnabled;
 
+		const startOnPageClick = (event: MouseEvent) => {
+			if (!musicEnabled || (event.target instanceof Node && musicButton?.contains(event.target))) {
+				return;
+			}
+
+			void startMusic().then((started) => {
+				if (started) window.removeEventListener('click', startOnPageClick);
+			});
+		};
+
+		if (musicEnabled) window.addEventListener('click', startOnPageClick);
+
 		return () => {
+			window.removeEventListener('click', startOnPageClick);
 			audio?.pause();
 			audio?.removeAttribute('src');
 			audio = null;
@@ -37,19 +51,21 @@
 		await startMusic();
 	}
 
-	async function startMusic(): Promise<void> {
-		if (!audio) return;
+	async function startMusic(): Promise<boolean> {
+		if (!audio) return false;
 
 		try {
 			await audio.play();
 			musicEnabled = true;
 			musicState = 'playing';
 			savePreferences();
+			return true;
 		} catch {
 			// Autoplay can be rejected even when the saved preference is enabled.
 			musicEnabled = true;
 			musicState = 'paused';
 			savePreferences();
+			return false;
 		}
 	}
 
@@ -73,6 +89,7 @@
 		</div>
 		<button
 			type="button"
+			bind:this={musicButton}
 			onclick={toggleMusic}
 			class="border-2 border-lime-300 px-2 py-1 font-bold text-lime-300 hover:bg-lime-300 hover:text-black focus:ring-2 focus:ring-white focus:outline-none"
 			aria-label="Toggle background music"
