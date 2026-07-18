@@ -9,6 +9,7 @@
 		total,
 		collapsed,
 		wide = false,
+		tray = false,
 		onToggleCollapsed,
 		onMove,
 		onDragStart,
@@ -23,6 +24,7 @@
 		total: number;
 		collapsed: boolean;
 		wide?: boolean;
+		tray?: boolean;
 		onToggleCollapsed: () => void;
 		onMove: (direction: -1 | 1) => void;
 		onDragStart: (event: DragEvent) => void;
@@ -45,7 +47,7 @@
 <div
 	role="group"
 	draggable="true"
-	class="min-w-0 {wide ? 'lg:col-span-2' : ''}"
+	class="min-w-0 {wide && !tray ? 'lg:col-span-2' : ''}"
 	style:order={position}
 	ondragover={onDragOver}
 	ondrop={onDrop}
@@ -55,7 +57,9 @@
 	<div
 		role="toolbar"
 		aria-label={`${title} panel controls`}
-		class="flex min-h-8 items-center gap-1 border-4 border-b-0 border-black bg-[#808080] px-2 py-1 text-xs text-white"
+		class="flex min-h-8 items-center gap-1 border-4 border-black {tray
+			? ''
+			: 'border-b-0'} bg-[#808080] px-2 py-1 text-xs text-white"
 	>
 		<span class="mr-auto truncate font-bold">{title}</span>
 		<span
@@ -90,7 +94,7 @@
 			onclick={onToggleCollapsed}
 			class="border-2 border-black bg-[#c0c0c0] px-2 py-0.5 font-bold text-black hover:bg-white focus:ring-2 focus:ring-white focus:outline-none"
 			aria-expanded={!collapsed}
-			aria-controls={`${panelId}-panel`}
+			aria-controls={tray ? undefined : `${panelId}-panel`}
 			aria-label={collapsed ? `Open ${title} panel` : `Collapse ${title} panel`}
 			title={collapsed ? 'Open panel' : 'Collapse panel'}
 		>
@@ -98,7 +102,9 @@
 		</button>
 	</div>
 
-	{#if collapsed}
+	{#if tray}
+		<!-- The window bar is the tray item; its content stays mounted only in the main grid. -->
+	{:else if collapsed}
 		<div
 			id={`${panelId}-panel`}
 			class="border-4 border-dashed border-black bg-[#d4d0c8] p-4 text-xs text-gray-700"
