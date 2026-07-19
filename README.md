@@ -75,6 +75,20 @@ Run the book-club test suite against an isolated local D1 database with:
 pnpm test
 ```
 
+Run the browser-level book-club smoke tests with:
+
+```bash
+pnpm exec playwright install chromium
+pnpm test:e2e
+```
+
+The browser suite starts the local app, applies local D1 migrations, creates temporary test sessions,
+and removes its test members when it finishes. It never uses production credentials or the remote D1
+database. On Debian or Ubuntu, install Chromium's system dependencies once with
+`pnpm exec playwright install-deps chromium` if the browser cannot launch.
+Run `pnpm test:e2e` separately from `pnpm test` because both test commands use local worker/database
+resources and can contend when started at the same time.
+
 When book-club schema changes are added, apply any pending append-only migrations to the remote D1
 database before deploying the corresponding application code:
 
