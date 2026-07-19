@@ -70,8 +70,8 @@ export async function getChatMessages(
 			        chat.message_type, chat.deleted_at, chat.original_body, chat.deleted_by
 			 FROM bookclub_chat_messages AS chat
 			 INNER JOIN bookclub_members AS members ON members.id = chat.member_id
-			 WHERE chat.created_at >= ?
-			 ORDER BY chat.created_at DESC
+                WHERE chat.created_at >= ?
+                ORDER BY chat.created_at DESC, chat.id DESC
 			 LIMIT ?`
 		)
 		.bind(new Date(Date.now() - CHAT_RETENTION_MS).toISOString(), CHAT_MESSAGE_LIMIT)

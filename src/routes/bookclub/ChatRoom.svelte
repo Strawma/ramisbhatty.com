@@ -1,11 +1,15 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { onMount } from 'svelte';
+	import type { SubmitFunction } from '@sveltejs/kit';
+	import { onMount, untrack } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import {
 		loadAudioPreferences,
 		saveAudioPreferences
 	} from '$lib/components/bookclub/audio-preferences';
+
+	const CHAT_POLL_INTERVAL_MS = 5_000;
+	const CHAT_POLL_TIMEOUT_MS = 10_000;
 
 	type Message = {
 		id: string;
@@ -43,10 +47,12 @@
 		members: Member[];
 		isAdmin: boolean;
 	} = $props();
-	let polledState = $state<ChatState | null>(null);
+	let polledState = $derived<ChatState | null>({ messages, members });
 	let visibleMessages = $derived(polledState?.messages ?? messages);
 	let visibleMembers = $derived(polledState?.members ?? members);
 	let onlineMemberCount = $derived(visibleMembers.filter((member) => member.isOnline).length);
+	let pollError = $state<string | null>(null);
+	let chatActionPending = $state(false);
 	let soundsEnabled = $state(false);
 	let soundUnavailable = $state(false);
 	let audioContext: AudioContext | null = null;
@@ -57,6 +63,10 @@
 	const seenMessageIds = new SvelteSet<string>();
 	const previousOnlineMemberIds = new SvelteSet<string>();
 	let hasSeenPresence = false;
+	let pollInFlight: Promise<void> | null = null;
+	let pollQueued = false;
+	let pollController: AbortController | null = null;
+	let pollStopped = false;
 
 	onMount(() => {
 		soundsEnabled = loadAudioPreferences().soundsEnabled;
@@ -98,26 +108,104 @@
 		});
 	});
 
-	async function refreshMessages(): Promise<void> {
+	async function fetchChatState(): Promise<void> {
+		const controller = new AbortController();
+		const timeout = window.setTimeout(() => controller.abort(), CHAT_POLL_TIMEOUT_MS);
+		pollController = controller;
+
 		try {
 			const response = await fetch('/bookclub/chat', {
 				headers: { accept: 'application/json' },
-				credentials: 'same-origin'
+				credentials: 'same-origin',
+				cache: 'no-store',
+				signal: controller.signal
 			});
 
-			if (response.ok) polledState = (await response.json()) as ChatState;
-		} catch {
-			// Keep the last successful chat state when a poll fails.
+			if (!response.ok || response.redirected) {
+				throw new Error('The chat request was not accepted.');
+			}
+
+			const nextState = (await response.json()) as Partial<ChatState>;
+			if (!Array.isArray(nextState.messages) || !Array.isArray(nextState.members)) {
+				throw new Error('The chat response was invalid.');
+			}
+
+			polledState = nextState as ChatState;
+			pollError = null;
+		} catch (error) {
+			if (!pollStopped) {
+				pollError =
+					error instanceof DOMException && error.name === 'AbortError'
+						? 'Chat refresh timed out.'
+						: 'Chat refresh is currently unavailable.';
+			}
+		} finally {
+			window.clearTimeout(timeout);
+			if (pollController === controller) pollController = null;
 		}
 	}
 
-	$effect(() => {
-		const interval = window.setInterval(() => {
-			void refreshMessages();
-		}, 5000);
+	async function refreshMessages(): Promise<void> {
+		if (pollStopped) return;
 
-		return () => window.clearInterval(interval);
+		if (pollInFlight) {
+			pollQueued = true;
+			await pollInFlight;
+			if (pollQueued && !pollStopped) {
+				pollQueued = false;
+				await refreshMessages();
+			}
+			return;
+		}
+
+		pollInFlight = fetchChatState();
+		try {
+			await pollInFlight;
+		} finally {
+			pollInFlight = null;
+		}
+	}
+
+	onMount(() => {
+		pollStopped = false;
+		void refreshMessages();
+
+		const pollIfVisible = () => {
+			if (document.visibilityState === 'visible') void refreshMessages();
+		};
+		const handleVisibilityChange = () => {
+			if (document.visibilityState === 'visible') void refreshMessages();
+		};
+		const interval = window.setInterval(pollIfVisible, CHAT_POLL_INTERVAL_MS);
+		document.addEventListener('visibilitychange', handleVisibilityChange);
+
+		return () => {
+			pollStopped = true;
+			pollQueued = false;
+			pollController?.abort();
+			window.clearInterval(interval);
+			document.removeEventListener('visibilitychange', handleVisibilityChange);
+		};
 	});
+
+	const enhanceChatForm: SubmitFunction = ({ cancel }) => {
+		if (chatActionPending) {
+			cancel();
+			return;
+		}
+
+		chatActionPending = true;
+		return async ({ update, result }) => {
+			try {
+				await update({ invalidateAll: false });
+				if (result.type === 'success' || result.type === 'failure') {
+					await refreshMessages();
+				}
+			} finally {
+				chatActionPending = false;
+			}
+		};
+	};
 
 	$effect(() => {
 		const currentMembers = visibleMembers;
@@ -129,21 +217,31 @@
 			hasSeenPresence = true;
 		} else if (soundsEnabled) {
 			for (const member of currentMembers) {
-				if (member.isOnline && !member.isOwn && !previousOnlineMemberIds.has(member.id)) {
+				if (
+					member.isOnline &&
+					!member.isOwn &&
+					!untrack(() => previousOnlineMemberIds.has(member.id))
+				) {
 					playMemberOnlineSound();
 				}
 			}
 		}
 
-		previousOnlineMemberIds.clear();
-		for (const memberId of currentOnlineMemberIds) previousOnlineMemberIds.add(memberId);
+		untrack(() => {
+			previousOnlineMemberIds.clear();
+			for (const memberId of currentOnlineMemberIds) previousOnlineMemberIds.add(memberId);
+		});
 	});
 
 	$effect(() => {
 		const currentMessages = visibleMessages;
-		const newMessages = currentMessages.filter((message) => !seenMessageIds.has(message.id));
+		const newMessages = currentMessages.filter(
+			(message) => !untrack(() => seenMessageIds.has(message.id))
+		);
 
-		for (const message of currentMessages) seenMessageIds.add(message.id);
+		untrack(() => {
+			for (const message of currentMessages) seenMessageIds.add(message.id);
+		});
 
 		if (!hasSeenMessages) {
 			hasSeenMessages = true;
@@ -281,6 +379,14 @@
 				Browser audio is unavailable.
 			</p>
 		{/if}
+		{#if pollError}
+			<p
+				class="mb-3 border-2 border-black bg-[#fff0f0] px-2 py-1 text-[10px] text-[#800000]"
+				role="status"
+			>
+				{pollError} New messages will be retried automatically.
+			</p>
+		{/if}
 		<div
 			aria-live="polite"
 			bind:this={messageList}
@@ -329,14 +435,15 @@
 							<form
 								method="POST"
 								action={message.isOwn ? '?/deleteOwnMessage' : '?/deleteMessage'}
-								use:enhance
+								use:enhance={enhanceChatForm}
 								class="col-start-3 row-start-1 ml-auto shrink-0 sm:col-auto sm:row-auto"
 							>
 								<input type="hidden" name="messageId" value={message.id} />
 								<button
 									type="submit"
+									disabled={chatActionPending}
 									aria-label={message.isOwn ? 'Delete your message' : 'Tombstone message as admin'}
-									class="text-red-400 underline hover:text-white"
+									class="text-red-400 underline hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
 								>
 									[x]
 								</button>
@@ -346,14 +453,15 @@
 							<form
 								method="POST"
 								action="?/restoreMessage"
-								use:enhance
+								use:enhance={enhanceChatForm}
 								class="col-start-3 row-start-1 ml-auto shrink-0 sm:col-auto sm:row-auto"
 							>
 								<input type="hidden" name="messageId" value={message.id} />
 								<button
 									type="submit"
+									disabled={chatActionPending}
 									aria-label="Restore deleted message"
-									class="text-lime-300 underline hover:text-white"
+									class="text-lime-300 underline hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
 								>
 									[RESTORE]
 								</button>
@@ -389,7 +497,13 @@
 				{/each}
 			</ul>
 		</div>
-		<form method="POST" action="?/sendMessage" use:enhance class="mt-3 flex gap-2">
+		<form
+			method="POST"
+			action="?/sendMessage"
+			use:enhance={enhanceChatForm}
+			aria-busy={chatActionPending}
+			class="mt-3 flex gap-2"
+		>
 			<label for="chat-message" class="sr-only">Chat message</label>
 			<input
 				id="chat-message"
@@ -401,9 +515,10 @@
 			/>
 			<button
 				type="submit"
-				class="border-2 border-black bg-[#d4d0c8] px-3 py-2 font-bold shadow-[2px_2px_0_#000] hover:bg-white"
+				disabled={chatActionPending}
+				class="border-2 border-black bg-[#d4d0c8] px-3 py-2 font-bold shadow-[2px_2px_0_#000] hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
 			>
-				SEND
+				{chatActionPending ? 'WAIT...' : 'SEND'}
 			</button>
 		</form>
 		<p class="mt-2 text-right text-[10px] text-gray-600">
