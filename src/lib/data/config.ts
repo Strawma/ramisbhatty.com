@@ -10,7 +10,12 @@ export const contact = {
 
 export const nav = {
 	home: '/',
+	about: '/about',
+	work: '/work',
+	education: '/education',
 	blog: '/blog',
+	interests: '/interests',
+	cv: '/cv',
 	silly: '/silly',
 	legacy: 'https://legacy.ramisbhatty.com'
 } as const;
