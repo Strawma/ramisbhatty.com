@@ -13,8 +13,8 @@ Installed addons:
 Uses pnpm package manager.
 
 The repository does not pin a local Node.js or pnpm version. Use Unix-native tools in the
-development environment and keep the deployment-specific versions in Cloudflare Pages settings. Node.js
-20 or newer is required for the Cloudflare Workers Vitest integration used by the test suite.
+development environment and keep the deployment-specific versions in Cloudflare Pages settings.
+Node.js 22.12 or newer is required by the current Vite and Wrangler versions.
 
 ### Local development
 
@@ -102,11 +102,11 @@ The site is deployed through Cloudflare Workers/Pages using SvelteKit and Cloudf
 v3. Configure the deployment-specific versions in the Cloudflare Pages project settings instead of
 adding local version pins to this repository:
 
-- Set `NODE_VERSION` to the Node.js version required by the Cloudflare deployment.
+- Set `NODE_VERSION` to Node.js 22.12 or newer. Node.js 24 is suitable for the current dependencies.
 - Set `PNPM_VERSION` to the pnpm version required by the Cloudflare deployment.
 - Use `pnpm run build` as the build command.
 - Keep `pnpm-lock.yaml` committed so the deployment installs the tested dependency tree.
 
 The Cloudflare project settings are intentionally separate from the Unix developer toolchain.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+The repository is already configured with `@sveltejs/adapter-cloudflare`; no additional deployment
+adapter is required.
