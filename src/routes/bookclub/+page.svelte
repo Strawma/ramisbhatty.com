@@ -368,7 +368,7 @@
 								<div class="space-y-2 p-4">
 									<p class="leading-6">
 										{data.dashboard.activeCycle
-											? 'Submit three literary gambling tickets before the book poll closes.'
+											? 'Submit up to three different books before the poll closes. Leave any slots you do not need empty.'
 											: 'No book poll is open. Await further literary instructions.'}
 									</p>
 									{#each [1, 2, 3] as slot (slot)}

@@ -18,6 +18,7 @@ import {
 	getDashboard,
 	getLatestActionCycle,
 	saveSuggestion,
+	SuggestionConflictError,
 	setBookCover
 } from '$lib/server/bookclub/cycles';
 import { clearNextMeeting, scheduleNextMeeting } from '$lib/server/bookclub/meetings';
@@ -96,7 +97,10 @@ export const actions: Actions = {
 				author.trim(),
 				typeof suggestionId === 'string' && suggestionId.length > 0 ? suggestionId : undefined
 			);
-		} catch {
+		} catch (error) {
+			if (error instanceof SuggestionConflictError) {
+				return fail(400, { error: error.message });
+			}
 			return fail(400, { error: 'That suggestion could not be saved.' });
 		}
 

@@ -120,6 +120,116 @@ interface BookPollSummaryRow extends ArchiveRow {
 	suggestion_count: number;
 }
 
+export type SuggestionConflictKind = 'duplicate-suggestion' | 'previously-read';
+
+export class SuggestionConflictError extends Error {
+	constructor(
+		public readonly kind: SuggestionConflictKind,
+		public readonly matchedTitle: string,
+		public readonly matchedAuthor: string
+	) {
+		super(
+			kind === 'previously-read'
+				? `The club has already read ${matchedTitle} by ${matchedAuthor}.`
+				: `You have already suggested ${matchedTitle} by ${matchedAuthor}.`
+		);
+		this.name = 'SuggestionConflictError';
+	}
+}
+
+function normalizeBookField(value: string): string {
+	return value
+		.normalize('NFKD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.toLocaleLowerCase('en-GB')
+		.replace(/&/g, ' and ')
+		.replace(/[^a-z0-9]+/g, ' ')
+		.trim()
+		.replace(/\s+/g, ' ');
+}
+
+function editDistance(first: string, second: string): number {
+	if (first === second) return 0;
+	if (first.length === 0) return second.length;
+	if (second.length === 0) return first.length;
+
+	let previous = Array.from({ length: second.length + 1 }, (_, index) => index);
+	for (let firstIndex = 1; firstIndex <= first.length; firstIndex += 1) {
+		const current = [firstIndex];
+		for (let secondIndex = 1; secondIndex <= second.length; secondIndex += 1) {
+			current[secondIndex] = Math.min(
+				current[secondIndex - 1] + 1,
+				previous[secondIndex] + 1,
+				previous[secondIndex - 1] + (first[firstIndex - 1] === second[secondIndex - 1] ? 0 : 1)
+			);
+		}
+		previous = current;
+	}
+
+	return previous[second.length];
+}
+
+function bookFieldMatches(first: string, second: string): boolean {
+	const normalizedFirst = normalizeBookField(first);
+	const normalizedSecond = normalizeBookField(second);
+	if (normalizedFirst === normalizedSecond) return true;
+	const firstNumbers = normalizedFirst.match(/\d+/g) ?? [];
+	const secondNumbers = normalizedSecond.match(/\d+/g) ?? [];
+	if (firstNumbers.join(',') !== secondNumbers.join(',')) return false;
+
+	const longestLength = Math.max(normalizedFirst.length, normalizedSecond.length);
+	if (longestLength < 5 || Math.abs(normalizedFirst.length - normalizedSecond.length) > 3) {
+		return false;
+	}
+
+	return (
+		editDistance(normalizedFirst, normalizedSecond) <= Math.min(3, Math.floor(longestLength / 6))
+	);
+}
+
+async function assertSuggestionIsAvailable(
+	database: D1Database,
+	cycleId: string,
+	memberId: string,
+	title: string,
+	author: string,
+	suggestionId?: string
+): Promise<void> {
+	const [suggestions, books] = await Promise.all([
+		database
+			.prepare(
+				`SELECT title, author
+				 FROM bookclub_suggestions
+				 WHERE cycle_id = ? AND member_id = ? AND (? IS NULL OR id != ?)`
+			)
+			.bind(cycleId, memberId, suggestionId ?? null, suggestionId ?? null)
+			.all<{ title: string; author: string }>(),
+		database
+			.prepare('SELECT title, author FROM bookclub_books')
+			.all<{ title: string; author: string }>()
+	]);
+
+	const duplicate = suggestions.results.find(
+		(candidate) =>
+			bookFieldMatches(title, candidate.title) && bookFieldMatches(author, candidate.author)
+	);
+	if (duplicate) {
+		throw new SuggestionConflictError('duplicate-suggestion', duplicate.title, duplicate.author);
+	}
+
+	const previouslyRead = books.results.find(
+		(candidate) =>
+			bookFieldMatches(title, candidate.title) && bookFieldMatches(author, candidate.author)
+	);
+	if (previouslyRead) {
+		throw new SuggestionConflictError(
+			'previously-read',
+			previouslyRead.title,
+			previouslyRead.author
+		);
+	}
+}
+
 function toCycle(row: CycleRow | null): BookclubCycle | null {
 	if (!row) return null;
 
@@ -422,6 +532,8 @@ export async function saveSuggestion(
 	author: string,
 	suggestionId?: string
 ): Promise<void> {
+	await assertSuggestionIsAvailable(database, cycleId, memberId, title, author, suggestionId);
+
 	if (suggestionId) {
 		const result = await database
 			.prepare(

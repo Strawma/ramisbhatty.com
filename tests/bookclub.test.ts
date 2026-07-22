@@ -402,6 +402,65 @@ describe('book-club cycles and suggestions', () => {
 		);
 	});
 
+	it('rejects duplicate suggestions despite punctuation, case, accents, and small misspellings', async () => {
+		const member = await createTestMember('Ramis');
+		await createCycle(database);
+		const cycleId = await getOpenCycleId();
+
+		await saveSuggestion(database, cycleId, member.id, 1, 'The Café at the Edge', 'John Smith');
+
+		await expect(
+			saveSuggestion(database, cycleId, member.id, 2, 'the cafe at the edeg!', 'Jon Smith')
+		).rejects.toThrow('already suggested The Café at the Edge by John Smith');
+		await expect(
+			saveSuggestion(database, cycleId, member.id, 2, 'The Café at the Edge', 'Jane Smith')
+		).resolves.toBeUndefined();
+	});
+
+	it('rejects a previously read book despite small title and author misspellings', async () => {
+		const member = await createTestMember('Ramis');
+		await createCycle(database);
+		const firstCycleId = await getOpenCycleId();
+		await saveSuggestion(
+			database,
+			firstCycleId,
+			member.id,
+			1,
+			'The Left Hand of Darkness',
+			'Ursula K. Le Guin'
+		);
+		await closeCycle(database, firstCycleId);
+		await drawCycle(database, firstCycleId, member.id);
+
+		await createCycle(database);
+		const secondCycleId = await getOpenCycleId();
+		await expect(
+			saveSuggestion(
+				database,
+				secondCycleId,
+				member.id,
+				1,
+				'The Left Hand of Darknes',
+				'Ursula K LeGuin'
+			)
+		).rejects.toThrow('already read The Left Hand of Darkness by Ursula K. Le Guin');
+	});
+
+	it('allows an existing suggestion to be saved without conflicting with itself', async () => {
+		const member = await createTestMember('Ramis');
+		await createCycle(database);
+		const cycleId = await getOpenCycleId();
+		await saveSuggestion(database, cycleId, member.id, 1, 'Dune', 'Frank Herbert');
+		const suggestion = await database
+			.prepare('SELECT id FROM bookclub_suggestions WHERE cycle_id = ? AND member_id = ?')
+			.bind(cycleId, member.id)
+			.first<{ id: string }>();
+
+		await expect(
+			saveSuggestion(database, cycleId, member.id, 1, 'Dune', 'Frank Herbert', suggestion?.id)
+		).resolves.toBeUndefined();
+	});
+
 	it('draws from a partially filled suggestion pool', async () => {
 		const members = [await createTestMember('Ramis'), await createTestMember('Alex')];
 		await createCycle(database);
