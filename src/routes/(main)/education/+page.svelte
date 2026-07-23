@@ -13,10 +13,7 @@
 
 <p class="font-mono text-sm text-neutral-500">/EDUCATION</p>
 <h1>Education</h1>
-<p class="lead">
-	TODO: Add your course, institution, attendance dates, and a short explanation of what you have
-	concentrated on.
-</p>
+<p class="lead">{data.education.overview}</p>
 
 <h2>Modules</h2>
 {#if data.modules.length}

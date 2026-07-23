@@ -1,9 +1,9 @@
 import { dev } from '$app/environment';
-import { profile, visibleModules, visibleProjects } from '$lib/data/main-site';
+import { personal, visibleModules, visibleProjects } from '$lib/content';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = () => ({
-	profile,
+	personal,
 	modules: visibleModules(dev),
 	projects: visibleProjects(dev)
 });

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { nav } from '$lib/data/config';
+	import { currentExperience, personal } from '$lib/content';
 	import { resolve } from '$app/paths';
 </script>
 
@@ -10,14 +11,11 @@
 
 <p class="font-mono text-sm text-neutral-500">/ABOUT</p>
 <h1>About</h1>
-<p class="lead">TODO: Write a longer introduction that adds useful context beyond the homepage.</p>
+<p class="lead">{personal.about}</p>
 
 <section class="border-t border-neutral-300 pt-6">
 	<h2>Currently</h2>
-	<p>
-		TODO: Describe your internship factually: what kind of organisation or team it is, what you are
-		learning, and what you can discuss publicly.
-	</p>
+	<p>{currentExperience.summary}</p>
 </section>
 
 <section class="border-t border-neutral-300 pt-6">

@@ -16,7 +16,7 @@
 <header class="not-prose border-b border-neutral-300 pb-10">
 	<p class="font-mono text-sm text-neutral-500">RAMISBHATTY.COM / INDEX</p>
 	<h1 class="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">Ramis Bhatty</h1>
-	<p class="mt-6 max-w-2xl text-lg leading-8 text-neutral-700">{data.profile.introduction}</p>
+	<p class="mt-6 max-w-2xl text-lg leading-8 text-neutral-700">{data.personal.introduction}</p>
 	<p class="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-sm">
 		<a class="underline underline-offset-4" href={resolve(nav.about)}>About</a>
 		<a class="underline underline-offset-4" href={contact.github} rel="external">GitHub ↗</a>
@@ -28,7 +28,7 @@
 <section class="mt-10">
 	<h2>Current focus</h2>
 	<ul>
-		{#each data.profile.currentFocus as item (item)}<li>{item}</li>{/each}
+		{#each data.personal.currentFocus as item (item)}<li>{item}</li>{/each}
 	</ul>
 </section>
 

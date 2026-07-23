@@ -1,6 +1,6 @@
 import { dev } from '$app/environment';
 import { error } from '@sveltejs/kit';
-import { findModule, findProject } from '$lib/data/main-site';
+import { findModule, findProject } from '$lib/content';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ params }) => {

@@ -1,6 +1,6 @@
 <script lang="ts">
 	/* eslint-disable svelte/no-navigation-without-resolve -- Content records contain validated internal or explicit external URLs. */
-	import type { ContentSection } from '$lib/data/main-site';
+	import type { ContentSection } from '$lib/content';
 
 	let { sections }: { sections: ContentSection[] } = $props();
 </script>
