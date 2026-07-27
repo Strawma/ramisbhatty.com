@@ -12,7 +12,7 @@
 <article>
 	<header class="not-prose border-b border-neutral-300 pb-8">
 		<p class="font-mono text-sm text-neutral-500">/WORK/{data.project.slug.toUpperCase()}</p>
-		{#if !data.project.published}<p
+		{#if data.project.status === 'draft'}<p
 				class="mt-4 inline-block border border-amber-600 px-2 py-1 text-xs text-amber-800"
 			>
 				LOCAL DRAFT

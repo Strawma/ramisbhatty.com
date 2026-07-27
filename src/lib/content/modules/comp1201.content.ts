@@ -1,6 +1,6 @@
 import type { AcademicModule } from '../schema';
 
-export const comp1201 = {
+const comp1201 = {
 	code: 'COMP1201',
 	title: 'TODO: Module title',
 	year: 'TODO: Academic year or level',
@@ -20,5 +20,9 @@ export const comp1201 = {
 			]
 		}
 	],
-	published: false
+	status: 'draft',
+	featured: true,
+	order: 10
 } satisfies AcademicModule;
+
+export default comp1201;

@@ -4,17 +4,28 @@
 </script>
 
 <svelte:head>
-	<title>Work | Ramis Bhatty</title>
-	<meta name="description" content="Projects and work by Ramis Bhatty." />
+	<title>{data.page.title} | Ramis Bhatty</title>
+	<meta name="description" content={data.page.description} />
 </svelte:head>
 
-<p class="font-mono text-sm text-neutral-500">/WORK</p>
-<h1>Work</h1>
-<p class="lead">
-	Projects, including work developed through university modules. Each entry focuses on the problem,
-	my contribution, and what I learned.
-</p>
+<p class="font-mono text-sm text-neutral-500">{data.page.path}</p>
+<h1>{data.page.title}</h1>
+<p class="lead">{data.page.lead}</p>
 
+{#if data.experience.length}
+	<h2>Experience</h2>
+	<EntryList
+		entries={data.experience.map((entry) => ({
+			href: `/work/experience/${entry.slug}`,
+			title: `${entry.role} — ${entry.organisation}`,
+			meta: entry.period,
+			summary: entry.summary,
+			draft: entry.status === 'draft'
+		}))}
+	/>
+{/if}
+
+<h2>Projects</h2>
 {#if data.projects.length}
 	<EntryList
 		entries={data.projects.map((project) => ({
@@ -23,7 +34,7 @@
 			meta: project.period,
 			summary: project.summary,
 			tags: project.technologies,
-			draft: !project.published
+			draft: project.status === 'draft'
 		}))}
 	/>
 {:else}

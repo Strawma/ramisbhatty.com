@@ -1,7 +1,7 @@
 <script lang="ts">
 	/* eslint-disable svelte/no-navigation-without-resolve -- Parent routes provide generated internal entry URLs. */
 	interface Entry {
-		href: string;
+		href?: string;
 		title: string;
 		meta?: string;
 		summary: string;
@@ -13,16 +13,20 @@
 </script>
 
 <div class="not-prose divide-y divide-neutral-300 border-y border-neutral-300">
-	{#each entries as entry (entry.href)}
+	{#each entries as entry (entry.href ?? entry.title)}
 		<article class="py-5">
 			<div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
 				<h2 class="text-lg font-semibold">
-					<a
-						class="underline decoration-neutral-400 underline-offset-4 hover:decoration-neutral-900"
-						href={entry.href}
-					>
+					{#if entry.href}
+						<a
+							class="underline decoration-neutral-400 underline-offset-4 hover:decoration-neutral-900"
+							href={entry.href}
+						>
+							{entry.title}
+						</a>
+					{:else}
 						{entry.title}
-					</a>
+					{/if}
 				</h2>
 				{#if entry.meta}<p class="font-mono text-xs text-neutral-500">{entry.meta}</p>{/if}
 			</div>

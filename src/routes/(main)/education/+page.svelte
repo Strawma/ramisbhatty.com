@@ -4,15 +4,12 @@
 </script>
 
 <svelte:head>
-	<title>Education | Ramis Bhatty</title>
-	<meta
-		name="description"
-		content="Education, university modules, and related projects by Ramis Bhatty."
-	/>
+	<title>{data.page.title} | Ramis Bhatty</title>
+	<meta name="description" content={data.page.description} />
 </svelte:head>
 
-<p class="font-mono text-sm text-neutral-500">/EDUCATION</p>
-<h1>Education</h1>
+<p class="font-mono text-sm text-neutral-500">{data.page.path}</p>
+<h1>{data.page.title}</h1>
 <p class="lead">{data.education.overview}</p>
 
 <h2>Modules</h2>
@@ -24,7 +21,7 @@
 			meta: module.year,
 			summary: module.summary,
 			tags: module.topics,
-			draft: !module.published
+			draft: module.status === 'draft'
 		}))}
 	/>
 {:else}

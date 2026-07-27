@@ -2,5 +2,5 @@ import type { EducationProfile } from './schema';
 
 export const education = {
 	overview:
-		'TODO: Add your course, institution, attendance dates, and a short explanation of what you have concentrated on.'
+		'I study Computer Science with Artificial Intelligence on the integrated MEng programme at the University of Southampton. I am preparing to enter my fourth year; individual module and coursework notes will be added as I write them up.'
 } satisfies EducationProfile;

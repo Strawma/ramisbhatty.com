@@ -1,6 +1,6 @@
 import type { Project } from '../schema';
 
-export const moduleProjectPlaceholder = {
+const moduleProjectPlaceholder = {
 	slug: 'module-project-placeholder',
 	title: 'TODO: Project title',
 	summary: 'TODO: State what the project does and the problem it addressed.',
@@ -26,5 +26,9 @@ export const moduleProjectPlaceholder = {
 		}
 	],
 	links: [],
-	published: false
+	status: 'draft',
+	featured: true,
+	order: 10
 } satisfies Project;
+
+export default moduleProjectPlaceholder;

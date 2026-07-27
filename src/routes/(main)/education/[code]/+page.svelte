@@ -12,7 +12,7 @@
 <article>
 	<header class="not-prose border-b border-neutral-300 pb-8">
 		<p class="font-mono text-sm text-neutral-500">/EDUCATION/{data.module.code}</p>
-		{#if !data.module.published}<p
+		{#if data.module.status === 'draft'}<p
 				class="mt-4 inline-block border border-amber-600 px-2 py-1 text-xs text-amber-800"
 			>
 				LOCAL DRAFT

@@ -1,9 +1,10 @@
 import { dev } from '$app/environment';
-import { pageIntroductions, visibleExperience, visibleProjects } from '$lib/content';
+import { aboutSiteCopy, pageIntroductions, personal, visibleExperience } from '$lib/content';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = () => ({
-	page: pageIntroductions.work,
+	page: pageIntroductions.about,
+	personal,
 	experience: visibleExperience(dev),
-	projects: visibleProjects(dev)
+	siteCopy: aboutSiteCopy
 });

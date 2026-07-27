@@ -1,3 +1,13 @@
+export type PublicationStatus = 'draft' | 'published';
+
+export interface CollectionMetadata {
+	status: PublicationStatus;
+	featured?: boolean;
+	order?: number;
+	updatedAt?: string;
+	related?: string[];
+}
+
 export interface ContentLink {
 	label: string;
 	href: string;
@@ -21,40 +31,52 @@ export interface ContentSection {
 export interface PersonalProfile {
 	introduction: string;
 	about: string;
-	currentFocus: string[];
+	currentFocus: FocusItem[];
+}
+
+export interface FocusItem {
+	text: string;
+	href?: string;
+	linkLabel?: string;
 }
 
 export interface EducationProfile {
 	overview: string;
 }
 
-export interface Experience {
+export interface Experience extends CollectionMetadata {
 	slug: string;
 	organisation: string;
 	role: string;
 	period: string;
 	summary: string;
-	published: boolean;
+	sections: ContentSection[];
+	links: ContentLink[];
 }
 
-export interface InterestCategory {
+export interface InterestItem {
+	title: string;
+	note?: string;
+	href?: string;
+}
+
+export interface InterestCategory extends CollectionMetadata {
 	slug: string;
 	title: string;
 	summary: string;
-	items: string[];
+	items: InterestItem[];
 }
 
-export interface AcademicModule {
+export interface AcademicModule extends CollectionMetadata {
 	code: string;
 	title: string;
 	year: string;
 	summary: string;
 	topics: string[];
 	sections: ContentSection[];
-	published: boolean;
 }
 
-export interface Project {
+export interface Project extends CollectionMetadata {
 	slug: string;
 	title: string;
 	summary: string;
@@ -63,5 +85,27 @@ export interface Project {
 	technologies: string[];
 	sections: ContentSection[];
 	links: ContentLink[];
-	published: boolean;
+}
+
+export interface Post extends CollectionMetadata {
+	slug: string;
+	title: string;
+	summary: string;
+	publishedAt?: string;
+	topics: string[];
+	sections: ContentSection[];
+	links: ContentLink[];
+}
+
+export interface PageIntroduction {
+	path: string;
+	title: string;
+	description: string;
+	lead: string;
+}
+
+export interface ExploreDestination {
+	title: string;
+	href: string;
+	description: string;
 }

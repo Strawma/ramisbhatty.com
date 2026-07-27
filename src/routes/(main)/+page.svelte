@@ -28,7 +28,15 @@
 <section class="mt-10">
 	<h2>Current focus</h2>
 	<ul>
-		{#each data.personal.currentFocus as item (item)}<li>{item}</li>{/each}
+		{#each data.personal.currentFocus as item (item.text)}
+			<li>
+				{item.text}
+				{#if item.href}
+					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- Focus records contain authored internal URLs. -->
+					<a href={item.href}> {item.linkLabel ?? 'Read more'} →</a>
+				{/if}
+			</li>
+		{/each}
 	</ul>
 </section>
 
@@ -42,7 +50,7 @@
 			{#each data.projects.slice(0, 3) as project (project.slug)}
 				<li>
 					<a href={resolve(`/work/${project.slug}`)}>{project.title}</a> — {project.summary}
-					{#if !project.published}<small> (local draft)</small>{/if}
+					{#if project.status === 'draft'}<small> (local draft)</small>{/if}
 				</li>
 			{/each}
 		</ul>
@@ -62,7 +70,7 @@
 				<li>
 					<a href={resolve(`/education/${module.code.toLowerCase()}`)}
 						>{module.code}: {module.title}</a
-					>{!module.published ? ' (local draft)' : ''}
+					>{module.status === 'draft' ? ' (local draft)' : ''}
 				</li>
 			{/each}
 		</ul>
@@ -74,39 +82,15 @@
 <section class="mt-10 border-t border-neutral-300 pt-6">
 	<h2>Explore</h2>
 	<dl class="not-prose mt-5 grid gap-5 sm:grid-cols-2">
-		<div>
-			<dt>
-				<a class="font-semibold underline underline-offset-4" href={resolve(nav.work)}>Work</a>
-			</dt>
-			<dd class="mt-1 text-sm text-neutral-600">
-				Projects, including work connected to university modules.
-			</dd>
-		</div>
-		<div>
-			<dt>
-				<a class="font-semibold underline underline-offset-4" href={resolve(nav.education)}
-					>Education</a
-				>
-			</dt>
-			<dd class="mt-1 text-sm text-neutral-600">
-				Modules, subjects, and what came out of studying them.
-			</dd>
-		</div>
-		<div>
-			<dt>
-				<a class="font-semibold underline underline-offset-4" href={resolve(nav.blog)}>Blog</a>
-			</dt>
-			<dd class="mt-1 text-sm text-neutral-600">Longer notes and thoughts, once written.</dd>
-		</div>
-		<div>
-			<dt>
-				<a class="font-semibold underline underline-offset-4" href={resolve(nav.interests)}
-					>Interests</a
-				>
-			</dt>
-			<dd class="mt-1 text-sm text-neutral-600">
-				Games, books, and other things worth keeping track of.
-			</dd>
-		</div>
+		{#each data.exploreDestinations as destination (destination.href)}
+			<div>
+				<dt>
+					<a class="font-semibold underline underline-offset-4" href={resolve(destination.href)}
+						>{destination.title}</a
+					>
+				</dt>
+				<dd class="mt-1 text-sm text-neutral-600">{destination.description}</dd>
+			</div>
+		{/each}
 	</dl>
 </section>
