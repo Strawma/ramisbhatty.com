@@ -3,7 +3,7 @@ import {
 	exploreDestinations,
 	featuredModules,
 	featuredProjects,
-	personal,
+	pageIntroductions,
 	visibleModules,
 	visibleProjects
 } from '$lib/content';
@@ -16,7 +16,7 @@ export const load: PageServerLoad = () => {
 	const selectedModules = featuredModules(dev);
 
 	return {
-		personal,
+		page: pageIntroductions.home,
 		exploreDestinations,
 		modules: selectedModules.length ? selectedModules : modules,
 		projects: selectedProjects.length ? selectedProjects : projects

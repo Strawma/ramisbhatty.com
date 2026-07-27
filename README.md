@@ -59,6 +59,10 @@ pnpm dev
 pnpm dev -- --open
 ```
 
+The main site's editable copy lives in `src/content`. Markdown bodies hold the prose, while short
+frontmatter blocks provide titles, summaries, dates, and draft status used automatically by the
+site's layouts and indexes.
+
 ### Building
 
 To create a production version of your app:

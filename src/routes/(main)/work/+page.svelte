@@ -1,6 +1,8 @@
 <script lang="ts">
 	import EntryList from '$lib/components/main/EntryList.svelte';
+	import { pageContent } from '$lib/content';
 	let { data } = $props();
+	const Content = pageContent.work;
 </script>
 
 <svelte:head>
@@ -10,7 +12,7 @@
 
 <p class="font-mono text-sm text-neutral-500">{data.page.path}</p>
 <h1>{data.page.title}</h1>
-<p class="lead">{data.page.lead}</p>
+<Content />
 
 {#if data.experience.length}
 	<h2>Experience</h2>

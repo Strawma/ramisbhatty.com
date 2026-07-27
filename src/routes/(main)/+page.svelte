@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { contact, nav } from '$lib/data/config';
+	import { pageContent } from '$lib/content';
 	import { resolve } from '$app/paths';
 
 	let { data } = $props();
+	const Content = pageContent.home;
 </script>
 
 <svelte:head>
@@ -16,7 +18,7 @@
 <header class="not-prose border-b border-neutral-300 pb-10">
 	<p class="font-mono text-sm text-neutral-500">RAMISBHATTY.COM / INDEX</p>
 	<h1 class="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">Ramis Bhatty</h1>
-	<p class="mt-6 max-w-2xl text-lg leading-8 text-neutral-700">{data.personal.introduction}</p>
+	<p class="mt-6 max-w-2xl text-lg leading-8 text-neutral-700">{data.page.introduction}</p>
 	<p class="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-sm">
 		<a class="underline underline-offset-4" href={resolve(nav.about)}>About</a>
 		<a class="underline underline-offset-4" href={contact.github} rel="external">GitHub ↗</a>
@@ -25,20 +27,7 @@
 	</p>
 </header>
 
-<section class="mt-10">
-	<h2>Current focus</h2>
-	<ul>
-		{#each data.personal.currentFocus as item (item.text)}
-			<li>
-				{item.text}
-				{#if item.href}
-					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- Focus records contain authored internal URLs. -->
-					<a href={item.href}> {item.linkLabel ?? 'Read more'} →</a>
-				{/if}
-			</li>
-		{/each}
-	</ul>
-</section>
+<section class="mt-10"><Content /></section>
 
 <section class="mt-10 border-t border-neutral-300 pt-6">
 	<div class="not-prose flex items-baseline justify-between gap-4">

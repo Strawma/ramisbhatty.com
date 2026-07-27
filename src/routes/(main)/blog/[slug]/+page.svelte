@@ -1,7 +1,8 @@
 <script lang="ts">
-	import ContentSections from '$lib/components/main/ContentSections.svelte';
+	import { postContent } from '$lib/content';
 
 	let { data } = $props();
+	let Content = $derived(postContent[data.post.slug]);
 </script>
 
 <svelte:head>
@@ -32,22 +33,6 @@
 	</header>
 
 	<div class="mt-8 space-y-8">
-		<ContentSections sections={data.post.sections} />
+		<Content />
 	</div>
-
-	{#if data.post.links.length}
-		<footer class="mt-10 border-t border-neutral-300 pt-6">
-			<h2>Links</h2>
-			<ul>
-				{#each data.post.links as link (link.href)}
-					<li>
-						<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- Content records contain validated internal or explicit external URLs. -->
-						<a href={link.href} rel={link.external ? 'external noreferrer' : undefined}>
-							{link.label}{link.external ? ' ↗' : ''}
-						</a>
-					</li>
-				{/each}
-			</ul>
-		</footer>
-	{/if}
 </article>

@@ -1,7 +1,8 @@
 <script lang="ts">
-	import ContentSections from '$lib/components/main/ContentSections.svelte';
+	import { projectContent } from '$lib/content';
 	import { resolve } from '$app/paths';
 	let { data } = $props();
+	let Content = $derived(projectContent[data.project.slug]);
 </script>
 
 <svelte:head>
@@ -39,18 +40,5 @@
 				{data.project.technologies.join(' · ')}
 			</p>{/if}
 	</header>
-	<div class="mt-8 space-y-8"><ContentSections sections={data.project.sections} /></div>
-	{#if data.project.links.length}
-		<footer class="mt-10 border-t border-neutral-300 pt-6">
-			<h2>Links</h2>
-			<ul>
-				{#each data.project.links as link (link.href)}<li>
-						<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- Content records contain validated internal or explicit external URLs. -->
-						<a href={link.href} rel={link.external ? 'external noreferrer' : undefined}
-							>{link.label}{link.external ? ' ↗' : ''}</a
-						>
-					</li>{/each}
-			</ul>
-		</footer>
-	{/if}
+	<div class="mt-8 space-y-8"><Content /></div>
 </article>

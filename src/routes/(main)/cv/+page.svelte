@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { contact } from '$lib/data/config';
-	import { pageIntroductions } from '$lib/content';
+	import { pageContent, pageIntroductions } from '$lib/content';
 
 	const page = pageIntroductions.cv;
+	const Content = pageContent.cv;
 </script>
 
 <svelte:head>
@@ -13,8 +13,4 @@
 
 <p class="font-mono text-sm text-neutral-500">{page.path}</p>
 <h1>{page.title}</h1>
-<p class="lead">{page.lead}</p>
-<p>
-	Until then, the rest of the site documents projects and education in more detail. For a copy
-	directly, contact <a href="mailto:{contact.email}">{contact.email}</a>.
-</p>
+<Content />

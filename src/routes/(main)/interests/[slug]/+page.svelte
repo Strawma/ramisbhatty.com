@@ -1,5 +1,8 @@
 <script lang="ts">
+	import { interestContent } from '$lib/content';
+
 	let { data } = $props();
+	let Content = $derived(interestContent[data.category.slug]);
 </script>
 
 <svelte:head>
@@ -21,35 +24,5 @@
 		<p class="mt-5 text-lg leading-8 text-neutral-700">{data.category.summary}</p>
 	</header>
 
-	{#if data.category.items.length}
-		<div class="not-prose divide-y divide-neutral-300 border-b border-neutral-300">
-			{#each data.category.items as item (item.title)}
-				<article class="py-5">
-					<div class="flex flex-wrap items-baseline justify-between gap-2">
-						<h2 class="text-lg font-semibold">
-							{#if item.href}
-								<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- Interest records may contain internal or external authored URLs. -->
-								<a
-									class="underline decoration-neutral-400 underline-offset-4 hover:decoration-neutral-900"
-									href={item.href}>{item.title}</a
-								>
-							{:else}
-								{item.title}
-							{/if}
-						</h2>
-						{#if item.date}
-							<p class="font-mono text-xs text-neutral-500">{item.date}</p>
-						{/if}
-					</div>
-					{#if item.note}
-						<p class="mt-2 leading-6 text-neutral-700">{item.note}</p>
-					{/if}
-				</article>
-			{/each}
-		</div>
-	{:else}
-		<p class="border-b border-neutral-300 py-6">
-			Notes for this section are still being assembled.
-		</p>
-	{/if}
+	<div class="mt-8"><Content /></div>
 </article>

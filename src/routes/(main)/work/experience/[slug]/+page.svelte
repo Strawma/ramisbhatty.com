@@ -1,7 +1,8 @@
 <script lang="ts">
-	import ContentSections from '$lib/components/main/ContentSections.svelte';
+	import { experienceContent } from '$lib/content';
 
 	let { data } = $props();
+	let Content = $derived(experienceContent[data.experience.slug]);
 </script>
 
 <svelte:head>
@@ -26,25 +27,5 @@
 		<p class="mt-5 text-lg leading-8 text-neutral-700">{data.experience.summary}</p>
 	</header>
 
-	{#if data.experience.sections.length}
-		<div class="mt-8 space-y-8">
-			<ContentSections sections={data.experience.sections} />
-		</div>
-	{/if}
-
-	{#if data.experience.links.length}
-		<footer class="mt-10 border-t border-neutral-300 pt-6">
-			<h2>Links</h2>
-			<ul>
-				{#each data.experience.links as link (link.href)}
-					<li>
-						<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- Content records contain validated internal or explicit external URLs. -->
-						<a href={link.href} rel={link.external ? 'external noreferrer' : undefined}>
-							{link.label}{link.external ? ' ↗' : ''}
-						</a>
-					</li>
-				{/each}
-			</ul>
-		</footer>
-	{/if}
+	<div class="mt-8 space-y-8"><Content /></div>
 </article>

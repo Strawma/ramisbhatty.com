@@ -1,7 +1,8 @@
 <script lang="ts">
-	import ContentSections from '$lib/components/main/ContentSections.svelte';
+	import { moduleContent } from '$lib/content';
 	import { resolve } from '$app/paths';
 	let { data } = $props();
+	let Content = $derived(moduleContent[data.module.slug]);
 </script>
 
 <svelte:head>
@@ -26,7 +27,7 @@
 				{data.module.topics.join(' · ')}
 			</p>{/if}
 	</header>
-	<div class="mt-8 space-y-8"><ContentSections sections={data.module.sections} /></div>
+	<div class="mt-8 space-y-8"><Content /></div>
 	{#if data.projects.length}
 		<section class="mt-10 border-t border-neutral-300 pt-6">
 			<h2>Related projects</h2>

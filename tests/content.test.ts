@@ -6,6 +6,7 @@ import {
 	findModule,
 	findPost,
 	findProject,
+	interestContent,
 	interests,
 	modules,
 	posts,
@@ -59,7 +60,7 @@ describe('main-site content visibility', () => {
 		}
 	});
 
-	it('keeps the calmer interest collection in the personal area', () => {
-		expect(interests.every((category) => category.area === 'personal')).toBe(true);
+	it('discovers a Markdown body for every interest category', () => {
+		expect(interests.every((category) => interestContent[category.slug])).toBe(true);
 	});
 });
