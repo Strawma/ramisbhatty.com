@@ -13,6 +13,7 @@
 
 		try {
 			const response = await fetch('https://uselessfacts.jsph.pl/api/v2/facts/random');
+			if (!response.ok) throw new Error(`Fact request failed with status ${response.status}`);
 			const data = await response.json();
 
 			if (data.text) {
@@ -38,7 +39,12 @@
 	style="box-shadow: 4px 4px 0 #000;"
 >
 	<h2 class="mb-4 text-center text-2xl font-bold underline">&lt; RANDOM FACT GENERATOR &gt;</h2>
-	<div class="mb-4 border-2 border-black bg-white p-4">
+	<div
+		class="mb-4 border-2 border-black bg-white p-4"
+		role="status"
+		aria-live="polite"
+		aria-busy={isLoading}
+	>
 		{#if isLoading}
 			<p class="text-ls min-h-23 animate-pulse italic">Loading fact from the World Wide Web...</p>
 		{:else}
@@ -47,7 +53,8 @@
 	</div>
 	<button
 		onclick={generateFact}
-		class="cursor-pointer border-4 border-black bg-linear-to-b from-[#c0c0c0] to-[#808080] px-5 py-2 font-bold hover:from-[#e0e0e0]"
+		disabled={isLoading}
+		class="cursor-pointer border-4 border-black bg-linear-to-b from-[#c0c0c0] to-[#808080] px-5 py-2 font-bold hover:from-[#e0e0e0] focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-purple-800 disabled:cursor-wait disabled:opacity-70"
 		style="box-shadow: 2px 2px 0 #000;"
 	>
 		GENERATE NEW FACT →

@@ -10,10 +10,13 @@
 	style="box-shadow: 4px 4px 0 #000;"
 >
 	<p class="mb-2 text-sm">-- AD SPACE --</p>
-	<a href="https://cse103-notes.readthedocs.io/en/latest/pumpinglemma.html">
+	<a
+		href="https://cse103-notes.readthedocs.io/en/latest/pumpinglemma.html"
+		aria-label="Read notes about the pumping lemma"
+	>
 		<img
 			src={AoOniSrc}
-			alt="Ad"
+			alt="Animated Ao Oni character"
 			class="mx-auto {size === 'large' ? 'h-16 w-200 object-fill' : 'h-48 w-64 object-contain'}"
 		/>
 	</a>

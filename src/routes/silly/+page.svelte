@@ -38,7 +38,7 @@
 		<Bouncer {...config} imageSrc={RamisSrc} />
 	{/each}
 
-	<div
+	<main
 		class="min-h-screen font-['pixel-sans',cursive]"
 		style="background: linear-gradient(45deg, #ff00ff 0%, #00ff00 25%, #ff0000 50%, #00ffff 75%, #ffff00 100%);"
 	>
@@ -62,7 +62,7 @@
 
 			<Footer />
 		</div>
-	</div>
+	</main>
 </BouncerManager>
 
 <style>

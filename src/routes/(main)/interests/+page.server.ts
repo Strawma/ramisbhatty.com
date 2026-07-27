@@ -4,5 +4,6 @@ import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = () => ({
 	page: pageIntroductions.interests,
-	interests: visibleInterests(dev)
+	interests: visibleInterests(dev),
+	hasPublishedInterests: visibleInterests().length > 0
 });

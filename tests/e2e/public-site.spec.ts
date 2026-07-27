@@ -116,7 +116,11 @@ test('main routes fit a narrow mobile viewport and retain keyboard navigation', 
 
 	await page.goto('/');
 	await page.keyboard.press('Tab');
-	await expect(page.locator(':focus')).toBeVisible();
+	const skipLink = page.getByRole('link', { name: 'Skip to main content' });
+	await expect(skipLink).toBeFocused();
+	await expect(skipLink).toBeVisible();
+	await page.keyboard.press('Enter');
+	await expect(page.locator('#main-content')).toBeFocused();
 });
 
 test('the silly route remains separate, titled, and usable on mobile', async ({ page }) => {
@@ -128,13 +132,41 @@ test('the silly route remains separate, titled, and usable on mobile', async ({ 
 	expect(response?.ok()).toBe(true);
 	await expect(page).toHaveTitle(/^Silly \| Ramis Bhatty$/);
 	await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+	await expect(page.locator('canvas')).toHaveAttribute('aria-hidden', 'true');
 
 	const dimensions = await page.evaluate(() => ({
 		scrollWidth: document.documentElement.scrollWidth,
 		clientWidth: document.documentElement.clientWidth
 	}));
 	expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
+	const accessibility = await new AxeBuilder({ page }).disableRules(['color-contrast']).analyze();
+	expect(accessibility.violations).toEqual([]);
 	expect(runtimeErrors).toEqual([]);
+});
+
+test('the streaming scene respects utility indexing and reduced-motion preferences', async ({
+	page
+}) => {
+	await page.emulateMedia({ reducedMotion: 'reduce' });
+	const response = await page.goto('/streaming/brb');
+
+	expect(response?.ok()).toBe(true);
+	await expect(page).toHaveTitle(/^Be Right Back \| Ramis Bhatty$/);
+	await expect(page.getByRole('heading', { level: 1, name: 'Be Right Back!' })).toBeVisible();
+	await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex, nofollow');
+
+	const accessibility = await new AxeBuilder({ page }).disableRules(['color-contrast']).analyze();
+	expect(accessibility.violations).toEqual([]);
+});
+
+test('unfinished public indexes stay out of search results', async ({ page }) => {
+	for (const path of ['/blog', '/interests', '/cv']) {
+		await page.goto(path);
+		await expect(page.locator('meta[name="robots"]'), path).toHaveAttribute(
+			'content',
+			'noindex, follow'
+		);
+	}
 });
 
 test('unknown authored records return not found', async ({ request }) => {

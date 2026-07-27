@@ -26,7 +26,9 @@
 <footer class="mt-4 space-y-4">
 	<!-- Under construction -->
 	<div class="retro-panel bg-yellow-400 p-4 text-center">
-		<p class="animate-pulse text-2xl font-bold">!!! SITE UNDER CONSTRUCTION !!!</p>
+		<p class="animate-pulse text-2xl font-bold motion-reduce:animate-none">
+			!!! SITE UNDER CONSTRUCTION !!!
+		</p>
 	</div>
 
 	<!-- Browser badges -->

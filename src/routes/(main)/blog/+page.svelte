@@ -7,6 +7,9 @@
 <svelte:head>
 	<title>{data.page.title} | Ramis Bhatty</title>
 	<meta name="description" content={data.page.description} />
+	{#if !data.hasPublishedPosts}
+		<meta name="robots" content="noindex, follow" />
+	{/if}
 </svelte:head>
 
 <p class="font-mono text-sm text-neutral-500">{data.page.path}</p>

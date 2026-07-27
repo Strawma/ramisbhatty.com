@@ -45,6 +45,10 @@ test('chat sends between sessions and remains responsive', async ({ browser }) =
 	]);
 	await expect(alice.locator('#chatroom')).toBeVisible();
 	await expect(bob.locator('#chatroom')).toBeVisible();
+	await expect(alice.locator('meta[name="robots"]')).toHaveAttribute(
+		'content',
+		'noindex, nofollow'
+	);
 
 	const message = `Browser chat check ${Date.now()}`;
 	await alice.getByPlaceholder('type a message...').fill(message);

@@ -8,12 +8,25 @@
 	<div class="flex items-center justify-between border-t border-neutral-200 pt-6">
 		<p>© {new Date().getFullYear()} {contact.name}</p>
 		<div class="flex gap-4">
-			<a href="mailto:{contact.email}" class="underline underline-offset-4">Email</a>
-			<a href={contact.github} rel="external" class="underline underline-offset-4">GitHub</a>
-			<a href={resolve(nav.interests)} class="underline underline-offset-4">Interests</a>
+			<a
+				href="mailto:{contact.email}"
+				class="underline underline-offset-4 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
+				>Email</a
+			>
+			<a
+				href={contact.github}
+				rel="external"
+				class="underline underline-offset-4 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
+				>GitHub</a
+			>
+			<a
+				href={resolve(nav.interests)}
+				class="underline underline-offset-4 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
+				>Interests</a
+			>
 			<a
 				href={resolve(nav.silly)}
-				class="transition-colors hover:text-neutral-700"
+				class="transition-colors hover:text-neutral-700 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
 				aria-label="Visit the silly version of this site">:)</a
 			>
 		</div>

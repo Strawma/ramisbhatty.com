@@ -8,6 +8,7 @@
 <svelte:head>
 	<title>{page.title} | Ramis Bhatty</title>
 	<meta name="description" content={page.description} />
+	<meta name="robots" content="noindex, follow" />
 </svelte:head>
 
 <p class="font-mono text-sm text-neutral-500">{page.path}</p>
