@@ -1,27 +1,73 @@
 import type { Component } from 'svelte';
-import type {
-	AcademicModule,
-	CollectionMetadata,
-	Experience,
-	ExploreDestination,
-	InterestCategory,
-	MarkdownModule,
-	PageIntroduction,
-	Post,
-	Project
-} from './schema';
 
-export type {
-	AcademicModule,
-	CollectionMetadata,
-	Experience,
-	ExploreDestination,
-	InterestCategory,
-	PageIntroduction,
-	Post,
-	Project,
-	PublicationStatus
-} from './schema';
+export type PublicationStatus = 'draft' | 'published';
+
+export interface CollectionMetadata {
+	status: PublicationStatus;
+	featured?: boolean;
+	order?: number;
+	updatedAt?: string;
+}
+
+export interface Experience extends CollectionMetadata {
+	slug: string;
+	organisation: string;
+	role: string;
+	period: string;
+	summary: string;
+}
+
+export interface InterestCategory extends CollectionMetadata {
+	slug: string;
+	title: string;
+	summary: string;
+}
+
+export interface AcademicModule extends CollectionMetadata {
+	slug: string;
+	code: string;
+	title: string;
+	year: string;
+	summary: string;
+	topics: string[];
+}
+
+export interface Project extends CollectionMetadata {
+	slug: string;
+	title: string;
+	summary: string;
+	moduleCode?: string;
+	period?: string;
+	technologies: string[];
+}
+
+export interface Post extends CollectionMetadata {
+	slug: string;
+	title: string;
+	summary: string;
+	publishedAt?: string;
+	topics: string[];
+}
+
+export interface PageIntroduction {
+	slug: string;
+	path: string;
+	title: string;
+	description: string;
+	indexDescription?: string;
+	introduction?: string;
+}
+
+export interface ExploreDestination {
+	title: string;
+	href: '/work' | '/education' | '/blog' | '/interests';
+	description: string;
+}
+
+interface MarkdownModule<T> {
+	default: Component;
+	metadata: T;
+}
 
 type MetadataRecord = Record<string, unknown>;
 type CollectionRecord = CollectionMetadata & { slug: string };
@@ -127,7 +173,7 @@ const byOrderThen = <T extends { order?: number }>(
 };
 
 const pageDocuments = loadContent(
-	import.meta.glob<MarkdownModule<MetadataRecord>>('../../content/pages/*.md', { eager: true }),
+	import.meta.glob<MarkdownModule<MetadataRecord>>('../content/pages/*.md', { eager: true }),
 	(slug, metadata, source): PageIntroduction => ({
 		slug,
 		path: requireString(metadata, 'path', source),
@@ -145,7 +191,7 @@ export const pageIntroductions = Object.fromEntries(
 export const pageContent = pageDocuments.components;
 
 const projectDocuments = loadContent(
-	import.meta.glob<MarkdownModule<MetadataRecord>>('../../content/projects/*.md', { eager: true }),
+	import.meta.glob<MarkdownModule<MetadataRecord>>('../content/projects/*.md', { eager: true }),
 	(slug, metadata, source): Project => ({
 		slug,
 		title: requireString(metadata, 'title', source),
@@ -161,7 +207,7 @@ export const projects = projectDocuments.records;
 export const projectContent = projectDocuments.components;
 
 const experienceDocuments = loadContent(
-	import.meta.glob<MarkdownModule<MetadataRecord>>('../../content/experience/*.md', {
+	import.meta.glob<MarkdownModule<MetadataRecord>>('../content/experience/*.md', {
 		eager: true
 	}),
 	(slug, metadata, source): Experience => ({
@@ -178,7 +224,7 @@ export const experience = experienceDocuments.records;
 export const experienceContent = experienceDocuments.components;
 
 const moduleDocuments = loadContent(
-	import.meta.glob<MarkdownModule<MetadataRecord>>('../../content/modules/*.md', { eager: true }),
+	import.meta.glob<MarkdownModule<MetadataRecord>>('../content/modules/*.md', { eager: true }),
 	(_slug, metadata, source): AcademicModule => ({
 		slug: requireString(metadata, 'code', source).toLocaleLowerCase('en-GB'),
 		code: requireString(metadata, 'code', source),
@@ -194,7 +240,7 @@ export const modules = moduleDocuments.records;
 export const moduleContent = moduleDocuments.components;
 
 const postDocuments = loadContent(
-	import.meta.glob<MarkdownModule<MetadataRecord>>('../../content/posts/*.md', { eager: true }),
+	import.meta.glob<MarkdownModule<MetadataRecord>>('../content/posts/*.md', { eager: true }),
 	(slug, metadata, source): Post => ({
 		slug,
 		title: requireString(metadata, 'title', source),
@@ -211,7 +257,7 @@ export const posts = postDocuments.records;
 export const postContent = postDocuments.components;
 
 const interestDocuments = loadContent(
-	import.meta.glob<MarkdownModule<MetadataRecord>>('../../content/interests/*.md', { eager: true }),
+	import.meta.glob<MarkdownModule<MetadataRecord>>('../content/interests/*.md', { eager: true }),
 	(slug, metadata, source): InterestCategory => ({
 		slug,
 		title: requireString(metadata, 'title', source),
