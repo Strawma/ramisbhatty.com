@@ -29,6 +29,8 @@
 
 	onMount(() => {
 		quoteVisible = true;
+		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
 		// The quote alternates between a long visible period and a short hidden period. Clearing the
 		// active timeout on teardown prevents navigation from updating an unmounted page.
 		function scheduleNextToggle() {
@@ -55,10 +57,16 @@
 	});
 </script>
 
-<div class="relative h-screen w-full overflow-hidden">
+<svelte:head>
+	<title>Be Right Back | Ramis Bhatty</title>
+	<meta name="description" content="A full-screen intermission scene for Ramis Bhatty's streams." />
+</svelte:head>
+
+<main class="relative h-screen w-full overflow-hidden">
 	<!-- BRB Text -->
-	<div
+	<h1
 		class="brb-text-container absolute top-60/100 left-4/100 z-30 -translate-y-1/2 font-bold text-white"
+		aria-label={brbText}
 	>
 		{#each brbText as char, i (i)}
 			<span class="floating-letter" style="animation-delay: {i * 0.1}s;">
@@ -69,11 +77,12 @@
 				{/if}
 			</span>
 		{/each}
-	</div>
+	</h1>
 
 	<!-- BRB Sliding -->
 	<div
 		class="bg-opacity-70 ticker-bar absolute bottom-8/100 left-0 z-30 flex h-[8%] w-full items-center justify-center bg-black text-white"
+		aria-live="polite"
 	>
 		{#if quoteVisible}
 			<div
@@ -87,22 +96,18 @@
 	</div>
 
 	<!-- Background images -->
-	<img
-		src={WindowsSRC}
-		alt="Windows XP"
-		class="hue-shift-bg absolute z-0 h-full w-full object-cover"
-	/>
+	<img src={WindowsSRC} alt="" class="hue-shift-bg absolute z-0 h-full w-full object-cover" />
 	<img
 		src={JimSRC}
-		alt="Jim"
+		alt="Jim posing in front of a Windows XP background"
 		class="rotating-image absolute top-44/100 left-3/4 z-10 h-[90%] min-h-[100px] -translate-x-1/2 -translate-y-1/2 object-contain"
 	/>
 	<img
 		src={WindowsBottomSRC}
-		alt="Windows XP Bottom"
+		alt=""
 		class="hue-shift-bottom absolute z-20 h-full w-full object-cover"
 	/>
-</div>
+</main>
 
 <style>
 	@font-face {
@@ -188,5 +193,15 @@
 
 	.hue-shift-bottom {
 		animation: hue-shift-mild 10s linear infinite alternate;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.rotating-image,
+		.ticker-content,
+		.floating-letter,
+		.hue-shift-bg,
+		.hue-shift-bottom {
+			animation: none;
+		}
 	}
 </style>

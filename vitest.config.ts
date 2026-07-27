@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { cloudflareTest, readD1Migrations } from '@cloudflare/vitest-pool-workers';
+import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig(async () => {
@@ -7,6 +8,7 @@ export default defineConfig(async () => {
 
 	return {
 		plugins: [
+			sveltekit(),
 			cloudflareTest({
 				wrangler: { configPath: './wrangler.jsonc' },
 				miniflare: {

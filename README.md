@@ -59,6 +59,10 @@ pnpm dev
 pnpm dev -- --open
 ```
 
+The main site's editable copy lives in `src/content`. Markdown bodies hold the prose, while short
+frontmatter blocks provide titles, summaries, dates, and draft status used automatically by the
+site's layouts and indexes.
+
 ### Building
 
 To create a production version of your app:
@@ -82,10 +86,19 @@ pnpm exec playwright install chromium
 pnpm test:e2e
 ```
 
-The browser suite starts the local app, applies local D1 migrations, creates temporary test sessions,
-and removes its test members when it finishes. It never uses production credentials or the remote D1
-database. On Debian or Ubuntu, install Chromium's system dependencies once with
-`pnpm exec playwright install-deps chromium` if the browser cannot launch.
+For faster iteration, the browser suites can be run separately:
+
+```bash
+pnpm test:e2e:public
+pnpm test:e2e:bookclub
+```
+
+The public suite starts the local app without touching D1. It checks public routes, metadata,
+navigation hierarchy, responsive overflow, draft pages, runtime errors, and accessibility. The
+book-club suite additionally applies local D1 migrations, creates temporary test sessions, and
+removes its test members when it finishes. It never uses production credentials or the remote D1
+database. On Debian or Ubuntu, install Chromium's system dependencies once with `pnpm exec playwright
+install-deps chromium` if the browser cannot launch.
 Run `pnpm test:e2e` separately from `pnpm test` because both test commands use local worker/database
 resources and can contend when started at the same time.
 

@@ -161,17 +161,23 @@
 <div
 	class="border-4 border-black bg-gradient-to-b from-[#ff00ff] to-[#8b008b] p-4 text-center select-none {tailwind}"
 	style="box-shadow: 4px 4px 0 #000;"
+	aria-busy={isLoading}
 >
 	<p class="mb-2 text-sm font-bold text-yellow-300 drop-shadow-md">♫ MIDI MUSIC ♫</p>
+	<p class="sr-only" role="status" aria-live="polite">
+		{isLoading ? 'Loading MIDI music' : isPlaying ? 'MIDI music playing' : 'MIDI music paused'}
+	</p>
 
 	<!-- Controls -->
 	<div class="mb-3 flex justify-center gap-2">
 		<button
 			onclick={togglePlay}
 			disabled={isLoading}
+			aria-pressed={isPlaying}
 			class="min-w-[80px] cursor-pointer border-2 border-black bg-gradient-to-b from-[#c0c0c0] to-[#808080] px-3 py-1
-				   text-sm font-bold hover:from-[#e0e0e0] active:translate-y-[1px]
-				   active:border-t-black active:border-l-black disabled:cursor-not-allowed disabled:opacity-50"
+				   text-sm font-bold hover:from-[#e0e0e0] focus-visible:outline-4
+				   focus-visible:outline-offset-2 focus-visible:outline-yellow-300 active:translate-y-[1px] active:border-t-black
+				   active:border-l-black disabled:cursor-not-allowed disabled:opacity-50"
 			style="box-shadow: 2px 2px 0 #000;"
 		>
 			{#if isLoading}
@@ -184,8 +190,10 @@
 		<button
 			onclick={skipSong}
 			disabled={!currentMidiUrl}
+			aria-label="Skip to another MIDI song"
 			class="cursor-pointer border-2 border-black bg-gradient-to-b from-[#c0c0c0] to-[#808080] px-3 py-1 text-sm
-				   font-bold hover:from-[#e0e0e0] active:translate-y-[1px] active:border-t-black
+				   font-bold hover:from-[#e0e0e0] focus-visible:outline-4 focus-visible:outline-offset-2
+				   focus-visible:outline-yellow-300 active:translate-y-[1px] active:border-t-black
 				   active:border-l-black disabled:cursor-not-allowed disabled:opacity-50"
 			style="box-shadow: 2px 2px 0 #000;"
 		>
@@ -195,8 +203,9 @@
 
 	<!-- Volume Slider -->
 	<div class="flex items-center justify-center gap-2 text-xs font-bold text-white">
-		<span>VOL:</span>
+		<label for="midi-volume">VOL:</label>
 		<input
+			id="midi-volume"
 			type="range"
 			min="0"
 			max="0.6"
@@ -204,6 +213,7 @@
 			value={volume}
 			oninput={updateVolume}
 			class="w-24 cursor-pointer accent-yellow-300"
+			aria-valuetext={`${Math.round((volume / 0.6) * 100)} percent`}
 		/>
 	</div>
 </div>

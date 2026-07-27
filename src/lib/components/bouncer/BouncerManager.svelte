@@ -198,6 +198,7 @@
 
 	onMount(() => {
 		const ctx = canvas!.getContext('2d')!;
+		const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 		function handleResize() {
 			viewportWidth = window.innerWidth;
@@ -219,7 +220,7 @@
 			// deliberately cheap and preserves the intentionally choppy retro effect.
 			if (timestamp - lastTime < frameInterval) return;
 			lastTime = timestamp;
-			updatePhysics();
+			if (!motionPreference.matches) updatePhysics();
 			render(ctx);
 		}
 
@@ -233,7 +234,8 @@
 </script>
 
 <!-- Canvas sits between background and content -->
-<canvas bind:this={canvas} class="pointer-events-none fixed inset-0 z-10"></canvas>
+<canvas bind:this={canvas} class="pointer-events-none fixed inset-0 z-10" aria-hidden="true"
+></canvas>
 
 <!-- Bouncer registrations (render nothing visible) -->
 {#if children}

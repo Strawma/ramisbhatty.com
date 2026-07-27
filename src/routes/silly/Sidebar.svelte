@@ -59,8 +59,8 @@
 	<div class="retro-panel bg-linear-to-b from-[#ff0000] to-[#8b0000] p-4 text-center">
 		<button
 			onclick={() => clicks++}
-			class="animate-pulse cursor-pointer border-2 border-yellow-300 bg-red-600
-             px-4 py-2 text-lg font-bold text-white hover:bg-red-700"
+			class="animate-pulse cursor-pointer border-2 border-yellow-300 bg-red-600 px-4
+             py-2 text-lg font-bold text-white hover:bg-red-700 motion-reduce:animate-none"
 		>
 			CLICK ME!
 		</button>
@@ -71,7 +71,7 @@
 
 	<!-- Clock -->
 	<div class="border-4 border-[#00ff00] bg-black p-3 text-center font-mono text-sm text-lime-400">
-		{currentTime}
+		<time datetime={new Date().toISOString()} aria-live="off">{currentTime}</time>
 	</div>
 
 	<!-- MIDI Player -->

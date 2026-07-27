@@ -3,22 +3,43 @@
 	import { contact, nav } from '$lib/data/config';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+
+	const links = [
+		{ label: 'Work', href: nav.work },
+		{ label: 'Education', href: nav.education },
+		{ label: 'Writing', href: nav.blog },
+		{ label: 'About', href: nav.about },
+		{ label: 'CV', href: nav.cv }
+	];
 </script>
 
-<nav class="mx-auto flex w-full max-w-2xl items-center justify-between px-6 py-6">
-	<a href={resolve(nav.home)} class="text-lg font-bold transition-colors hover:text-neutral-600">
+<nav
+	class="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-4 px-6 py-6"
+	aria-label="Main navigation"
+>
+	<a
+		href={resolve(nav.home)}
+		class="text-lg font-bold transition-colors hover:text-neutral-600 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
+	>
 		{contact.name}
 	</a>
-	<div class="flex gap-6 text-sm">
+	<div class="flex flex-wrap gap-x-5 gap-y-2 text-sm">
 		<a
 			href={resolve(nav.home)}
-			class="transition-colors hover:text-neutral-600"
+			class="transition-colors hover:text-neutral-600 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
 			class:font-semibold={page.url.pathname === nav.home}
 		>
 			Home
 		</a>
-		<a href={contact.github} rel="external" class="transition-colors hover:text-neutral-600"
-			>Github</a
-		>
+		{#each links as link (link.href)}
+			<a
+				href={resolve(link.href)}
+				class="transition-colors hover:text-neutral-600 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
+				class:font-semibold={page.url.pathname === link.href ||
+					page.url.pathname.startsWith(`${link.href}/`)}
+			>
+				{link.label}
+			</a>
+		{/each}
 	</div>
 </nav>
