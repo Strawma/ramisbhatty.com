@@ -16,13 +16,7 @@ const mainRoutes: RouteExpectation[] = [
 	{ path: '/interests', heading: 'Interests', title: /^Interests \| Ramis Bhatty$/ }
 ];
 
-const draftRoutes = [
-	'/education/comp1201',
-	'/work/module-project-placeholder',
-	'/work/experience/research-internship',
-	'/blog/first-post',
-	'/interests/games'
-];
+const draftRoutes = ['/work/module-project-placeholder', '/blog/first-post', '/interests/games'];
 
 function collectRuntimeErrors(page: Page): string[] {
 	const errors: string[] = [];
@@ -96,6 +90,16 @@ test('education groups modules chronologically with averages, awards, and the la
 		.locator('article')
 		.filter({ has: page.locator('a[href="/education/comp1201"]') });
 	await expect(comp1201.getByLabel('Overall mark: 76%')).toBeVisible();
+});
+
+test('published module and experience records are available without draft labels', async ({
+	page
+}) => {
+	for (const path of ['/education/comp1201', '/work/experience/research-internship']) {
+		const response = await page.goto(path);
+		expect(response?.ok(), path).toBe(true);
+		await expect(page.getByText('LOCAL DRAFT', { exact: true })).toHaveCount(0);
+	}
 });
 
 test('authored draft records are reachable locally and visibly labelled', async ({ page }) => {
