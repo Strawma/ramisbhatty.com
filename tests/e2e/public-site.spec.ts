@@ -13,36 +13,15 @@ const mainRoutes: RouteExpectation[] = [
 	{ path: '/work', heading: 'Work', title: /^Work \| Ramis Bhatty$/ },
 	{ path: '/education', heading: 'Education', title: /^Education \| Ramis Bhatty$/ },
 	{ path: '/blog', heading: 'Writing', title: /^Writing \| Ramis Bhatty$/ },
-	{ path: '/interests', heading: 'Interests', title: /^Interests \| Ramis Bhatty$/ },
-	{ path: '/cv', heading: 'CV', title: /^CV \| Ramis Bhatty$/ }
+	{ path: '/interests', heading: 'Interests', title: /^Interests \| Ramis Bhatty$/ }
 ];
 
-const draftRoutes: RouteExpectation[] = [
-	{
-		path: '/education/comp1201',
-		heading: 'COMP1201: TODO: Module title',
-		title: /^COMP1201: TODO: Module title \| Ramis Bhatty$/
-	},
-	{
-		path: '/work/module-project-placeholder',
-		heading: 'TODO: Project title',
-		title: /^TODO: Project title \| Ramis Bhatty$/
-	},
-	{
-		path: '/work/experience/research-internship',
-		heading: 'Research intern',
-		title: /^Research intern, TODO: Organisation \| Ramis Bhatty$/
-	},
-	{
-		path: '/blog/first-post',
-		heading: 'TODO: First post title',
-		title: /^TODO: First post title \| Ramis Bhatty$/
-	},
-	{
-		path: '/interests/games',
-		heading: 'Games',
-		title: /^Games \| Interests \| Ramis Bhatty$/
-	}
+const draftRoutes = [
+	'/education/comp1201',
+	'/work/module-project-placeholder',
+	'/work/experience/research-internship',
+	'/blog/first-post',
+	'/interests/games'
 ];
 
 function collectRuntimeErrors(page: Page): string[] {
@@ -77,6 +56,7 @@ test('primary navigation keeps personal and silly destinations secondary', async
 
 	const navigation = page.getByRole('navigation', { name: 'Main navigation' });
 	await expect(navigation.getByRole('link', { name: 'Writing' })).toHaveAttribute('href', '/blog');
+	await expect(navigation.getByRole('link', { name: 'CV' })).toHaveAttribute('href', '/cv');
 	await expect(navigation.getByRole('link', { name: 'Interests' })).toHaveCount(0);
 	await expect(navigation.getByRole('link', { name: /silly/i })).toHaveCount(0);
 
@@ -90,12 +70,40 @@ test('primary navigation keeps personal and silly destinations secondary', async
 	).toHaveAttribute('href', '/silly');
 });
 
+test('education groups modules chronologically with averages, awards, and the latest year open', async ({
+	page
+}) => {
+	await page.goto('/education');
+
+	const yearGroups = page.locator('details');
+	await expect(yearGroups).toHaveCount(3);
+
+	const firstYear = yearGroups.filter({ hasText: 'First Year, 2023/24' });
+	const secondYear = yearGroups.filter({ hasText: 'Second Year, 2024/25' });
+	const thirdYear = yearGroups.filter({ hasText: 'Third Year, 2025/26' });
+
+	await expect(firstYear).not.toHaveAttribute('open');
+	await expect(secondYear).not.toHaveAttribute('open');
+	await expect(thirdYear).toHaveAttribute('open', '');
+	await expect(firstYear.getByLabel('Year average: 84.4%')).toBeVisible();
+	await expect(secondYear.getByLabel('Year average: 79.6%')).toBeVisible();
+	await expect(thirdYear.getByLabel('Year average: 81.3%')).toBeVisible();
+	await expect(firstYear.getByText(/Netcraft Prize/)).toBeVisible();
+	await expect(secondYear.getByText(/Netcraft Prize/)).toBeVisible();
+
+	await firstYear.locator('summary').click();
+	const comp1201 = page
+		.locator('article')
+		.filter({ has: page.locator('a[href="/education/comp1201"]') });
+	await expect(comp1201.getByLabel('Overall mark: 76%')).toBeVisible();
+});
+
 test('authored draft records are reachable locally and visibly labelled', async ({ page }) => {
-	for (const route of draftRoutes) {
-		const response = await page.goto(route.path);
-		expect(response?.ok(), route.path).toBe(true);
-		await expect(page).toHaveTitle(route.title);
-		await expect(page.getByRole('heading', { level: 1, name: route.heading })).toBeVisible();
+	for (const path of draftRoutes) {
+		const response = await page.goto(path);
+		expect(response?.ok(), path).toBe(true);
+		await expect(page).toHaveTitle(/\| (Interests \| )?Ramis Bhatty$/);
+		await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 		await expect(page.getByText('LOCAL DRAFT', { exact: true }).first()).toBeVisible();
 	}
 });
@@ -160,13 +168,24 @@ test('the streaming scene respects utility indexing and reduced-motion preferenc
 });
 
 test('unfinished public indexes stay out of search results', async ({ page }) => {
-	for (const path of ['/blog', '/interests', '/cv']) {
+	for (const path of ['/blog', '/interests']) {
 		await page.goto(path);
 		await expect(page.locator('meta[name="robots"]'), path).toHaveAttribute(
 			'content',
 			'noindex, follow'
 		);
 	}
+});
+
+test('/cv redirects directly to the technical CV PDF', async ({ request }) => {
+	const response = await request.get('/cv', { maxRedirects: 0 });
+
+	expect(response.status()).toBe(307);
+	expect(response.headers().location).toBe('/documents/ramis-bhatty-cv.pdf');
+
+	const pdf = await request.get('/documents/ramis-bhatty-cv.pdf');
+	expect(pdf.ok()).toBe(true);
+	expect(pdf.headers()['content-type']).toContain('application/pdf');
 });
 
 test('unknown authored records return not found', async ({ request }) => {

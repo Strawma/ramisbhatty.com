@@ -1,9 +1,12 @@
 <script lang="ts">
 	/* eslint-disable svelte/no-navigation-without-resolve -- Parent routes provide generated internal entry URLs. */
+	import ModuleMark from './ModuleMark.svelte';
+
 	interface Entry {
 		href?: string;
 		title: string;
 		meta?: string;
+		mark?: number;
 		summary: string;
 		tags?: string[];
 		draft?: boolean;
@@ -28,7 +31,12 @@
 						{entry.title}
 					{/if}
 				</h2>
-				{#if entry.meta}<p class="font-mono text-xs text-neutral-500">{entry.meta}</p>{/if}
+				{#if entry.meta || entry.mark !== undefined}
+					<div class="flex flex-wrap items-center gap-2">
+						{#if entry.meta}<p class="font-mono text-xs text-neutral-500">{entry.meta}</p>{/if}
+						{#if entry.mark !== undefined}<ModuleMark mark={entry.mark} compact />{/if}
+					</div>
+				{/if}
 			</div>
 			<p class="mt-2 leading-6 text-neutral-700">{entry.summary}</p>
 			{#if entry.tags?.length || entry.draft}

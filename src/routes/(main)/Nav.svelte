@@ -8,7 +8,8 @@
 		{ label: 'Work', href: nav.work },
 		{ label: 'Education', href: nav.education },
 		{ label: 'Writing', href: nav.blog },
-		{ label: 'About', href: nav.about }
+		{ label: 'About', href: nav.about },
+		{ label: 'CV', href: nav.cv }
 	];
 </script>
 

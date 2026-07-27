@@ -4,15 +4,12 @@ title: About
 description: About Ramis Bhatty and a guide to this website.
 ---
 
-I study Computer Science with Artificial Intelligence at the University of Southampton on the
-integrated MEng programme. I am preparing to enter my fourth year and am currently completing a
-research internship; I will add more about the work when I can describe it properly.
+I am a 4th year student studying Computer Science with Artificial Intelligence (MEng) at the University of Southampton. This website serves as a portfolio / hub of random things about me!
 
 ## This site
 
 The main routes are a concise record of my work, education, and writing. Interests is a quieter
-personal index for books, games, and less formal notes; the deliberately excessive experiments
-remain in their own separate corner.
+personal index for books, games, and less formal notes; there's also some more unusual stuff quarantined off in different corners.
 
 - [Work and projects](/work)
 - [Education and modules](/education)

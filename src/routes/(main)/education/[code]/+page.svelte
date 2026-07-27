@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ModuleMark from '$lib/components/main/ModuleMark.svelte';
 	import { moduleContent } from '$lib/content';
 	import { resolve } from '$app/paths';
 	let { data } = $props();
@@ -21,7 +22,12 @@
 		<h1 class="mt-4 text-4xl font-semibold tracking-tight">
 			{data.module.code}: {data.module.title}
 		</h1>
-		<p class="mt-3 font-mono text-sm text-neutral-500">{data.module.year}</p>
+		<p class="mt-3 font-mono text-sm text-neutral-500">
+			{data.module.year}{data.module.semester ? ` · ${data.module.semester}` : ''}
+		</p>
+		{#if data.module.mark !== undefined}
+			<p class="mt-4"><ModuleMark mark={data.module.mark} /></p>
+		{/if}
 		<p class="mt-5 text-lg leading-8 text-neutral-700">{data.module.summary}</p>
 		{#if data.module.topics.length}<p class="mt-5 text-sm text-neutral-600">
 				{data.module.topics.join(' · ')}

@@ -9,8 +9,8 @@ order: 10
 
 ## The idea
 
-TODO: Develop the main idea in your own words.
+TODO: 
 
 ## Notes and references
 
-TODO: Add useful context, evidence, or links.
+TODO: 

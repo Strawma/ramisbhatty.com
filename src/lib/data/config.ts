@@ -19,3 +19,7 @@ export const nav = {
 	silly: '/silly',
 	legacy: 'https://legacy.ramisbhatty.com'
 } as const;
+
+export const documents = {
+	cv: '/documents/ramis-bhatty-cv.pdf'
+} as const;

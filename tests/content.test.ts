@@ -63,4 +63,26 @@ describe('main-site content visibility', () => {
 	it('discovers a Markdown body for every interest category', () => {
 		expect(interests.every((category) => interestContent[category.slug])).toBe(true);
 	});
+
+	it('keeps module marks within percentage bounds when provided', () => {
+		expect(
+			modules.every(
+				(module) => module.mark === undefined || (module.mark >= 0 && module.mark <= 100)
+			)
+		).toBe(true);
+	});
+
+	it('uses the correct marks and credit weighting metadata', () => {
+		expect(findModule('MATH3082', true)).toMatchObject({
+			title: 'Optimisation',
+			mark: 88,
+			credits: 15
+		});
+		expect(findModule('COMP3200', true)?.credits).toBe(45);
+		expect(
+			modules
+				.filter((module) => module.code !== 'COMP3200')
+				.every((module) => module.credits === 15)
+		).toBe(true);
+	});
 });

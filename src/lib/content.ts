@@ -28,8 +28,16 @@ export interface AcademicModule extends CollectionMetadata {
 	code: string;
 	title: string;
 	year: string;
+	semester?: string;
+	mark?: number;
+	credits: number;
 	summary: string;
 	topics: string[];
+}
+
+export interface AcademicYearDetails {
+	year: string;
+	awards: string[];
 }
 
 export interface Project extends CollectionMetadata {
@@ -56,6 +64,7 @@ export interface PageIntroduction {
 	description: string;
 	indexDescription?: string;
 	introduction?: string;
+	academicYears?: AcademicYearDetails[];
 }
 
 export interface ExploreDestination {
@@ -107,6 +116,32 @@ function optionalString(
 	return value;
 }
 
+function optionalPercentage(
+	metadata: MetadataRecord,
+	field: string,
+	source: string
+): number | undefined {
+	const value = metadata[field];
+	if (value === undefined) return undefined;
+	if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 100) {
+		throw new Error(`Invalid "${field}" in ${source}; expected a number from 0 to 100`);
+	}
+	return value;
+}
+
+function optionalPositiveNumber(
+	metadata: MetadataRecord,
+	field: string,
+	source: string
+): number | undefined {
+	const value = metadata[field];
+	if (value === undefined) return undefined;
+	if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+		throw new Error(`Invalid "${field}" in ${source}; expected a positive number`);
+	}
+	return value;
+}
+
 function stringList(metadata: MetadataRecord, field: string, source: string): string[] {
 	const value = metadata[field];
 	if (value === undefined) return [];
@@ -114,6 +149,28 @@ function stringList(metadata: MetadataRecord, field: string, source: string): st
 		throw new Error(`Invalid "${field}" in ${source}`);
 	}
 	return value;
+}
+
+function academicYears(
+	metadata: MetadataRecord,
+	source: string
+): AcademicYearDetails[] | undefined {
+	const value = metadata.academicYears;
+	if (value === undefined) return undefined;
+	if (!Array.isArray(value)) {
+		throw new Error(`Invalid "academicYears" in ${source}`);
+	}
+
+	return value.map((item, index) => {
+		if (!item || typeof item !== 'object' || Array.isArray(item)) {
+			throw new Error(`Invalid "academicYears[${index}]" in ${source}`);
+		}
+		const year = item as MetadataRecord;
+		return {
+			year: requireString(year, 'year', source),
+			awards: stringList(year, 'awards', source)
+		};
+	});
 }
 
 function collectionMetadata(
@@ -180,7 +237,8 @@ const pageDocuments = loadContent(
 		title: requireString(metadata, 'title', source),
 		description: requireString(metadata, 'description', source),
 		indexDescription: optionalString(metadata, 'indexDescription', source),
-		introduction: optionalString(metadata, 'introduction', source)
+		introduction: optionalString(metadata, 'introduction', source),
+		academicYears: academicYears(metadata, source)
 	}),
 	(left, right) => left.slug.localeCompare(right.slug, 'en-GB')
 );
@@ -230,6 +288,9 @@ const moduleDocuments = loadContent(
 		code: requireString(metadata, 'code', source),
 		title: requireString(metadata, 'title', source),
 		year: requireString(metadata, 'year', source),
+		semester: optionalString(metadata, 'semester', source),
+		mark: optionalPercentage(metadata, 'mark', source),
+		credits: optionalPositiveNumber(metadata, 'credits', source) ?? 15,
 		summary: requireString(metadata, 'summary', source),
 		topics: stringList(metadata, 'topics', source),
 		...collectionMetadata(metadata, source)
