@@ -7,7 +7,7 @@
 	const links = [
 		{ label: 'Work', href: nav.work },
 		{ label: 'Education', href: nav.education },
-		{ label: 'Blog', href: nav.blog },
+		{ label: 'Writing', href: nav.blog },
 		{ label: 'About', href: nav.about }
 	];
 </script>

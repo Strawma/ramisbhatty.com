@@ -20,6 +20,7 @@ const comp1201 = {
 			]
 		}
 	],
+	area: 'professional',
 	status: 'draft',
 	featured: true,
 	order: 10

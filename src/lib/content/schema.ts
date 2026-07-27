@@ -1,6 +1,8 @@
 export type PublicationStatus = 'draft' | 'published';
+export type ContentArea = 'professional' | 'personal';
 
 export interface CollectionMetadata {
+	area: ContentArea;
 	status: PublicationStatus;
 	featured?: boolean;
 	order?: number;
@@ -58,6 +60,7 @@ export interface InterestItem {
 	title: string;
 	note?: string;
 	href?: string;
+	date?: string;
 }
 
 export interface InterestCategory extends CollectionMetadata {

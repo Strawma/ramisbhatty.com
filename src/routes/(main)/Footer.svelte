@@ -1,6 +1,6 @@
 <!-- src/lib/components/prose/Footer.svelte -->
 <script lang="ts">
-	import { contact } from '$lib/data/config';
+	import { contact, nav } from '$lib/data/config';
 	import { resolve } from '$app/paths';
 </script>
 
@@ -10,8 +10,9 @@
 		<div class="flex gap-4">
 			<a href="mailto:{contact.email}" class="underline underline-offset-4">Email</a>
 			<a href={contact.github} rel="external" class="underline underline-offset-4">GitHub</a>
+			<a href={resolve(nav.interests)} class="underline underline-offset-4">Interests</a>
 			<a
-				href={resolve('/silly')}
+				href={resolve(nav.silly)}
 				class="transition-colors hover:text-neutral-700"
 				aria-label="Visit the silly version of this site">:)</a
 			>

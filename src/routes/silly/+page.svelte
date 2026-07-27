@@ -25,6 +25,14 @@
 	}));
 </script>
 
+<svelte:head>
+	<title>Silly | Ramis Bhatty</title>
+	<meta
+		name="description"
+		content="A deliberately excessive retro corner of Ramis Bhatty's personal website."
+	/>
+</svelte:head>
+
 <BouncerManager fps={8}>
 	{#each bouncerConfigs as config, i (i)}
 		<Bouncer {...config} imageSrc={RamisSrc} />

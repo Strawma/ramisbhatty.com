@@ -8,6 +8,7 @@ export { posts } from './posts';
 export { projects } from './projects';
 export type {
 	AcademicModule,
+	ContentArea,
 	ContentImage,
 	ContentLink,
 	CollectionMetadata,
@@ -25,7 +26,7 @@ export type {
 } from './schema';
 
 import { experience, visibleExperience } from './experience';
-import { interests } from './interests';
+import { interests, visibleInterests } from './interests';
 import { modules } from './modules';
 import { posts } from './posts';
 import { projects } from './projects';
@@ -112,4 +113,8 @@ export function findPost(slug: string, includeDrafts = false): Post | undefined 
 
 export function findExperience(slug: string, includeDrafts = false) {
 	return visibleExperience(includeDrafts).find((entry) => entry.slug === slug);
+}
+
+export function findInterest(slug: string, includeDrafts = false) {
+	return visibleInterests(includeDrafts).find((category) => category.slug === slug);
 }

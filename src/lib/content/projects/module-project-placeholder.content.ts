@@ -26,6 +26,7 @@ const moduleProjectPlaceholder = {
 		}
 	],
 	links: [],
+	area: 'professional',
 	status: 'draft',
 	featured: true,
 	order: 10

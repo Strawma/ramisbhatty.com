@@ -6,6 +6,7 @@ export const interests: InterestCategory[] = [
 		title: 'Games',
 		summary: 'TODO: Add favourites, current games, or individual notes.',
 		items: [],
+		area: 'personal',
 		status: 'draft',
 		order: 10
 	},
@@ -14,6 +15,7 @@ export const interests: InterestCategory[] = [
 		title: 'Books',
 		summary: 'TODO: Add books read, favourites, and links to longer notes.',
 		items: [],
+		area: 'personal',
 		status: 'draft',
 		order: 20
 	},
@@ -22,6 +24,7 @@ export const interests: InterestCategory[] = [
 		title: 'Other subjects',
 		summary: 'TODO: Add interests that deserve their own connected pages.',
 		items: [],
+		area: 'personal',
 		status: 'draft',
 		order: 30
 	}

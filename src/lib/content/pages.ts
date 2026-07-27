@@ -1,4 +1,4 @@
-import { nav } from '$lib/data/config';
+import { nav } from '../data/config';
 import type { ExploreDestination, PageIntroduction } from './schema';
 
 export const pageIntroductions = {
@@ -22,15 +22,15 @@ export const pageIntroductions = {
 	},
 	blog: {
 		path: '/BLOG',
-		title: 'Blog',
+		title: 'Writing',
 		description: 'Writing and notes by Ramis Bhatty.',
-		lead: 'Longer notes, explanations, reviews, and ideas as I write them.'
+		lead: 'Technical writing, project notes, explanations, and substantial ideas as I write them.'
 	},
 	interests: {
 		path: '/INTERESTS',
 		title: 'Interests',
 		description: 'Games, books, and other interests collected by Ramis Bhatty.',
-		lead: 'A less formal index of games, books, and other subjects I want to remember or write about.'
+		lead: 'A calmer personal index of games, books, reviews, and other subjects I want to remember or write about.'
 	},
 	cv: {
 		path: '/CV',
@@ -52,9 +52,9 @@ export const exploreDestinations = [
 		description: 'My degree, modules, coursework, and the ideas that came out of studying them.'
 	},
 	{
-		title: 'Blog',
+		title: 'Writing',
 		href: nav.blog,
-		description: 'Longer notes, reviews, explanations, and ideas.'
+		description: 'Technical notes, project write-ups, explanations, and substantial ideas.'
 	},
 	{
 		title: 'Interests',
@@ -66,5 +66,5 @@ export const exploreDestinations = [
 export const aboutSiteCopy = {
 	heading: 'This site',
 	paragraph:
-		'This is a record of work, education, and things I find interesting. The professional parts come first; the less formal corners will grow over time.'
+		'The main routes are a concise record of my work, education, and writing. Interests is a quieter personal index for books, games, and less formal notes; the deliberately excessive experiments remain in their own separate corner.'
 } as const;

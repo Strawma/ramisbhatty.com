@@ -16,6 +16,7 @@ const firstPost = {
 		}
 	],
 	links: [],
+	area: 'professional',
 	status: 'draft',
 	order: 10
 } satisfies Post;

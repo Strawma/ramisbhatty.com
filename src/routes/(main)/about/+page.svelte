@@ -32,7 +32,15 @@
 	<ul>
 		<li><a href={resolve(nav.work)}>Work and projects</a></li>
 		<li><a href={resolve(nav.education)}>Education and modules</a></li>
-		<li><a href={resolve(nav.blog)}>Blog</a></li>
-		<li><a href={resolve(nav.interests)}>Interests</a></li>
+		<li><a href={resolve(nav.blog)}>Writing</a></li>
 	</ul>
+</section>
+
+<section class="border-t border-neutral-300 pt-6">
+	<h2>Personal index</h2>
+	<p>
+		Books, games, reviews, and less formal notes live under
+		<a href={resolve(nav.interests)}>Interests</a>. The main navigation stays focused on the
+		professional parts of the site.
+	</p>
 </section>

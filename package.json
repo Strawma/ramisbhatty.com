@@ -12,7 +12,9 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"test:e2e": "playwright test",
+		"test:e2e": "pnpm test:e2e:public && pnpm test:e2e:bookclub",
+		"test:e2e:public": "playwright test --config=playwright.config.ts",
+		"test:e2e:bookclub": "playwright test --config=playwright.bookclub.config.ts",
 		"bookclub:provision-admin": "node scripts/bookclub-provision-admin.mjs",
 		"bookclub:reset-invite": "node scripts/bookclub-reset-invite.mjs",
 		"bookclub:check-invite": "node scripts/bookclub-check-invite.mjs",
@@ -23,6 +25,7 @@
 		"node": ">=22.12.0"
 	},
 	"devDependencies": {
+		"@axe-core/playwright": "^4.12.1",
 		"@cloudflare/vitest-pool-workers": "^0.18.8",
 		"@cloudflare/workers-types": "^5.20260726.1",
 		"@eslint/compat": "^2.1.0",

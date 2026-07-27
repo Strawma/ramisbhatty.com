@@ -9,6 +9,7 @@ const researchInternship = {
 		'TODO: Describe the research area, organisation or team, and what can be discussed publicly.',
 	sections: [],
 	links: [],
+	area: 'professional',
 	status: 'draft',
 	featured: true,
 	order: 10

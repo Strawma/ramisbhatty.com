@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
+
 	let { data } = $props();
 </script>
 
@@ -16,7 +18,12 @@
 		{#each data.interests as category (category.slug)}
 			<section class="border-t border-neutral-300 pt-4">
 				<div class="flex flex-wrap items-baseline gap-2">
-					<h2 class="text-lg font-semibold">{category.title}</h2>
+					<h2 class="text-lg font-semibold">
+						<a
+							class="underline decoration-neutral-400 underline-offset-4 hover:decoration-neutral-900"
+							href={resolve(`/interests/${category.slug}`)}>{category.title}</a
+						>
+					</h2>
 					{#if category.status === 'draft'}
 						<span class="border border-amber-600 px-2 py-1 text-xs text-amber-800">
 							LOCAL DRAFT
@@ -33,6 +40,9 @@
 									<a href={item.href}>{item.title}</a>
 								{:else}
 									{item.title}
+								{/if}
+								{#if item.date}
+									<span class="font-mono text-xs text-neutral-500"> · {item.date}</span>
 								{/if}
 								{#if item.note}
 									— {item.note}{/if}
