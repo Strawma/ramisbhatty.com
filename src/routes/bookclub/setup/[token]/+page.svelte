@@ -9,7 +9,7 @@
 	<title>{isReset ? 'Reset BMBMT Login' : 'Join BMBMT'} | Ramis Bhatty</title>
 	<meta name="description" content="Private BMBMT account setup." />
 	<meta property="og:image" content="https://ramisbhatty.com/bookclub/favicon.ico" />
-	<meta name="referrer" content="no-referrer" />
+	<meta name="referrer" content="origin" />
 </svelte:head>
 
 <main

@@ -23,7 +23,7 @@ import type { Actions, PageServerLoad } from './$types';
 async function requireAdmin(event: RequestEvent) {
 	event.setHeaders({
 		'cache-control': 'no-store',
-		'referrer-policy': 'no-referrer'
+		'referrer-policy': 'origin'
 	});
 	const member = await requireBookclubMember(event);
 

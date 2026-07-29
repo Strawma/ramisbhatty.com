@@ -26,6 +26,37 @@ async function createSessionContext(browser: Browser, token: string) {
 	return context;
 }
 
+test('ordinary login and logout forms keep a same-origin CSRF header', async ({ browser }) => {
+	const loginPage = await browser.newPage();
+	await loginPage.goto('/bookclub/login');
+	await expect(loginPage.locator('meta[name="referrer"]')).toHaveAttribute('content', 'origin');
+
+	await loginPage.getByLabel('USERNAME').fill('invalid-user');
+	await loginPage.getByLabel('LOGIN CODE').fill('invalid-login-code');
+	const loginRequestPromise = loginPage.waitForRequest(
+		(request) => request.url().endsWith('/bookclub/login') && request.method() === 'POST'
+	);
+	await loginPage.getByRole('button', { name: 'ENTER THE CLUB' }).click();
+	const loginRequest = await loginRequestPromise;
+	expect(loginRequest.headers().origin).toBe(new URL(loginPage.url()).origin);
+	await loginPage.close();
+
+	const { aliceToken } = getTestSessions();
+	const memberContext = await createSessionContext(browser, aliceToken);
+	const memberPage = await memberContext.newPage();
+	await memberPage.goto('/bookclub');
+
+	let logoutOrigin: string | undefined;
+	await memberPage.route('**/bookclub/logout', async (route) => {
+		logoutOrigin = route.request().headers().origin;
+		await route.fulfill({ status: 204 });
+	});
+	await memberPage.getByRole('button', { name: 'LOG OUT' }).click();
+
+	await expect.poll(() => logoutOrigin).toBe(new URL(memberPage.url()).origin);
+	await memberContext.close();
+});
+
 test('chat sends between sessions and remains responsive', async ({ browser }) => {
 	const { aliceToken, bobToken } = getTestSessions();
 	const contextAlice = await createSessionContext(browser, aliceToken);
