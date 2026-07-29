@@ -12,7 +12,7 @@ function validateCode(value: FormDataEntryValue | null): value is string {
 export const load: PageServerLoad = async (event) => {
 	event.setHeaders({
 		'cache-control': 'no-store',
-		'referrer-policy': 'no-referrer'
+		'referrer-policy': 'origin'
 	});
 
 	const invitation = await getInvitationByToken(
@@ -35,7 +35,7 @@ export const actions: Actions = {
 	default: async (event) => {
 		event.setHeaders({
 			'cache-control': 'no-store',
-			'referrer-policy': 'no-referrer'
+			'referrer-policy': 'origin'
 		});
 
 		const form = await event.request.formData();

@@ -7,7 +7,7 @@ import type { PageServerLoad } from './$types';
 export const load: PageServerLoad = async (event) => {
 	event.setHeaders({
 		'cache-control': 'no-store',
-		'referrer-policy': 'no-referrer'
+		'referrer-policy': 'origin'
 	});
 	const member = await requireBookclubMember(event);
 
