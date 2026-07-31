@@ -751,56 +751,56 @@
 		--pixel-teal:
 			repeating-linear-gradient(
 				0deg,
-				rgb(255 255 255 / 0.08) 0 4px,
-				transparent 4px 12px,
-				rgb(0 0 0 / 0.12) 12px 16px,
-				transparent 16px 24px
+				rgb(255 255 255 / 0.035) 0 3px,
+				transparent 3px 18px,
+				rgb(0 0 0 / 0.05) 18px 21px,
+				transparent 21px 36px
 			),
 			repeating-linear-gradient(
 				90deg,
-				rgb(255 255 255 / 0.05) 0 8px,
-				transparent 8px 24px,
-				rgb(0 0 0 / 0.1) 24px 32px,
-				transparent 32px 48px
+				rgb(255 255 255 / 0.025) 0 6px,
+				transparent 6px 30px,
+				rgb(0 0 0 / 0.04) 30px 36px,
+				transparent 36px 48px
 			);
 		--pixel-panel:
 			repeating-linear-gradient(
 				135deg,
-				rgb(255 255 255 / 0.28) 0 8px,
-				transparent 8px 20px,
-				rgb(0 0 0 / 0.1) 20px 28px,
-				transparent 28px 40px
+				rgb(255 255 255 / 0.1) 0 6px,
+				transparent 6px 24px,
+				rgb(0 0 0 / 0.04) 24px 30px,
+				transparent 30px 48px
 			),
-			radial-gradient(circle at 1px 1px, rgb(0 0 0 / 0.12) 0 1px, transparent 1.5px);
+			radial-gradient(circle at 1px 1px, rgb(0 0 0 / 0.035) 0 1px, transparent 1.25px);
 		--pixel-chrome:
 			repeating-linear-gradient(
 				0deg,
-				rgb(255 255 255 / 0.2) 0 3px,
-				transparent 3px 9px,
-				rgb(0 0 0 / 0.16) 9px 12px,
-				transparent 12px 18px
+				rgb(255 255 255 / 0.07) 0 2px,
+				transparent 2px 12px,
+				rgb(0 0 0 / 0.05) 12px 14px,
+				transparent 14px 24px
 			),
 			repeating-linear-gradient(
 				90deg,
-				rgb(255 255 255 / 0.14) 0 6px,
-				transparent 6px 16px,
-				rgb(0 0 0 / 0.12) 16px 22px,
-				transparent 22px 32px
+				rgb(255 255 255 / 0.05) 0 4px,
+				transparent 4px 20px,
+				rgb(0 0 0 / 0.04) 20px 24px,
+				transparent 24px 32px
 			);
 		--pixel-title:
 			repeating-linear-gradient(
 				90deg,
-				rgb(255 255 255 / 0.18) 0 6px,
-				transparent 6px 14px,
-				rgb(0 0 0 / 0.2) 14px 20px,
-				transparent 20px 28px
+				rgb(255 255 255 / 0.08) 0 4px,
+				transparent 4px 18px,
+				rgb(0 0 0 / 0.08) 18px 22px,
+				transparent 22px 32px
 			),
 			repeating-linear-gradient(
 				0deg,
-				rgb(255 255 255 / 0.08) 0 4px,
-				transparent 4px 12px,
-				rgb(0 0 0 / 0.14) 12px 16px,
-				transparent 16px 24px
+				rgb(255 255 255 / 0.035) 0 3px,
+				transparent 3px 14px,
+				rgb(0 0 0 / 0.06) 14px 17px,
+				transparent 17px 24px
 			);
 		background-image: var(--pixel-teal);
 		background-size:
@@ -813,8 +813,8 @@
 	.bookclub-theme :global([class~='bg-[#d4d0c8]']) {
 		background-image: var(--pixel-panel);
 		background-size:
-			40px 40px,
-			4px 4px;
+			48px 48px,
+			8px 8px;
 		background-blend-mode: normal, multiply;
 	}
 
@@ -848,12 +848,12 @@
 	.bookclub-theme :global([class~='bg-[#ffffcc]']) {
 		background-image: repeating-linear-gradient(
 			135deg,
-			rgb(255 255 255 / 0.42) 0 8px,
-			transparent 8px 20px,
-			rgb(128 96 0 / 0.08) 20px 24px,
-			transparent 24px 40px
+			rgb(255 255 255 / 0.14) 0 6px,
+			transparent 6px 24px,
+			rgb(128 96 0 / 0.035) 24px 28px,
+			transparent 28px 48px
 		);
-		background-size: 40px 40px;
+		background-size: 48px 48px;
 	}
 
 	@media (min-width: 1024px) {
