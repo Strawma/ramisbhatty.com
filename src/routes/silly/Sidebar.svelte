@@ -12,13 +12,18 @@
 	} = $props();
 
 	let clicks = $state(0);
-	let currentTime = $state(new Date().toLocaleString());
+	let currentTime = $state('Loading local time...');
+	let currentDateTime = $state<string>();
 
 	onMount(() => {
-		// Both values are decorative client-side state; stop the interval when navigating away.
-		const interval = setInterval(() => {
-			currentTime = new Date().toLocaleString();
-		}, 3000);
+		const updateClock = () => {
+			const now = new Date();
+			currentTime = now.toLocaleString();
+			currentDateTime = now.toISOString();
+		};
+
+		updateClock();
+		const interval = setInterval(updateClock, 3000);
 		return () => clearInterval(interval);
 	});
 
@@ -71,7 +76,7 @@
 
 	<!-- Clock -->
 	<div class="border-4 border-[#00ff00] bg-black p-3 text-center font-mono text-sm text-lime-400">
-		<time datetime={new Date().toISOString()} aria-live="off">{currentTime}</time>
+		<time datetime={currentDateTime} aria-live="off">{currentTime}</time>
 	</div>
 
 	<!-- MIDI Player -->

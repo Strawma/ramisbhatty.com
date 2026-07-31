@@ -6,11 +6,15 @@
 	import DashboardPanel from '$lib/components/bookclub/DashboardPanel.svelte';
 	import ClubhouseBackdrop from '$lib/components/bookclub/ClubhouseBackdrop.svelte';
 	import ProfileSettings from '$lib/components/bookclub/ProfileSettings.svelte';
+	import SuggestionSlot from '$lib/components/bookclub/SuggestionSlot.svelte';
 	import {
 		completeOrder,
+		constrainWindowGeometry,
+		createDefaultWindowGeometries,
 		loadDashboardPreferences,
 		saveDashboardPreferences,
-		type DashboardPanelId
+		type DashboardPanelId,
+		type DashboardWindowGeometry
 	} from '$lib/components/bookclub/dashboard-preferences';
 	import ChatRoom from './ChatRoom.svelte';
 	import ClubNav from './ClubNav.svelte';
@@ -21,28 +25,74 @@
 	let systemMessage = $state(bookclubSystemMessages[0] ?? 'Please insert literature.');
 	let dashboardOrder = $state<DashboardPanelId[]>(completeOrder([]));
 	let collapsedPanels = $state<Partial<Record<DashboardPanelId, boolean>>>({});
+	let windowGeometries = $state<Partial<Record<DashboardPanelId, DashboardWindowGeometry>>>({});
+	let windowStack = $state<DashboardPanelId[]>(completeOrder([]));
+	let workspaceWidth = $state(900);
+	let workspaceReady = $state(false);
+	let workspaceElement: HTMLDivElement;
 	let visiblePanelIds = $derived(
 		dashboardOrder.filter((panelId) => panelId !== 'admin' || data.member.role === 'admin')
 	);
 	let activePanelIds = $derived(visiblePanelIds.filter((panelId) => !collapsedPanels[panelId]));
 	let collapsedPanelIds = $derived(visiblePanelIds.filter((panelId) => collapsedPanels[panelId]));
+	let workspaceHeight = $derived.by(() =>
+		Math.max(
+			480,
+			...activePanelIds.map((panelId) => {
+				const geometry = getWindowGeometry(panelId);
+				return geometry.y + geometry.height + 16;
+			})
+		)
+	);
 
 	onMount(() => {
 		timezoneOffset = new Date().getTimezoneOffset();
 		const preferences = loadDashboardPreferences();
 		dashboardOrder = preferences.order;
 		collapsedPanels = preferences.collapsed;
+		windowGeometries = preferences.windows;
+		windowStack = preferences.zOrder;
 		systemMessage =
 			bookclubSystemMessages[Math.floor(Math.random() * bookclubSystemMessages.length)] ??
 			systemMessage;
+
+		const resizeObserver = new ResizeObserver(([entry]) => {
+			const nextWidth = Math.max(280, Math.floor(entry.contentRect.width));
+			if (
+				nextWidth === workspaceWidth &&
+				completeOrder([]).every((panelId) => windowGeometries[panelId])
+			) {
+				return;
+			}
+			const defaults = createDefaultWindowGeometries(nextWidth);
+			const nextGeometries: Partial<Record<DashboardPanelId, DashboardWindowGeometry>> = {};
+			for (const panelId of completeOrder([])) {
+				nextGeometries[panelId] = constrainWindowGeometry(
+					windowGeometries[panelId] ?? defaults[panelId],
+					nextWidth
+				);
+			}
+			workspaceWidth = nextWidth;
+			windowGeometries = nextGeometries;
+			saveDashboardLayout();
+		});
+		resizeObserver.observe(workspaceElement);
+		workspaceReady = true;
+		return () => resizeObserver.disconnect();
 	});
 
 	function saveDashboardLayout(): void {
-		saveDashboardPreferences({ order: dashboardOrder, collapsed: collapsedPanels });
+		saveDashboardPreferences({
+			order: dashboardOrder,
+			collapsed: collapsedPanels,
+			windows: windowGeometries,
+			zOrder: windowStack
+		});
 	}
 
 	function togglePanel(panelId: DashboardPanelId): void {
 		collapsedPanels = { ...collapsedPanels, [panelId]: !collapsedPanels[panelId] };
+		if (!collapsedPanels[panelId]) bringWindowToFront(panelId, false);
 		saveDashboardLayout();
 	}
 
@@ -62,52 +112,40 @@
 		saveDashboardLayout();
 	}
 
-	function handleDragStart(panelId: DashboardPanelId, event: DragEvent): void {
-		event.dataTransfer?.setData('text/plain', panelId);
-		if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
-	}
-
-	function handleDragOver(event: DragEvent): void {
-		event.preventDefault();
-		if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
-	}
-
-	function handleDrop(targetPanelId: DashboardPanelId, event: DragEvent): void {
-		event.preventDefault();
-		const sourcePanelId = event.dataTransfer?.getData('text/plain') as DashboardPanelId | undefined;
-		if (sourcePanelId && sourcePanelId !== targetPanelId) {
-			const sourceIndex = visiblePanelIds.indexOf(sourcePanelId);
-			const targetIndex = visiblePanelIds.indexOf(targetPanelId);
-			const nextOrder = [...dashboardOrder];
-			const sourceOrderIndex = nextOrder.indexOf(sourcePanelId);
-			const [movedPanel] = nextOrder.splice(sourceOrderIndex, 1);
-			const targetOrderIndex = nextOrder.indexOf(targetPanelId);
-			nextOrder.splice(targetOrderIndex + (sourceIndex < targetIndex ? 1 : 0), 0, movedPanel);
-			dashboardOrder = nextOrder;
-			saveDashboardLayout();
-		}
-	}
-
-	function handleDragEnd(): void {
-		// The browser clears the drag state after the drop or cancellation.
-	}
-
 	function resetDashboardLayout(): void {
 		dashboardOrder = completeOrder([]);
 		collapsedPanels = {};
+		windowGeometries = createDefaultWindowGeometries(workspaceWidth);
+		windowStack = completeOrder([]);
 		saveDashboardLayout();
 	}
 
-	function shouldSpanPanel(panelId: DashboardPanelId, inTray: boolean): boolean {
-		if (inTray) return false;
-		if (panelId === 'current-book') return true;
-
-		const sidePanels = activePanelIds.filter((id) => id !== 'current-book');
-		return sidePanels.length % 2 === 1 && sidePanels.at(-1) === panelId;
+	function getWindowGeometry(panelId: DashboardPanelId): DashboardWindowGeometry {
+		return constrainWindowGeometry(
+			windowGeometries[panelId] ?? createDefaultWindowGeometries(workspaceWidth)[panelId],
+			workspaceWidth
+		);
 	}
 
-	function suggestionAt(position: number) {
-		return data.dashboard.mySuggestions.find((suggestion) => suggestion.position === position);
+	function updateWindowGeometry(
+		panelId: DashboardPanelId,
+		geometry: DashboardWindowGeometry
+	): void {
+		windowGeometries = {
+			...windowGeometries,
+			[panelId]: constrainWindowGeometry(geometry, workspaceWidth)
+		};
+		saveDashboardLayout();
+	}
+
+	function bringWindowToFront(panelId: DashboardPanelId, save = true): void {
+		if (windowStack.at(-1) === panelId) return;
+		windowStack = [...windowStack.filter((id) => id !== panelId), panelId];
+		if (save) saveDashboardLayout();
+	}
+
+	function getWindowZIndex(panelId: DashboardPanelId): number {
+		return Math.max(1, windowStack.indexOf(panelId) + 1);
 	}
 
 	function formatMeetingDate(value: string): string {
@@ -249,9 +287,10 @@
 				<div class="mt-5 border-2 border-black bg-[#c0c0c0] p-2 text-xs">
 					<div class="flex flex-wrap items-center justify-between gap-2">
 						<div>
-							<p class="font-bold text-[#000080]">DASHBOARD LAYOUT</p>
+							<p class="font-bold text-[#000080]">WINDOW WORKSPACE</p>
 							<p class="mt-1">
-								Drag a panel, or use the move buttons. Layout is saved in this browser.
+								On desktop, drag window bars and resize from the lower-right corner. On mobile, use
+								the move buttons. Layout is saved in this browser.
 							</p>
 						</div>
 						<button
@@ -273,13 +312,13 @@
 							total={visiblePanelIds.length}
 							collapsed={inTray}
 							tray={inTray}
-							wide={shouldSpanPanel('current-book', inTray)}
+							geometry={getWindowGeometry('current-book')}
+							{workspaceWidth}
+							zIndex={getWindowZIndex('current-book')}
 							onToggleCollapsed={() => togglePanel('current-book')}
 							onMove={(direction) => movePanel('current-book', direction)}
-							onDragStart={(event) => handleDragStart('current-book', event)}
-							onDragOver={handleDragOver}
-							onDrop={(event) => handleDrop('current-book', event)}
-							onDragEnd={handleDragEnd}
+							onFocus={() => bringWindowToFront('current-book')}
+							onGeometryChange={(geometry) => updateWindowGeometry('current-book', geometry)}
 						>
 							<section
 								id="current-book"
@@ -349,13 +388,13 @@
 							total={visiblePanelIds.length}
 							collapsed={inTray}
 							tray={inTray}
-							wide={shouldSpanPanel('suggestions', inTray)}
+							geometry={getWindowGeometry('suggestions')}
+							{workspaceWidth}
+							zIndex={getWindowZIndex('suggestions')}
 							onToggleCollapsed={() => togglePanel('suggestions')}
 							onMove={(direction) => movePanel('suggestions', direction)}
-							onDragStart={(event) => handleDragStart('suggestions', event)}
-							onDragOver={handleDragOver}
-							onDrop={(event) => handleDrop('suggestions', event)}
-							onDragEnd={handleDragEnd}
+							onFocus={() => bringWindowToFront('suggestions')}
+							onGeometryChange={(geometry) => updateWindowGeometry('suggestions', geometry)}
 						>
 							<section
 								id="suggestions"
@@ -368,64 +407,17 @@
 								<div class="space-y-2 p-4">
 									<p class="leading-6">
 										{data.dashboard.activeCycle
-											? 'Submit up to three different books before the poll closes. Leave any slots you do not need empty.'
+											? 'Submit up to three different books before the poll closes. Books that are not chosen will stay in their slots for the next poll.'
 											: 'No book poll is open. Await further literary instructions.'}
 									</p>
 									{#each [1, 2, 3] as slot (slot)}
-										{@const suggestion = suggestionAt(slot)}
-										<form
-											method="POST"
-											action="?/saveSuggestion"
-											use:enhance
-											class="border-2 border-black bg-white p-3"
-										>
-											<input type="hidden" name="position" value={slot} />
-											{#if suggestion}
-												<input type="hidden" name="suggestionId" value={suggestion.id} />
-											{/if}
-											<div class="flex items-center justify-between gap-2">
-												<span class="font-bold">SLOT {slot}</span>
-												<span class="text-xs text-gray-600">{suggestion ? 'FILLED' : 'EMPTY'}</span>
-											</div>
-											<div class="mt-2 grid gap-2 sm:grid-cols-2">
-												<input
-													name="title"
-													value={suggestion?.title ?? ''}
-													placeholder="Book title"
-													required
-													disabled={!data.dashboard.activeCycle}
-													maxlength="200"
-													class="border-2 border-black px-2 py-2 text-xs focus:ring-2 focus:ring-[#000080] focus:outline-none"
-												/>
-												<input
-													name="author"
-													value={suggestion?.author ?? ''}
-													placeholder="Author"
-													required
-													disabled={!data.dashboard.activeCycle}
-													maxlength="120"
-													class="border-2 border-black px-2 py-2 text-xs focus:ring-2 focus:ring-[#000080] focus:outline-none"
-												/>
-											</div>
-											<div class="mt-2 flex flex-wrap gap-2">
-												<button
-													type="submit"
-													disabled={!data.dashboard.activeCycle}
-													class="border-2 border-black bg-[#d4d0c8] px-2 py-1 text-xs font-bold shadow-[2px_2px_0_#000] hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
-												>
-													{suggestion ? 'UPDATE' : 'SAVE'}
-												</button>
-												{#if suggestion}
-													<button
-														type="submit"
-														formaction="?/deleteSuggestion"
-														class="border-2 border-black bg-[#fff0f0] px-2 py-1 text-xs font-bold text-[#800000] shadow-[2px_2px_0_#000] hover:bg-white"
-													>
-														DELETE
-													</button>
-												{/if}
-											</div>
-										</form>
+										<SuggestionSlot
+											{slot}
+											active={Boolean(data.dashboard.activeCycle)}
+											suggestion={data.dashboard.mySuggestions.find(
+												(suggestion) => suggestion.position === slot
+											)}
+										/>
 									{/each}
 									{#if data.dashboard.activeCycle}
 										<div class="mt-4 border-2 border-black bg-black p-3 text-xs text-lime-300">
@@ -446,13 +438,13 @@
 							total={visiblePanelIds.length}
 							collapsed={inTray}
 							tray={inTray}
-							wide={shouldSpanPanel('chatroom', inTray)}
+							geometry={getWindowGeometry('chatroom')}
+							{workspaceWidth}
+							zIndex={getWindowZIndex('chatroom')}
 							onToggleCollapsed={() => togglePanel('chatroom')}
 							onMove={(direction) => movePanel('chatroom', direction)}
-							onDragStart={(event) => handleDragStart('chatroom', event)}
-							onDragOver={handleDragOver}
-							onDrop={(event) => handleDrop('chatroom', event)}
-							onDragEnd={handleDragEnd}
+							onFocus={() => bringWindowToFront('chatroom')}
+							onGeometryChange={(geometry) => updateWindowGeometry('chatroom', geometry)}
 						>
 							<ChatRoom
 								messages={data.dashboard.chatMessages}
@@ -468,13 +460,13 @@
 							total={visiblePanelIds.length}
 							collapsed={inTray}
 							tray={inTray}
-							wide={shouldSpanPanel('archive', inTray)}
+							geometry={getWindowGeometry('archive')}
+							{workspaceWidth}
+							zIndex={getWindowZIndex('archive')}
 							onToggleCollapsed={() => togglePanel('archive')}
 							onMove={(direction) => movePanel('archive', direction)}
-							onDragStart={(event) => handleDragStart('archive', event)}
-							onDragOver={handleDragOver}
-							onDrop={(event) => handleDrop('archive', event)}
-							onDragEnd={handleDragEnd}
+							onFocus={() => bringWindowToFront('archive')}
+							onGeometryChange={(geometry) => updateWindowGeometry('archive', geometry)}
 						>
 							<section
 								id="archive"
@@ -531,13 +523,13 @@
 							total={visiblePanelIds.length}
 							collapsed={inTray}
 							tray={inTray}
-							wide={shouldSpanPanel('profile', inTray)}
+							geometry={getWindowGeometry('profile')}
+							{workspaceWidth}
+							zIndex={getWindowZIndex('profile')}
 							onToggleCollapsed={() => togglePanel('profile')}
 							onMove={(direction) => movePanel('profile', direction)}
-							onDragStart={(event) => handleDragStart('profile', event)}
-							onDragOver={handleDragOver}
-							onDrop={(event) => handleDrop('profile', event)}
-							onDragEnd={handleDragEnd}
+							onFocus={() => bringWindowToFront('profile')}
+							onGeometryChange={(geometry) => updateWindowGeometry('profile', geometry)}
 						>
 							<section
 								id="profile"
@@ -557,13 +549,13 @@
 							total={visiblePanelIds.length}
 							collapsed={inTray}
 							tray={inTray}
-							wide={shouldSpanPanel('admin', inTray)}
+							geometry={getWindowGeometry('admin')}
+							{workspaceWidth}
+							zIndex={getWindowZIndex('admin')}
 							onToggleCollapsed={() => togglePanel('admin')}
 							onMove={(direction) => movePanel('admin', direction)}
-							onDragStart={(event) => handleDragStart('admin', event)}
-							onDragOver={handleDragOver}
-							onDrop={(event) => handleDrop('admin', event)}
-							onDragEnd={handleDragEnd}
+							onFocus={() => bringWindowToFront('admin')}
+							onGeometryChange={(geometry) => updateWindowGeometry('admin', geometry)}
 						>
 							<section
 								id="admin"
@@ -701,7 +693,7 @@
 						<div
 							class="mb-2 flex items-center justify-between gap-2 text-xs font-bold text-[#000080]"
 						>
-							<span>COLLAPSED PANELS</span>
+							<span>MINIMIZED WINDOWS</span>
 							<span>{collapsedPanelIds.length} STORED</span>
 						</div>
 						<div class="grid gap-2 sm:grid-cols-2">
@@ -712,7 +704,12 @@
 					</section>
 				{/if}
 
-				<div class="mt-2 grid gap-5 lg:grid-cols-2">
+				<div
+					bind:this={workspaceElement}
+					data-ready={workspaceReady}
+					class="dashboard-workspace mt-2 grid gap-5 lg:relative lg:block"
+					style={`--workspace-height: ${workspaceHeight}px;`}
+				>
 					{#each activePanelIds as panelId (panelId)}
 						{@render renderDashboardPanel(panelId, false)}
 					{/each}
@@ -727,3 +724,11 @@
 		</footer>
 	</div>
 </main>
+
+<style>
+	@media (min-width: 1024px) {
+		.dashboard-workspace {
+			height: var(--workspace-height);
+		}
+	}
+</style>

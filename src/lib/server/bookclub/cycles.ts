@@ -102,6 +102,19 @@ interface ProgressRow {
 	count: number;
 }
 
+interface CarryoverSuggestionRow {
+	member_id: string;
+	position: number;
+	title: string;
+	author: string;
+}
+
+interface CarryoverSourceRow {
+	id: string;
+	winner_title: string;
+	winner_author: string;
+}
+
 interface ArchiveRow {
 	id: string;
 	opened_at: string;
@@ -513,14 +526,65 @@ export async function deleteBookPoll(database: D1Database, cycleId: string): Pro
 	return true;
 }
 
-export async function createCycle(database: D1Database): Promise<void> {
-	await database
+export async function createCycle(database: D1Database): Promise<number> {
+	const sourceCycle = await database
 		.prepare(
-			`INSERT INTO bookclub_cycles (id, status, suggestion_limit)
-			 VALUES (?, 'open', ?)`
+			`SELECT c.id, winner.title AS winner_title, winner.author AS winner_author
+			 FROM bookclub_cycles AS c
+			 INNER JOIN bookclub_draws AS d ON d.cycle_id = c.id
+			 INNER JOIN bookclub_suggestions AS winner ON winner.id = d.suggestion_id
+			 WHERE c.status = 'drawn'
+			 ORDER BY c.created_at DESC, c.id DESC
+			 LIMIT 1`
 		)
-		.bind(crypto.randomUUID(), SUGGESTION_LIMIT)
-		.run();
+		.first<CarryoverSourceRow>();
+
+	const carryovers = sourceCycle
+		? await database
+				.prepare(
+					`SELECT s.member_id, s.position, s.title, s.author
+					 FROM bookclub_suggestions AS s
+					 INNER JOIN bookclub_members AS m ON m.id = s.member_id
+					 WHERE s.cycle_id = ? AND m.active = 1
+					 ORDER BY s.member_id, s.position`
+				)
+				.bind(sourceCycle.id)
+				.all<CarryoverSuggestionRow>()
+		: { results: [] as CarryoverSuggestionRow[] };
+
+	const suggestionsToCarry = carryovers.results.filter(
+		(suggestion) =>
+			!bookFieldMatches(suggestion.title, sourceCycle?.winner_title ?? '') ||
+			!bookFieldMatches(suggestion.author, sourceCycle?.winner_author ?? '')
+	);
+	const cycleId = crypto.randomUUID();
+
+	await database.batch([
+		database
+			.prepare(
+				`INSERT INTO bookclub_cycles (id, status, suggestion_limit)
+				 VALUES (?, 'open', ?)`
+			)
+			.bind(cycleId, SUGGESTION_LIMIT),
+		...suggestionsToCarry.map((suggestion) =>
+			database
+				.prepare(
+					`INSERT INTO bookclub_suggestions
+					 (id, cycle_id, member_id, position, title, author)
+					 VALUES (?, ?, ?, ?, ?, ?)`
+				)
+				.bind(
+					crypto.randomUUID(),
+					cycleId,
+					suggestion.member_id,
+					suggestion.position,
+					suggestion.title,
+					suggestion.author
+				)
+		)
+	]);
+
+	return suggestionsToCarry.length;
 }
 
 export async function saveSuggestion(

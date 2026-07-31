@@ -9,8 +9,8 @@ order: 10
 
 ## The idea
 
-TODO: 
+TODO:
 
 ## Notes and references
 
-TODO: 
+TODO:

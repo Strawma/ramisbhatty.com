@@ -474,6 +474,92 @@ describe('book-club cycles and suggestions', () => {
 		});
 	});
 
+	it('carries unselected suggestions into the next poll and keeps the new copies editable', async () => {
+		const member = await createTestMember('Ramis');
+		await createCycle(database);
+		const firstCycleId = await getOpenCycleId();
+		await saveSuggestion(database, firstCycleId, member.id, 1, 'Dune', 'Frank Herbert');
+		await saveSuggestion(database, firstCycleId, member.id, 2, 'Piranesi', 'Susanna Clarke');
+		await saveSuggestion(database, firstCycleId, member.id, 3, 'Beloved', 'Toni Morrison');
+		await closeCycle(database, firstCycleId);
+		const selectedBook = await drawCycle(database, firstCycleId, member.id);
+
+		expect(await createCycle(database)).toBe(2);
+		const secondCycleId = await getOpenCycleId();
+		let dashboard = await getDashboard(database, member);
+		expect(dashboard.mySuggestions).toHaveLength(2);
+		expect(dashboard.mySuggestions).not.toContainEqual(
+			expect.objectContaining({ title: selectedBook.title, author: selectedBook.author })
+		);
+
+		const suggestionToChange = dashboard.mySuggestions[0];
+		await saveSuggestion(
+			database,
+			secondCycleId,
+			member.id,
+			suggestionToChange.position,
+			'Replacement Book',
+			'Replacement Author',
+			suggestionToChange.id
+		);
+		dashboard = await getDashboard(database, member);
+		expect(dashboard.mySuggestions).toContainEqual(
+			expect.objectContaining({
+				id: suggestionToChange.id,
+				title: 'Replacement Book',
+				author: 'Replacement Author'
+			})
+		);
+
+		expect(await deleteSuggestion(database, suggestionToChange.id, member.id)).toBe(true);
+		dashboard = await getDashboard(database, member);
+		expect(dashboard.mySuggestions).toHaveLength(1);
+
+		await saveSuggestion(
+			database,
+			secondCycleId,
+			member.id,
+			suggestionToChange.position,
+			'Fresh Suggestion',
+			'Fresh Author'
+		);
+		dashboard = await getDashboard(database, member);
+		expect(dashboard.mySuggestions).toContainEqual(
+			expect.objectContaining({
+				position: suggestionToChange.position,
+				title: 'Fresh Suggestion',
+				author: 'Fresh Author'
+			})
+		);
+
+		const historicalSuggestions = await database
+			.prepare(
+				'SELECT title, author FROM bookclub_suggestions WHERE cycle_id = ? ORDER BY position'
+			)
+			.bind(firstCycleId)
+			.all<{ title: string; author: string }>();
+		expect(historicalSuggestions.results).toEqual([
+			{ title: 'Dune', author: 'Frank Herbert' },
+			{ title: 'Piranesi', author: 'Susanna Clarke' },
+			{ title: 'Beloved', author: 'Toni Morrison' }
+		]);
+	});
+
+	it("does not carry another member's duplicate ticket for the selected book", async () => {
+		const firstMember = await createTestMember('Ramis');
+		const secondMember = await createTestMember('Alex');
+		await createCycle(database);
+		const firstCycleId = await getOpenCycleId();
+		await saveSuggestion(database, firstCycleId, firstMember.id, 1, 'Dune', 'Frank Herbert');
+		await saveSuggestion(database, firstCycleId, secondMember.id, 1, 'Dune!', 'Frank  Herbert');
+		await closeCycle(database, firstCycleId);
+		await drawCycle(database, firstCycleId, firstMember.id);
+
+		expect(await createCycle(database)).toBe(0);
+		expect((await getDashboard(database, firstMember)).mySuggestions).toEqual([]);
+		expect((await getDashboard(database, secondMember)).mySuggestions).toEqual([]);
+	});
+
 	it('lists past books and deletes a book poll with its associated data', async () => {
 		const member = await createTestMember('Ramis');
 
