@@ -51,11 +51,16 @@ export const actions: Actions = {
 		}
 
 		try {
-			await createCycle(database);
+			const carriedSuggestionCount = await createCycle(database);
+			return {
+				success:
+					carriedSuggestionCount === 0
+						? 'A new book poll is open.'
+						: `A new book poll is open with ${carriedSuggestionCount} previous suggestion${carriedSuggestionCount === 1 ? '' : 's'}.`
+			};
 		} catch {
 			return fail(400, { error: 'A book poll is already open.' });
 		}
-		return { success: 'A new book poll is open.' };
 	},
 
 	saveSuggestion: async (event) => {

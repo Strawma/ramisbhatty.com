@@ -6,6 +6,7 @@
 	import DashboardPanel from '$lib/components/bookclub/DashboardPanel.svelte';
 	import ClubhouseBackdrop from '$lib/components/bookclub/ClubhouseBackdrop.svelte';
 	import ProfileSettings from '$lib/components/bookclub/ProfileSettings.svelte';
+	import SuggestionSlot from '$lib/components/bookclub/SuggestionSlot.svelte';
 	import {
 		completeOrder,
 		loadDashboardPreferences,
@@ -104,10 +105,6 @@
 
 		const sidePanels = activePanelIds.filter((id) => id !== 'current-book');
 		return sidePanels.length % 2 === 1 && sidePanels.at(-1) === panelId;
-	}
-
-	function suggestionAt(position: number) {
-		return data.dashboard.mySuggestions.find((suggestion) => suggestion.position === position);
 	}
 
 	function formatMeetingDate(value: string): string {
@@ -368,64 +365,17 @@
 								<div class="space-y-2 p-4">
 									<p class="leading-6">
 										{data.dashboard.activeCycle
-											? 'Submit up to three different books before the poll closes. Leave any slots you do not need empty.'
+											? 'Submit up to three different books before the poll closes. Books that are not chosen will stay in their slots for the next poll.'
 											: 'No book poll is open. Await further literary instructions.'}
 									</p>
 									{#each [1, 2, 3] as slot (slot)}
-										{@const suggestion = suggestionAt(slot)}
-										<form
-											method="POST"
-											action="?/saveSuggestion"
-											use:enhance
-											class="border-2 border-black bg-white p-3"
-										>
-											<input type="hidden" name="position" value={slot} />
-											{#if suggestion}
-												<input type="hidden" name="suggestionId" value={suggestion.id} />
-											{/if}
-											<div class="flex items-center justify-between gap-2">
-												<span class="font-bold">SLOT {slot}</span>
-												<span class="text-xs text-gray-600">{suggestion ? 'FILLED' : 'EMPTY'}</span>
-											</div>
-											<div class="mt-2 grid gap-2 sm:grid-cols-2">
-												<input
-													name="title"
-													value={suggestion?.title ?? ''}
-													placeholder="Book title"
-													required
-													disabled={!data.dashboard.activeCycle}
-													maxlength="200"
-													class="border-2 border-black px-2 py-2 text-xs focus:ring-2 focus:ring-[#000080] focus:outline-none"
-												/>
-												<input
-													name="author"
-													value={suggestion?.author ?? ''}
-													placeholder="Author"
-													required
-													disabled={!data.dashboard.activeCycle}
-													maxlength="120"
-													class="border-2 border-black px-2 py-2 text-xs focus:ring-2 focus:ring-[#000080] focus:outline-none"
-												/>
-											</div>
-											<div class="mt-2 flex flex-wrap gap-2">
-												<button
-													type="submit"
-													disabled={!data.dashboard.activeCycle}
-													class="border-2 border-black bg-[#d4d0c8] px-2 py-1 text-xs font-bold shadow-[2px_2px_0_#000] hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
-												>
-													{suggestion ? 'UPDATE' : 'SAVE'}
-												</button>
-												{#if suggestion}
-													<button
-														type="submit"
-														formaction="?/deleteSuggestion"
-														class="border-2 border-black bg-[#fff0f0] px-2 py-1 text-xs font-bold text-[#800000] shadow-[2px_2px_0_#000] hover:bg-white"
-													>
-														DELETE
-													</button>
-												{/if}
-											</div>
-										</form>
+										<SuggestionSlot
+											{slot}
+											active={Boolean(data.dashboard.activeCycle)}
+											suggestion={data.dashboard.mySuggestions.find(
+												(suggestion) => suggestion.position === slot
+											)}
+										/>
 									{/each}
 									{#if data.dashboard.activeCycle}
 										<div class="mt-4 border-2 border-black bg-black p-3 text-xs text-lime-300">

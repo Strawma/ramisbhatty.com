@@ -43,7 +43,7 @@ export default async function globalSetup(): Promise<() => void> {
 	executeLocalSql(
 		`INSERT INTO bookclub_members (id, username, name, role, invite_code_hash, chat_color)
 		 VALUES
-		 ('${MEMBER_IDS[0]}', 'e2e-alice', 'E2E Alice', 'member', 'e2e-hash-alice', '#22d3ee'),
+		 ('${MEMBER_IDS[0]}', 'e2e-alice', 'E2E Alice', 'admin', 'e2e-hash-alice', '#22d3ee'),
 		 ('${MEMBER_IDS[1]}', 'e2e-bob', 'E2E Bob', 'member', 'e2e-hash-bob', '#f472b6');
 		 INSERT INTO bookclub_sessions (id, member_id, token_hash, expires_at)
 		 VALUES

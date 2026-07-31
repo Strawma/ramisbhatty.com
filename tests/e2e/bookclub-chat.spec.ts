@@ -104,6 +104,51 @@ test('chat sends between sessions and remains responsive', async ({ browser }) =
 	await contextBob.close();
 });
 
+test('suggestion slots add, update, and clear reliably on a narrow screen', async ({ browser }) => {
+	const { aliceToken } = getTestSessions();
+	const memberContext = await createSessionContext(browser, aliceToken);
+	const memberPage = await memberContext.newPage();
+	await memberPage.setViewportSize({ width: 360, height: 740 });
+	await memberPage.goto('/bookclub');
+
+	const startPollButton = memberPage.getByRole('button', { name: 'START POLL' });
+	if ((await startPollButton.count()) > 0) {
+		await startPollButton.click();
+		await expect(memberPage.getByText('A new book poll is open.', { exact: true })).toBeVisible();
+	}
+
+	const titleInput = memberPage.getByLabel('Book title for slot 1');
+	const authorInput = memberPage.getByLabel('Author for slot 1');
+	const slotForm = memberPage.locator('form').filter({ has: titleInput });
+	await titleInput.fill('Mobile Test Book');
+	await authorInput.fill('Mobile Test Author');
+	await slotForm.getByRole('button', { name: 'SAVE', exact: true }).click();
+	await expect(titleInput).toHaveValue('Mobile Test Book');
+	await expect(authorInput).toHaveValue('Mobile Test Author');
+	await expect(slotForm.getByText('FILLED', { exact: true })).toBeVisible();
+
+	await titleInput.fill('Updated Mobile Book');
+	await authorInput.fill('Updated Mobile Author');
+	await slotForm.getByRole('button', { name: 'UPDATE', exact: true }).click();
+	await expect(titleInput).toHaveValue('Updated Mobile Book');
+	await expect(authorInput).toHaveValue('Updated Mobile Author');
+
+	await titleInput.fill('');
+	await authorInput.fill('');
+	await slotForm.getByRole('button', { name: 'CLEAR SLOT', exact: true }).click();
+	await expect(titleInput).toHaveValue('');
+	await expect(authorInput).toHaveValue('');
+	await expect(slotForm.getByText('EMPTY', { exact: true })).toBeVisible();
+	await expect(slotForm.getByRole('button', { name: 'SAVE', exact: true })).toBeEnabled();
+
+	const dimensions = await memberPage.evaluate(() => ({
+		scrollWidth: document.documentElement.scrollWidth,
+		clientWidth: document.documentElement.clientWidth
+	}));
+	expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
+	await memberContext.close();
+});
+
 test('ordinary login and logout forms send same-origin CSRF and referrer headers', async ({
 	browser
 }) => {
