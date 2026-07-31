@@ -1,11 +1,16 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
+	import { dev } from '$app/environment';
+
 	let { form, data } = $props();
 </script>
 
 <svelte:head>
 	<title>BMBMT Login | Ramis Bhatty</title>
 	<meta name="description" content="Private access to the Bournemouth Mini Book Meet Thing." />
-	<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+	{#if !dev}
+		<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+	{/if}
 </svelte:head>
 
 <main
@@ -57,7 +62,7 @@
 					<p class="mt-1 text-xs">Minimum 12 characters.</p>
 				</div>
 
-				{#if data.turnstileSiteKey}
+				{#if !dev && data.turnstileSiteKey}
 					<div class="border-2 border-black bg-white p-2">
 						<div
 							class="cf-turnstile"
@@ -66,7 +71,7 @@
 							data-theme="light"
 						></div>
 					</div>
-				{:else}
+				{:else if !dev}
 					<p class="border-2 border-[#800000] bg-[#fff0f0] px-3 py-2 text-[#800000]" role="status">
 						SYSTEM MESSAGE: Bot check is not configured yet.
 					</p>
@@ -85,6 +90,22 @@
 					&gt; ENTER THE CLUB
 				</button>
 			</form>
+
+			{#if dev}
+				<div class="mt-5 border-2 border-dashed border-[#000080] bg-[#e8f8ff] p-3 text-xs">
+					<p class="font-bold text-[#000080]">LOCAL DEVELOPMENT PREVIEW</p>
+					<p class="mt-1 leading-5">
+						Turnstile is bypassed only by this local-only preview link. It cannot be used outside
+						the Vite development server.
+					</p>
+					<a
+						href={resolve('/bookclub/preview')}
+						class="mt-2 inline-block border-2 border-black bg-[#d4d0c8] px-3 py-2 font-bold shadow-[2px_2px_0_#000] hover:bg-white focus:ring-2 focus:ring-[#000080] focus:outline-none"
+					>
+						&gt; OPEN LOCAL PREVIEW
+					</a>
+				</div>
+			{/if}
 		</div>
 
 		<footer class="border-t-4 border-black bg-[#808080] px-3 py-2 text-xs text-white">
