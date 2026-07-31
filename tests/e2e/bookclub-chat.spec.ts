@@ -149,6 +149,120 @@ test('suggestion slots add, update, and clear reliably on a narrow screen', asyn
 	await memberContext.close();
 });
 
+test('desktop dashboard windows drag, resize, stack, minimize, and persist', async ({
+	browser
+}) => {
+	const { aliceToken } = getTestSessions();
+	const memberContext = await createSessionContext(browser, aliceToken);
+	const memberPage = await memberContext.newPage();
+	await memberPage.setViewportSize({ width: 1280, height: 900 });
+	await memberPage.goto('/bookclub');
+	await expect(memberPage.locator('.dashboard-workspace')).toHaveAttribute('data-ready', 'true');
+
+	const suggestionHandle = memberPage.getByRole('button', {
+		name: 'Move SUGGESTIONS window. Drag, or use the arrow keys.'
+	});
+	const suggestionWindow = memberPage
+		.getByRole('group')
+		.filter({ has: memberPage.getByRole('toolbar', { name: 'SUGGESTIONS panel controls' }) });
+	const geometry = () =>
+		suggestionWindow.evaluate((element) => {
+			const style = getComputedStyle(element);
+			return {
+				left: Number.parseFloat(style.left),
+				top: Number.parseFloat(style.top),
+				width: Number.parseFloat(style.width),
+				height: Number.parseFloat(style.height),
+				zIndex: Number.parseInt(style.zIndex, 10)
+			};
+		});
+
+	const initialGeometry = await geometry();
+	await suggestionHandle.scrollIntoViewIfNeeded();
+	await suggestionHandle.hover();
+	const handleBox = await suggestionHandle.boundingBox();
+	if (!handleBox) throw new Error('Suggestion drag handle was not measurable.');
+	expect(
+		await memberPage.evaluate(
+			({ x, y }) => document.elementFromPoint(x, y)?.hasAttribute('data-drag-handle'),
+			{ x: handleBox.x + handleBox.width / 2, y: handleBox.y + handleBox.height / 2 }
+		)
+	).toBe(true);
+	await memberPage.mouse.down();
+	await expect(suggestionWindow).toHaveAttribute('data-interaction', 'drag');
+	await memberPage.mouse.move(
+		handleBox.x + handleBox.width / 2 + 80,
+		handleBox.y + handleBox.height / 2 + 60,
+		{
+			steps: 5
+		}
+	);
+	await expect
+		.poll(async () => (await geometry()).left)
+		.toBeGreaterThanOrEqual(initialGeometry.left + 70);
+	await memberPage.mouse.up();
+	const movedGeometry = await geometry();
+	expect(movedGeometry.left).toBeGreaterThanOrEqual(initialGeometry.left + 70);
+	expect(movedGeometry.top).toBeGreaterThanOrEqual(initialGeometry.top + 50);
+
+	const resizeHandle = memberPage.getByRole('button', {
+		name: 'Resize SUGGESTIONS window. Drag, or use the arrow keys.'
+	});
+	await resizeHandle.scrollIntoViewIfNeeded();
+	const resizeBox = await resizeHandle.boundingBox();
+	if (!resizeBox) throw new Error('Suggestion resize handle was not measurable.');
+	await memberPage.mouse.move(
+		resizeBox.x + resizeBox.width / 2,
+		resizeBox.y + resizeBox.height / 2
+	);
+	await memberPage.mouse.down();
+	await memberPage.mouse.move(
+		resizeBox.x + resizeBox.width / 2 + 70,
+		resizeBox.y + resizeBox.height / 2 + 50,
+		{
+			steps: 5
+		}
+	);
+	await memberPage.mouse.up();
+	const resizedGeometry = await geometry();
+	expect(resizedGeometry.width).toBeGreaterThanOrEqual(movedGeometry.width + 60);
+	expect(resizedGeometry.height).toBeGreaterThanOrEqual(movedGeometry.height + 40);
+
+	const chatHandle = memberPage.getByRole('button', {
+		name: 'Move CHATROOM window. Drag, or use the arrow keys.'
+	});
+	await suggestionHandle.click();
+	const focusedSuggestionGeometry = await geometry();
+	await chatHandle.click();
+	const backgroundSuggestionGeometry = await geometry();
+	const chatZIndex = await memberPage
+		.getByRole('group')
+		.filter({ has: memberPage.getByRole('toolbar', { name: 'CHATROOM panel controls' }) })
+		.evaluate((element) => Number.parseInt(getComputedStyle(element).zIndex, 10));
+	expect(focusedSuggestionGeometry.zIndex).toBeGreaterThan(initialGeometry.zIndex);
+	expect(chatZIndex).toBeGreaterThan(backgroundSuggestionGeometry.zIndex);
+
+	await memberPage.reload();
+	await expect.poll(async () => (await geometry()).left).toBe(resizedGeometry.left);
+	await expect.poll(async () => (await geometry()).top).toBe(resizedGeometry.top);
+	await expect.poll(async () => (await geometry()).width).toBe(resizedGeometry.width);
+	await expect.poll(async () => (await geometry()).height).toBe(resizedGeometry.height);
+
+	await memberPage
+		.getByRole('toolbar', { name: 'SUGGESTIONS panel controls' })
+		.click({ position: { x: 20, y: 18 } });
+	await memberPage.getByRole('button', { name: 'Minimize SUGGESTIONS window' }).click();
+	await expect(memberPage.getByText('MINIMIZED WINDOWS', { exact: true })).toBeVisible();
+	await memberPage.getByRole('button', { name: 'Restore SUGGESTIONS window' }).click();
+	await expect(
+		memberPage.getByRole('button', {
+			name: 'Resize SUGGESTIONS window. Drag, or use the arrow keys.'
+		})
+	).toBeVisible();
+
+	await memberContext.close();
+});
+
 test('ordinary login and logout forms send same-origin CSRF and referrer headers', async ({
 	browser
 }) => {
