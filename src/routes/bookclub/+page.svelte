@@ -30,6 +30,7 @@
 	let workspaceWidth = $state(900);
 	let workspaceReady = $state(false);
 	let workspaceElement: HTMLDivElement;
+	let layoutSaveFrame: number | null = null;
 	let visiblePanelIds = $derived(
 		dashboardOrder.filter((panelId) => panelId !== 'admin' || data.member.role === 'admin')
 	);
@@ -74,19 +75,37 @@
 			}
 			workspaceWidth = nextWidth;
 			windowGeometries = nextGeometries;
-			saveDashboardLayout();
+			scheduleDashboardLayoutSave();
 		});
 		resizeObserver.observe(workspaceElement);
 		workspaceReady = true;
-		return () => resizeObserver.disconnect();
+		return () => {
+			resizeObserver.disconnect();
+			if (layoutSaveFrame !== null) cancelAnimationFrame(layoutSaveFrame);
+			layoutSaveFrame = null;
+		};
 	});
 
 	function saveDashboardLayout(): void {
+		if (layoutSaveFrame !== null) {
+			cancelAnimationFrame(layoutSaveFrame);
+			layoutSaveFrame = null;
+		}
+
 		saveDashboardPreferences({
 			order: dashboardOrder,
 			collapsed: collapsedPanels,
 			windows: windowGeometries,
 			zOrder: windowStack
+		});
+	}
+
+	function scheduleDashboardLayoutSave(): void {
+		if (layoutSaveFrame !== null) return;
+
+		layoutSaveFrame = requestAnimationFrame(() => {
+			layoutSaveFrame = null;
+			saveDashboardLayout();
 		});
 	}
 
@@ -214,7 +233,7 @@
 </svelte:head>
 
 <main
-	class="relative isolate min-h-screen overflow-hidden bg-[#008080] p-2 font-mono text-sm text-black sm:p-4"
+	class="bookclub-theme relative isolate min-h-screen overflow-hidden bg-[#008080] p-2 font-mono text-sm text-black sm:p-4"
 >
 	<ClubhouseBackdrop />
 	<div
@@ -290,7 +309,8 @@
 							<p class="font-bold text-[#000080]">WINDOW WORKSPACE</p>
 							<p class="mt-1">
 								On desktop, drag window bars and resize from the lower-right corner. On mobile, use
-								the move buttons. Layout is saved in this browser.
+								the move buttons. Scroll over a window to move the page; chat, member, and archive
+								lists keep their own scrolling. Layout is saved in this browser.
 							</p>
 						</div>
 						<button
@@ -484,6 +504,7 @@
 											The shelves remember previous selections. Open a book to inspect its record.
 										</p>
 										<div
+											data-inner-scroll
 											class="max-h-64 space-y-2 overflow-y-auto border-2 border-black bg-white p-2"
 										>
 											{#each data.dashboard.archive as entry (entry.id)}
@@ -726,6 +747,115 @@
 </main>
 
 <style>
+	.bookclub-theme {
+		--pixel-teal:
+			repeating-linear-gradient(
+				0deg,
+				rgb(255 255 255 / 0.08) 0 4px,
+				transparent 4px 12px,
+				rgb(0 0 0 / 0.12) 12px 16px,
+				transparent 16px 24px
+			),
+			repeating-linear-gradient(
+				90deg,
+				rgb(255 255 255 / 0.05) 0 8px,
+				transparent 8px 24px,
+				rgb(0 0 0 / 0.1) 24px 32px,
+				transparent 32px 48px
+			);
+		--pixel-panel:
+			repeating-linear-gradient(
+				135deg,
+				rgb(255 255 255 / 0.28) 0 8px,
+				transparent 8px 20px,
+				rgb(0 0 0 / 0.1) 20px 28px,
+				transparent 28px 40px
+			),
+			radial-gradient(circle at 1px 1px, rgb(0 0 0 / 0.12) 0 1px, transparent 1.5px);
+		--pixel-chrome:
+			repeating-linear-gradient(
+				0deg,
+				rgb(255 255 255 / 0.2) 0 3px,
+				transparent 3px 9px,
+				rgb(0 0 0 / 0.16) 9px 12px,
+				transparent 12px 18px
+			),
+			repeating-linear-gradient(
+				90deg,
+				rgb(255 255 255 / 0.14) 0 6px,
+				transparent 6px 16px,
+				rgb(0 0 0 / 0.12) 16px 22px,
+				transparent 22px 32px
+			);
+		--pixel-title:
+			repeating-linear-gradient(
+				90deg,
+				rgb(255 255 255 / 0.18) 0 6px,
+				transparent 6px 14px,
+				rgb(0 0 0 / 0.2) 14px 20px,
+				transparent 20px 28px
+			),
+			repeating-linear-gradient(
+				0deg,
+				rgb(255 255 255 / 0.08) 0 4px,
+				transparent 4px 12px,
+				rgb(0 0 0 / 0.14) 12px 16px,
+				transparent 16px 24px
+			);
+		background-image: var(--pixel-teal);
+		background-size:
+			48px 48px,
+			48px 48px;
+		background-blend-mode: normal, normal;
+	}
+
+	/* Keep the palette, but give each surface a deliberately stepped, dithered fill. */
+	.bookclub-theme :global([class~='bg-[#d4d0c8]']) {
+		background-image: var(--pixel-panel);
+		background-size:
+			40px 40px,
+			4px 4px;
+		background-blend-mode: normal, multiply;
+	}
+
+	.bookclub-theme :global([class~='bg-[#c0c0c0]']) {
+		background-image: var(--pixel-chrome);
+		background-size:
+			32px 32px,
+			32px 32px;
+		background-blend-mode: normal, normal;
+	}
+
+	.bookclub-theme :global([class~='bg-[#808080]']) {
+		background-image: var(--pixel-title);
+		background-size:
+			28px 28px,
+			24px 24px;
+		background-blend-mode: normal, normal;
+	}
+
+	.bookclub-theme :global([class~='bg-[#000080]']),
+	.bookclub-theme :global([class~='bg-[#800080]']),
+	.bookclub-theme :global([class~='bg-[#800000]']),
+	.bookclub-theme :global([class~='bg-[#008080]']) {
+		background-image: var(--pixel-title);
+		background-size:
+			28px 28px,
+			24px 24px;
+		background-blend-mode: normal, normal;
+	}
+
+	.bookclub-theme :global([class~='bg-[#ffffcc]']) {
+		background-image: repeating-linear-gradient(
+			135deg,
+			rgb(255 255 255 / 0.42) 0 8px,
+			transparent 8px 20px,
+			rgb(128 96 0 / 0.08) 20px 24px,
+			transparent 24px 40px
+		);
+		background-size: 40px 40px;
+	}
+
 	@media (min-width: 1024px) {
 		.dashboard-workspace {
 			height: var(--workspace-height);
