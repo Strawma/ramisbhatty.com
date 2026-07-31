@@ -290,7 +290,8 @@
 							<p class="font-bold text-[#000080]">WINDOW WORKSPACE</p>
 							<p class="mt-1">
 								On desktop, drag window bars and resize from the lower-right corner. On mobile, use
-								the move buttons. Layout is saved in this browser.
+								the move buttons. Scroll over a window to move the page; chat, member, and archive
+								lists keep their own scrolling. Layout is saved in this browser.
 							</p>
 						</div>
 						<button
@@ -484,6 +485,7 @@
 											The shelves remember previous selections. Open a book to inspect its record.
 										</p>
 										<div
+											data-inner-scroll
 											class="max-h-64 space-y-2 overflow-y-auto border-2 border-black bg-white p-2"
 										>
 											{#each data.dashboard.archive as entry (entry.id)}

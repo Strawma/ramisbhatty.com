@@ -175,6 +175,31 @@
 		onFocus();
 	}
 
+	function routeWheelToPage(node: HTMLElement): { destroy: () => void } {
+		const handleWheel = (event: WheelEvent) => {
+			if (tray || !desktopWindowsEnabled() || event.ctrlKey) return;
+
+			const target = event.target instanceof Element ? event.target : null;
+			if (target?.closest('[data-inner-scroll]')) return;
+
+			event.preventDefault();
+			const multiplier =
+				event.deltaMode === WheelEvent.DOM_DELTA_LINE
+					? 16
+					: event.deltaMode === WheelEvent.DOM_DELTA_PAGE
+						? window.innerHeight
+						: 1;
+			window.scrollBy({
+				top: event.deltaY * multiplier,
+				left: event.deltaX * multiplier,
+				behavior: 'auto'
+			});
+		};
+
+		node.addEventListener('wheel', handleWheel, { passive: false });
+		return { destroy: () => node.removeEventListener('wheel', handleWheel) };
+	}
+
 	onDestroy(removeInteractionListeners);
 </script>
 
@@ -187,6 +212,7 @@
 	style:order={position}
 	style={`--window-x: ${localGeometry.x}px; --window-y: ${localGeometry.y}px; --window-width: ${localGeometry.width}px; --window-height: ${localGeometry.height}px; --window-z: ${zIndex};`}
 	onpointerdown={onFocus}
+	use:routeWheelToPage
 >
 	<div
 		role="toolbar"
@@ -278,7 +304,7 @@
 		.window-content {
 			height: calc(100% - 2.25rem);
 			overflow: auto;
-			overscroll-behavior: contain;
+			overscroll-behavior: auto;
 		}
 
 		.window-content > :global(*) {

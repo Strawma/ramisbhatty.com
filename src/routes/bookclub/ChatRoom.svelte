@@ -391,6 +391,7 @@
 			aria-live="polite"
 			bind:this={messageList}
 			onscroll={updateScrollPosition}
+			data-inner-scroll
 			class="flex max-h-72 min-h-40 flex-1 flex-col gap-1 overflow-y-auto border-2 border-black bg-black p-3 font-mono text-xs text-green-400"
 		>
 			{#if visibleMessages.length === 0}
@@ -477,6 +478,7 @@
 				<span>{onlineMemberCount}/{visibleMembers.length} ONLINE</span>
 			</div>
 			<ul
+				data-inner-scroll
 				class="grid max-h-28 gap-1 overflow-y-auto border-2 border-black bg-white p-2 sm:grid-cols-2"
 			>
 				{#each visibleMembers as member (member.id)}
