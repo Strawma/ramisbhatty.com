@@ -30,6 +30,7 @@
 	let workspaceWidth = $state(900);
 	let workspaceReady = $state(false);
 	let workspaceElement: HTMLDivElement;
+	let layoutSaveFrame: number | null = null;
 	let visiblePanelIds = $derived(
 		dashboardOrder.filter((panelId) => panelId !== 'admin' || data.member.role === 'admin')
 	);
@@ -74,19 +75,37 @@
 			}
 			workspaceWidth = nextWidth;
 			windowGeometries = nextGeometries;
-			saveDashboardLayout();
+			scheduleDashboardLayoutSave();
 		});
 		resizeObserver.observe(workspaceElement);
 		workspaceReady = true;
-		return () => resizeObserver.disconnect();
+		return () => {
+			resizeObserver.disconnect();
+			if (layoutSaveFrame !== null) cancelAnimationFrame(layoutSaveFrame);
+			layoutSaveFrame = null;
+		};
 	});
 
 	function saveDashboardLayout(): void {
+		if (layoutSaveFrame !== null) {
+			cancelAnimationFrame(layoutSaveFrame);
+			layoutSaveFrame = null;
+		}
+
 		saveDashboardPreferences({
 			order: dashboardOrder,
 			collapsed: collapsedPanels,
 			windows: windowGeometries,
 			zOrder: windowStack
+		});
+	}
+
+	function scheduleDashboardLayoutSave(): void {
+		if (layoutSaveFrame !== null) return;
+
+		layoutSaveFrame = requestAnimationFrame(() => {
+			layoutSaveFrame = null;
+			saveDashboardLayout();
 		});
 	}
 

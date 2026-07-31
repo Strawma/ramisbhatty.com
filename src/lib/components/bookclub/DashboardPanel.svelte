@@ -116,10 +116,20 @@
 
 	function finishInteraction(event: PointerEvent): void {
 		if (!interaction || interaction.pointerId !== event.pointerId) return;
+		const geometryChanged = !sameGeometry(localGeometry, interaction.geometry);
 		removeInteractionListeners();
 		interaction = null;
-		onGeometryChange(localGeometry);
+		if (geometryChanged) onGeometryChange(localGeometry);
 		onFocus();
+	}
+
+	function sameGeometry(first: DashboardWindowGeometry, second: DashboardWindowGeometry): boolean {
+		return (
+			first.x === second.x &&
+			first.y === second.y &&
+			first.width === second.width &&
+			first.height === second.height
+		);
 	}
 
 	function removeInteractionListeners(): void {
