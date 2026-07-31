@@ -749,89 +749,90 @@
 <style>
 	.bookclub-theme {
 		--pixel-teal:
-			repeating-linear-gradient(
-				0deg,
-				rgb(255 255 255 / 0.08) 0 4px,
-				transparent 4px 12px,
-				rgb(0 0 0 / 0.12) 12px 16px,
-				transparent 16px 24px
+			linear-gradient(
+				112deg,
+				transparent 0 18%,
+				rgb(255 255 255 / 0.035) 18% 31%,
+				transparent 31% 61%,
+				rgb(0 0 0 / 0.045) 61% 73%,
+				transparent 73% 100%
 			),
-			repeating-linear-gradient(
-				90deg,
-				rgb(255 255 255 / 0.05) 0 8px,
-				transparent 8px 24px,
-				rgb(0 0 0 / 0.1) 24px 32px,
-				transparent 32px 48px
+			linear-gradient(
+				28deg,
+				rgb(255 255 255 / 0.02) 0 16%,
+				transparent 16% 44%,
+				rgb(0 0 0 / 0.025) 44% 57%,
+				transparent 57% 84%,
+				rgb(255 255 255 / 0.018) 84% 100%
 			);
 		--pixel-panel:
-			repeating-linear-gradient(
-				135deg,
-				rgb(255 255 255 / 0.28) 0 8px,
-				transparent 8px 20px,
-				rgb(0 0 0 / 0.1) 20px 28px,
-				transparent 28px 40px
+			linear-gradient(
+				130deg,
+				rgb(255 255 255 / 0.085) 0 13%,
+				transparent 13% 37%,
+				rgb(0 0 0 / 0.03) 37% 51%,
+				transparent 51% 77%,
+				rgb(255 255 255 / 0.035) 77% 100%
 			),
-			radial-gradient(circle at 1px 1px, rgb(0 0 0 / 0.12) 0 1px, transparent 1.5px);
+			linear-gradient(
+				35deg,
+				transparent 0 23%,
+				rgb(0 0 0 / 0.02) 23% 35%,
+				transparent 35% 62%,
+				rgb(255 255 255 / 0.03) 62% 75%,
+				transparent 75% 100%
+			);
 		--pixel-chrome:
-			repeating-linear-gradient(
-				0deg,
-				rgb(255 255 255 / 0.2) 0 3px,
-				transparent 3px 9px,
-				rgb(0 0 0 / 0.16) 9px 12px,
-				transparent 12px 18px
+			linear-gradient(
+				118deg,
+				rgb(255 255 255 / 0.06) 0 18%,
+				transparent 18% 43%,
+				rgb(0 0 0 / 0.03) 43% 57%,
+				transparent 57% 82%,
+				rgb(255 255 255 / 0.025) 82% 100%
 			),
-			repeating-linear-gradient(
-				90deg,
-				rgb(255 255 255 / 0.14) 0 6px,
-				transparent 6px 16px,
-				rgb(0 0 0 / 0.12) 16px 22px,
-				transparent 22px 32px
+			linear-gradient(
+				12deg,
+				transparent 0 30%,
+				rgb(255 255 255 / 0.025) 30% 43%,
+				transparent 43% 69%,
+				rgb(0 0 0 / 0.02) 69% 80%,
+				transparent 80% 100%
 			);
 		--pixel-title:
-			repeating-linear-gradient(
+			linear-gradient(
 				90deg,
-				rgb(255 255 255 / 0.18) 0 6px,
-				transparent 6px 14px,
-				rgb(0 0 0 / 0.2) 14px 20px,
-				transparent 20px 28px
+				rgb(255 255 255 / 0.07) 0 12%,
+				transparent 12% 41%,
+				rgb(0 0 0 / 0.07) 41% 56%,
+				transparent 56% 82%,
+				rgb(255 255 255 / 0.03) 82% 100%
 			),
-			repeating-linear-gradient(
+			linear-gradient(
 				0deg,
-				rgb(255 255 255 / 0.08) 0 4px,
-				transparent 4px 12px,
-				rgb(0 0 0 / 0.14) 12px 16px,
-				transparent 16px 24px
+				rgb(255 255 255 / 0.025) 0 19%,
+				transparent 19% 66%,
+				rgb(0 0 0 / 0.045) 66% 80%,
+				transparent 80% 100%
 			);
 		background-image: var(--pixel-teal);
-		background-size:
-			48px 48px,
-			48px 48px;
-		background-blend-mode: normal, normal;
+		background-repeat: no-repeat;
 	}
 
-	/* Keep the palette, but give each surface a deliberately stepped, dithered fill. */
+	/* Keep the palette, but give each surface a deliberately stepped, non-repeating fill. */
 	.bookclub-theme :global([class~='bg-[#d4d0c8]']) {
 		background-image: var(--pixel-panel);
-		background-size:
-			40px 40px,
-			4px 4px;
-		background-blend-mode: normal, multiply;
+		background-repeat: no-repeat;
 	}
 
 	.bookclub-theme :global([class~='bg-[#c0c0c0]']) {
 		background-image: var(--pixel-chrome);
-		background-size:
-			32px 32px,
-			32px 32px;
-		background-blend-mode: normal, normal;
+		background-repeat: no-repeat;
 	}
 
 	.bookclub-theme :global([class~='bg-[#808080]']) {
 		background-image: var(--pixel-title);
-		background-size:
-			28px 28px,
-			24px 24px;
-		background-blend-mode: normal, normal;
+		background-repeat: no-repeat;
 	}
 
 	.bookclub-theme :global([class~='bg-[#000080]']),
@@ -839,21 +840,28 @@
 	.bookclub-theme :global([class~='bg-[#800000]']),
 	.bookclub-theme :global([class~='bg-[#008080]']) {
 		background-image: var(--pixel-title);
-		background-size:
-			28px 28px,
-			24px 24px;
-		background-blend-mode: normal, normal;
+		background-repeat: no-repeat;
 	}
 
 	.bookclub-theme :global([class~='bg-[#ffffcc]']) {
-		background-image: repeating-linear-gradient(
-			135deg,
-			rgb(255 255 255 / 0.42) 0 8px,
-			transparent 8px 20px,
-			rgb(128 96 0 / 0.08) 20px 24px,
-			transparent 24px 40px
-		);
-		background-size: 40px 40px;
+		background-image:
+			linear-gradient(
+				130deg,
+				rgb(255 255 255 / 0.11) 0 14%,
+				transparent 14% 39%,
+				rgb(128 96 0 / 0.025) 39% 53%,
+				transparent 53% 79%,
+				rgb(255 255 255 / 0.04) 79% 100%
+			),
+			linear-gradient(
+				35deg,
+				transparent 0 27%,
+				rgb(128 96 0 / 0.018) 27% 39%,
+				transparent 39% 67%,
+				rgb(255 255 255 / 0.035) 67% 79%,
+				transparent 79% 100%
+			);
+		background-repeat: no-repeat;
 	}
 
 	@media (min-width: 1024px) {
