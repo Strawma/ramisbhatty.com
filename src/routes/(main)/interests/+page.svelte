@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { pageContent } from '$lib/content';
+	import { pageContent } from '#lib/content';
 
 	let { data } = $props();
 	const Content = pageContent.interests;
@@ -26,7 +26,7 @@
 					<h2 class="text-lg font-semibold">
 						<a
 							class="underline decoration-neutral-400 underline-offset-4 hover:decoration-neutral-900"
-							href={resolve(`/interests/${category.slug}`)}>{category.title}</a
+							href={resolve(`interests/${category.slug}`)}>{category.title}</a
 						>
 					</h2>
 					{#if category.status === 'draft'}

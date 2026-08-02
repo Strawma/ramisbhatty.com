@@ -6,10 +6,10 @@ import {
 	isValidUsername,
 	normalizeUsername,
 	setBookclubSessionCookie
-} from '$lib/server/bookclub/auth';
-import { getBookclubDatabase } from '$lib/server/bookclub/db';
-import { cleanupBookclubDataAfterLogin } from '$lib/server/bookclub/maintenance';
-import { verifyTurnstileToken } from '$lib/server/bookclub/turnstile';
+} from '#lib/server/bookclub/auth';
+import { getBookclubDatabase } from '#lib/server/bookclub/db';
+import { cleanupBookclubDataAfterLogin } from '#lib/server/bookclub/maintenance';
+import { verifyTurnstileToken } from '#lib/server/bookclub/turnstile';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {

@@ -1,6 +1,9 @@
 import path from 'node:path';
 import { cloudflareTest, readD1Migrations } from '@cloudflare/vitest-pool-workers';
+import adapter from '@sveltejs/adapter-cloudflare';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { mdsvex } from 'mdsvex';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig(async () => {
@@ -8,7 +11,14 @@ export default defineConfig(async () => {
 
 	return {
 		plugins: [
-			sveltekit(),
+			sveltekit({
+				extensions: ['.svelte', '.md'],
+				preprocess: [vitePreprocess(), mdsvex({ extensions: ['.md'] })],
+				csrf: {
+					trustedOrigins: ['https://ramisbhatty.com', 'https://www.ramisbhatty.com']
+				},
+				adapter: adapter()
+			}),
 			cloudflareTest({
 				wrangler: { configPath: './wrangler.jsonc' },
 				miniflare: {

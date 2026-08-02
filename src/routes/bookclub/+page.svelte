@@ -2,11 +2,11 @@
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { onMount } from 'svelte';
-	import bookclubSystemMessages from '$lib/data/bookclub-system-messages.json';
-	import DashboardPanel from '$lib/components/bookclub/DashboardPanel.svelte';
-	import ClubhouseBackdrop from '$lib/components/bookclub/ClubhouseBackdrop.svelte';
-	import ProfileSettings from '$lib/components/bookclub/ProfileSettings.svelte';
-	import SuggestionSlot from '$lib/components/bookclub/SuggestionSlot.svelte';
+	import bookclubSystemMessages from '#lib/data/bookclub-system-messages.json';
+	import DashboardPanel from '#lib/components/bookclub/DashboardPanel.svelte';
+	import ClubhouseBackdrop from '#lib/components/bookclub/ClubhouseBackdrop.svelte';
+	import ProfileSettings from '#lib/components/bookclub/ProfileSettings.svelte';
+	import SuggestionSlot from '#lib/components/bookclub/SuggestionSlot.svelte';
 	import {
 		completeOrder,
 		constrainWindowGeometry,
@@ -15,7 +15,7 @@
 		saveDashboardPreferences,
 		type DashboardPanelId,
 		type DashboardWindowGeometry
-	} from '$lib/components/bookclub/dashboard-preferences';
+	} from '#lib/components/bookclub/dashboard-preferences';
 	import ChatRoom from './ChatRoom.svelte';
 	import ClubNav from './ClubNav.svelte';
 
@@ -509,7 +509,7 @@
 										>
 											{#each data.dashboard.archive as entry (entry.id)}
 												<a
-													href={resolve(`/bookclub/archive/${entry.id}`)}
+													href={resolve(`bookclub/archive/${entry.id}`)}
 													class="block border-2 border-black bg-[#ffffcc] p-3 hover:bg-white focus:ring-2 focus:ring-[#000080] focus:outline-none"
 												>
 													<div class="flex flex-wrap items-start justify-between gap-2">

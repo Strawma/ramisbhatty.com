@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { dev } from '$app/environment';
+	import { dev } from '$app/env';
 
 	let { form, data } = $props();
 </script>
@@ -99,7 +99,7 @@
 						the Vite development server.
 					</p>
 					<a
-						href={resolve('/bookclub/preview')}
+						href={resolve('bookclub/preview')}
 						class="mt-2 inline-block border-2 border-black bg-[#d4d0c8] px-3 py-2 font-bold shadow-[2px_2px_0_#000] hover:bg-white focus:ring-2 focus:ring-[#000080] focus:outline-none"
 					>
 						&gt; OPEN LOCAL PREVIEW

@@ -1,5 +1,5 @@
-import { dev } from '$app/environment';
-import { pageIntroductions, visibleExperience, visibleProjects } from '$lib/content';
+import { dev } from '$app/env';
+import { pageIntroductions, visibleExperience, visibleProjects } from '#lib/content';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = () => ({

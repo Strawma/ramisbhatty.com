@@ -6,7 +6,7 @@
 	import {
 		loadAudioPreferences,
 		saveAudioPreferences
-	} from '$lib/components/bookclub/audio-preferences';
+	} from '#lib/components/bookclub/audio-preferences';
 
 	const CHAT_POLL_INTERVAL_MS = 5_000;
 	const CHAT_POLL_TIMEOUT_MS = 10_000;

@@ -69,7 +69,7 @@ export interface PageIntroduction {
 
 export interface ExploreDestination {
 	title: string;
-	href: '/work' | '/education' | '/blog' | '/interests';
+	href: 'work' | 'education' | 'blog' | 'interests';
 	description: string;
 }
 
@@ -402,7 +402,7 @@ export const exploreDestinations: ExploreDestination[] = exploreSlugs.map((slug)
 	}
 	return {
 		title: page.title,
-		href: `/${slug}` as ExploreDestination['href'],
+		href: slug as ExploreDestination['href'],
 		description: page.indexDescription
 	};
 });

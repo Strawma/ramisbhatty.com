@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { projectContent } from '$lib/content';
+	import { projectContent } from '#lib/content';
 	import { resolve } from '$app/paths';
 	let { data } = $props();
 	let Content = $derived(projectContent[data.project.slug]);
@@ -30,7 +30,7 @@
 					<dd>
 						<a
 							class="underline underline-offset-4"
-							href={resolve(`/education/${data.module.code.toLowerCase()}`)}
+							href={resolve(`education/${data.module.code.toLowerCase()}`)}
 							>{data.module.code}: {data.module.title}</a
 						>
 					</dd>

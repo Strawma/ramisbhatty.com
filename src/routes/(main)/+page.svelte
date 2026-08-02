@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { contact, nav } from '$lib/data/config';
-	import { pageContent } from '$lib/content';
+	import { contact, nav } from '#lib/data/config';
+	import { pageContent } from '#lib/content';
 	import { resolve } from '$app/paths';
 
 	let { data } = $props();
@@ -38,7 +38,7 @@
 		<ul class="mt-5">
 			{#each data.projects.slice(0, 3) as project (project.slug)}
 				<li>
-					<a href={resolve(`/work/${project.slug}`)}>{project.title}</a> — {project.summary}
+					<a href={resolve(`work/${project.slug}`)}>{project.title}</a> — {project.summary}
 					{#if project.status === 'draft'}<small> (local draft)</small>{/if}
 				</li>
 			{/each}
@@ -57,7 +57,7 @@
 		<ul class="mt-5">
 			{#each data.modules.slice(0, 4) as module (module.code)}
 				<li>
-					<a href={resolve(`/education/${module.code.toLowerCase()}`)}
+					<a href={resolve(`education/${module.code.toLowerCase()}`)}
 						>{module.code}: {module.title}</a
 					>{module.status === 'draft' ? ' (local draft)' : ''}
 				</li>

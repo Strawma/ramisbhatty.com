@@ -1,7 +1,7 @@
-import { dev } from '$app/environment';
+import { dev } from '$app/env';
 import { error, redirect } from '@sveltejs/kit';
-import { createSession, setBookclubSessionCookie } from '$lib/server/bookclub/auth';
-import { getBookclubDatabase } from '$lib/server/bookclub/db';
+import { createSession, setBookclubSessionCookie } from '#lib/server/bookclub/auth';
+import { getBookclubDatabase } from '#lib/server/bookclub/db';
 import type { PageServerLoad } from './$types';
 
 const PREVIEW_MEMBER_ID = 'local-preview-member';

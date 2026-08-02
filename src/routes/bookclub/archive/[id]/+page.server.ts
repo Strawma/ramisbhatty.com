@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
-import { requireBookclubMember } from '$lib/server/bookclub/auth';
-import { getBookclubDatabase } from '$lib/server/bookclub/db';
-import { getArchiveEntry } from '$lib/server/bookclub/cycles';
+import { requireBookclubMember } from '#lib/server/bookclub/auth';
+import { getBookclubDatabase } from '#lib/server/bookclub/db';
+import { getArchiveEntry } from '#lib/server/bookclub/cycles';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
