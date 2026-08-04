@@ -9,6 +9,6 @@ introduction: >-
 ## Current focus
 
 - Completing a research internship at the University.
-- Preparing for the fourth year of the Computer Science with Artificial Intelligence MEng. [Read about my education](/education) →
+- Preparing for my fourth year studying Computer Science with Artificial Intelligence (MEng). [Read about my education](/education) →
 - Turning coursework and personal projects into useful, connected notes for this site. [Browse my work](/work) →
 - Finishing this site!
