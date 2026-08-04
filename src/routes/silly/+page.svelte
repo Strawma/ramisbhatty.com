@@ -68,6 +68,6 @@
 <style>
 	@font-face {
 		font-family: 'pixel-sans';
-		src: url('#lib/assets/fonts/pixel-comic-sans.ttf') format('truetype');
+		src: url('../../lib/assets/fonts/pixel-comic-sans.ttf') format('truetype');
 	}
 </style>

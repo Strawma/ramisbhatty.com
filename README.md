@@ -73,12 +73,6 @@ The main site's editable copy lives in `src/content`. Markdown bodies hold the p
 frontmatter blocks provide titles, summaries, dates, and draft status used automatically by the
 site's layouts and indexes.
 
-The complete route inventory, including dynamic content routes and private book-club endpoints, is
-in [ROUTES.md](ROUTES.md).
-
-The [SvelteKit 3 notes](SVELTEKIT-3-NOTES.md) record the prerelease migration decisions and features
-worth revisiting as the framework matures.
-
 ### Building
 
 To create a production version of your app:
