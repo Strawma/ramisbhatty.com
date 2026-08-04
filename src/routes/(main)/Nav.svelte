@@ -11,6 +11,16 @@
 		{ label: 'About', href: nav.about },
 		{ label: 'CV', href: nav.cv }
 	];
+
+	// Navigation data stays slashless because SvelteKit's resolve() accepts route paths in that form.
+	// URL.pathname is absolute, so normalize before comparing it for active-link styling.
+	function isActive(path: string): boolean {
+		const pathname = path ? `/${path}` : '/';
+		return (
+			page.url.pathname === pathname ||
+			(pathname !== '/' && page.url.pathname.startsWith(`${pathname}/`))
+		);
+	}
 </script>
 
 <nav
@@ -27,7 +37,7 @@
 		<a
 			href={resolve(nav.home)}
 			class="transition-colors hover:text-neutral-600 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
-			class:font-semibold={page.url.pathname === nav.home}
+			class:font-semibold={isActive(nav.home)}
 		>
 			Home
 		</a>
@@ -35,8 +45,7 @@
 			<a
 				href={resolve(link.href)}
 				class="transition-colors hover:text-neutral-600 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
-				class:font-semibold={page.url.pathname === link.href ||
-					page.url.pathname.startsWith(`${link.href}/`)}
+				class:font-semibold={isActive(link.href)}
 			>
 				{link.label}
 			</a>

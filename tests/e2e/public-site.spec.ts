@@ -64,6 +64,17 @@ test('primary navigation keeps personal and silly destinations secondary', async
 	).toHaveAttribute('href', '/silly');
 });
 
+test('primary navigation marks the current route and nested sections active', async ({ page }) => {
+	const navigation = page.getByRole('navigation', { name: 'Main navigation' });
+
+	await page.goto('/');
+	await expect(navigation.getByRole('link', { name: 'Home' })).toHaveClass(/font-semibold/);
+
+	await page.goto('/work/module-project-placeholder');
+	await expect(navigation.getByRole('link', { name: 'Work' })).toHaveClass(/font-semibold/);
+	await expect(navigation.getByRole('link', { name: 'Home' })).not.toHaveClass(/font-semibold/);
+});
+
 test('education groups modules chronologically with averages, awards, and the latest year open', async ({
 	page
 }) => {
@@ -154,6 +165,15 @@ test('the silly route remains separate, titled, and usable on mobile', async ({ 
 	const accessibility = await new AxeBuilder({ page }).disableRules(['color-contrast']).analyze();
 	expect(accessibility.violations).toEqual([]);
 	expect(runtimeErrors).toEqual([]);
+});
+
+test('the silly route loads its bundled pixel font', async ({ page }) => {
+	const fontResponse = page.waitForResponse(
+		(response) => response.url().endsWith('.ttf') && response.ok()
+	);
+
+	await page.goto('/silly');
+	await fontResponse;
 });
 
 test('the streaming scene respects utility indexing and reduced-motion preferences', async ({
