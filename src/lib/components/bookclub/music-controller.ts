@@ -1,4 +1,4 @@
-import backgroundMusicUrl from '$lib/assets/audio/bmbmt-background.mp3';
+import backgroundMusicUrl from '#lib/assets/audio/bmbmt-background.mp3';
 import {
 	DEFAULT_MUSIC_VOLUME,
 	loadAudioPreferences,

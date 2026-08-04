@@ -1,15 +1,15 @@
 import { fail, redirect } from '@sveltejs/kit';
-import { buildTimestamp } from '$lib/data/build-info';
-import { requireBookclubMember } from '$lib/server/bookclub/auth';
+import { buildTimestamp } from '#lib/data/build-info';
+import { requireBookclubMember } from '#lib/server/bookclub/auth';
 import {
 	ChatCooldownError,
 	createChatMessage,
 	restoreChatMessage,
 	tombstoneChatMessageByAdmin,
 	tombstoneOwnChatMessage
-} from '$lib/server/bookclub/chat';
-import { findBookCover } from '$lib/server/bookclub/covers';
-import { getBookclubDatabase } from '$lib/server/bookclub/db';
+} from '#lib/server/bookclub/chat';
+import { findBookCover } from '#lib/server/bookclub/covers';
+import { getBookclubDatabase } from '#lib/server/bookclub/db';
 import {
 	closeCycle,
 	createCycle,
@@ -20,10 +20,10 @@ import {
 	saveSuggestion,
 	SuggestionConflictError,
 	setBookCover
-} from '$lib/server/bookclub/cycles';
-import { clearNextMeeting, scheduleNextMeeting } from '$lib/server/bookclub/meetings';
-import { setMemberChatColor, setMemberDisplayName } from '$lib/server/bookclub/invitations';
-import { isValidChatColor, normalizeChatColor } from '$lib/server/bookclub/colors';
+} from '#lib/server/bookclub/cycles';
+import { clearNextMeeting, scheduleNextMeeting } from '#lib/server/bookclub/meetings';
+import { setMemberChatColor, setMemberDisplayName } from '#lib/server/bookclub/invitations';
+import { isValidChatColor, normalizeChatColor } from '#lib/server/bookclub/colors';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {

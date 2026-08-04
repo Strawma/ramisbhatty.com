@@ -1,6 +1,6 @@
 <script lang="ts">
-	import EntryList from '$lib/components/main/EntryList.svelte';
-	import { pageContent } from '$lib/content';
+	import EntryList from '#lib/components/main/EntryList.svelte';
+	import { pageContent } from '#lib/content';
 
 	let { data } = $props();
 	const Content = pageContent.blog;

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { pageContent } from '$lib/content';
+	import { pageContent } from '#lib/content';
 
 	let { data } = $props();
 	const Content = pageContent.about;

@@ -1,6 +1,6 @@
 <!-- src/lib/components/prose/Footer.svelte -->
 <script lang="ts">
-	import { contact, nav } from '$lib/data/config';
+	import { contact, nav } from '#lib/data/config';
 	import { resolve } from '$app/paths';
 </script>
 

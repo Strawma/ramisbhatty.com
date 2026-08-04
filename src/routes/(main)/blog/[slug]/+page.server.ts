@@ -1,5 +1,5 @@
-import { dev } from '$app/environment';
-import { findPost } from '$lib/content';
+import { dev } from '$app/env';
+import { findPost } from '#lib/content';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 

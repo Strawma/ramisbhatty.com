@@ -1,7 +1,7 @@
 <!-- AdBanner.svelte -->
 <script lang="ts">
-	import AoOniSrc from '$lib/assets/images/ao oni.gif';
-	import { contact } from '$lib/data/config';
+	import AoOniSrc from '#lib/assets/images/ao oni.gif';
+	import { contact } from '#lib/data/config';
 	let { class: className = '', size = 'large' } = $props();
 </script>
 

@@ -32,7 +32,7 @@
 
 			<div class="min-w-0 flex-1 bg-[#008080] p-3 sm:p-5">
 				<a
-					href={resolve('/bookclub#archive')}
+					href={resolve('bookclub#archive')}
 					class="inline-block border-2 border-black bg-[#d4d0c8] px-2 py-1 font-bold underline shadow-[2px_2px_0_#000] hover:bg-white focus:ring-2 focus:ring-[#000080] focus:outline-none"
 				>
 					&lt; BACK TO ARCHIVE

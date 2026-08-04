@@ -4,8 +4,8 @@ import {
 	isValidUsername,
 	normalizeUsername,
 	requireBookclubMember
-} from '$lib/server/bookclub/auth';
-import { getBookclubDatabase } from '$lib/server/bookclub/db';
+} from '#lib/server/bookclub/auth';
+import { getBookclubDatabase } from '#lib/server/bookclub/db';
 import {
 	createInvitation,
 	getInvitationSummaries,
@@ -15,9 +15,9 @@ import {
 	setMemberChatColor,
 	setMemberDisplayName,
 	setMemberUsername
-} from '$lib/server/bookclub/invitations';
-import { isValidChatColor, normalizeChatColor } from '$lib/server/bookclub/colors';
-import { deleteBookPoll, getBookPollSummaries } from '$lib/server/bookclub/cycles';
+} from '#lib/server/bookclub/invitations';
+import { isValidChatColor, normalizeChatColor } from '#lib/server/bookclub/colors';
+import { deleteBookPoll, getBookPollSummaries } from '#lib/server/bookclub/cycles';
 import type { Actions, PageServerLoad } from './$types';
 
 async function requireAdmin(event: RequestEvent) {

@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
-import { BOOKCLUB_SESSION_COOKIE, deleteSession } from '$lib/server/bookclub/auth';
-import { getBookclubDatabase } from '$lib/server/bookclub/db';
+import { BOOKCLUB_SESSION_COOKIE, deleteSession } from '#lib/server/bookclub/auth';
+import { getBookclubDatabase } from '#lib/server/bookclub/db';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async (event) => {

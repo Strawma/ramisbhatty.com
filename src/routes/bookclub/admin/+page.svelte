@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import ProfileSettings from '$lib/components/bookclub/ProfileSettings.svelte';
+	import ProfileSettings from '#lib/components/bookclub/ProfileSettings.svelte';
 	import ClubNav from '../ClubNav.svelte';
 
 	let { data, form } = $props();

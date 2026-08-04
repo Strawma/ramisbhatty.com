@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import MidiPlayer from './MidiPlayer.svelte';
-	import { nav } from '$lib/data/config';
+	import { nav } from '#lib/data/config';
 	import { resolve } from '$app/paths';
 
 	let {

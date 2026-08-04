@@ -3,10 +3,10 @@
 	import { slide } from 'svelte/transition';
 	import { linear } from 'svelte/easing';
 
-	import brb_quotes from '$lib/data/quotes.json';
-	import WindowsSRC from '$lib/assets/images/windows-xp.webp';
-	import WindowsBottomSRC from '$lib/assets/images/windows-xp-bottom.webp';
-	import JimSRC from '$lib/assets/images/jim.webp';
+	import brb_quotes from '#lib/data/quotes.json';
+	import WindowsSRC from '#lib/assets/images/windows-xp.webp';
+	import WindowsBottomSRC from '#lib/assets/images/windows-xp-bottom.webp';
+	import JimSRC from '#lib/assets/images/jim.webp';
 
 	// Keep the quote pool in JSON so the streaming scene can be edited without changing its timer.
 	const quotes = brb_quotes;
@@ -112,7 +112,7 @@
 <style>
 	@font-face {
 		font-family: 'pixel-sans';
-		src: url('$lib/assets/fonts/pixel-comic-sans.ttf') format('truetype');
+		src: url('#lib/assets/fonts/pixel-comic-sans.ttf') format('truetype');
 	}
 
 	@keyframes slow-rotation {

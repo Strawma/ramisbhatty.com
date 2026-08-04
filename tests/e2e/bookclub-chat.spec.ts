@@ -13,6 +13,13 @@ function getTestSessions(): TestSessions {
 	return JSON.parse(readFileSync(sessionFile, 'utf8')) as TestSessions;
 }
 
+test('local preview link opens an authenticated dashboard', async ({ page }) => {
+	await page.goto('/bookclub/login');
+	await page.getByRole('link', { name: 'OPEN LOCAL PREVIEW' }).click();
+	await expect(page).toHaveURL('/bookclub');
+	await expect(page.getByRole('heading', { name: 'Hello, Local Preview.' })).toBeVisible();
+});
+
 async function createSessionContext(browser: Browser, token: string) {
 	const context = await browser.newContext();
 	await context.addCookies([

@@ -1,4 +1,4 @@
-import { dev } from '$app/environment';
+import { dev } from '$app/env';
 import {
 	exploreDestinations,
 	featuredModules,
@@ -6,7 +6,7 @@ import {
 	pageIntroductions,
 	visibleModules,
 	visibleProjects
-} from '$lib/content';
+} from '#lib/content';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = () => {

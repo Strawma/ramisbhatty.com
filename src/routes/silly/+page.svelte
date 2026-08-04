@@ -1,8 +1,8 @@
 <script lang="ts">
-	import RamisSrc from '$lib/assets/images/ramis-pixellated.webp';
+	import RamisSrc from '#lib/assets/images/ramis-pixellated.webp';
 
-	import BouncerManager from '$lib/components/bouncer/BouncerManager.svelte';
-	import Bouncer from '$lib/components/bouncer/Bouncer.svelte';
+	import BouncerManager from '#lib/components/bouncer/BouncerManager.svelte';
+	import Bouncer from '#lib/components/bouncer/Bouncer.svelte';
 	import Header from './Header.svelte';
 	import Sidebar from './Sidebar.svelte';
 	import AdBanner from './AdBanner.svelte';
@@ -12,7 +12,7 @@
 
 	// Vite turns the bundled MIDI files into URLs. The player fetches the selected file only after
 	// the visitor explicitly starts audio playback.
-	const midiFiles = import.meta.glob('$lib/assets/midi/*.mid', {
+	const midiFiles = import.meta.glob('#lib/assets/midi/*.mid', {
 		eager: true,
 		query: '?url',
 		import: 'default'
@@ -68,6 +68,6 @@
 <style>
 	@font-face {
 		font-family: 'pixel-sans';
-		src: url('$lib/assets/fonts/pixel-comic-sans.ttf') format('truetype');
+		src: url('#lib/assets/fonts/pixel-comic-sans.ttf') format('truetype');
 	}
 </style>

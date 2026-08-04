@@ -1,6 +1,6 @@
 <script lang="ts">
-	import ModuleMark from '$lib/components/main/ModuleMark.svelte';
-	import { moduleContent } from '$lib/content';
+	import ModuleMark from '#lib/components/main/ModuleMark.svelte';
+	import { moduleContent } from '#lib/content';
 	import { resolve } from '$app/paths';
 	let { data } = $props();
 	let Content = $derived(moduleContent[data.module.slug]);
@@ -39,7 +39,7 @@
 			<h2>Related projects</h2>
 			<ul>
 				{#each data.projects as project (project.slug)}<li>
-						<a href={resolve(`/work/${project.slug}`)}>{project.title}</a> — {project.summary}
+						<a href={resolve(`work/${project.slug}`)}>{project.title}</a> — {project.summary}
 					</li>{/each}
 			</ul>
 		</section>

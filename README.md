@@ -59,9 +59,25 @@ pnpm dev
 pnpm dev -- --open
 ```
 
+The private book-club route has a local-only preview entry point. Apply the D1 migrations once, run
+the dev server, and open `/bookclub/login`; the development page includes an `OPEN LOCAL PREVIEW`
+link that creates a local admin session without contacting Turnstile. This route is unavailable in
+production builds.
+
+```bash
+pnpm exec wrangler d1 migrations apply ramis-bookclub --local
+pnpm dev
+```
+
 The main site's editable copy lives in `src/content`. Markdown bodies hold the prose, while short
 frontmatter blocks provide titles, summaries, dates, and draft status used automatically by the
 site's layouts and indexes.
+
+The complete route inventory, including dynamic content routes and private book-club endpoints, is
+in [ROUTES.md](ROUTES.md).
+
+The [SvelteKit 3 notes](SVELTEKIT-3-NOTES.md) record the prerelease migration decisions and features
+worth revisiting as the framework matures.
 
 ### Building
 

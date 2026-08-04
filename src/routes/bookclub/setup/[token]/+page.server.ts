@@ -1,8 +1,8 @@
 import { fail, redirect } from '@sveltejs/kit';
-import { createSession, setBookclubSessionCookie } from '$lib/server/bookclub/auth';
-import { getBookclubDatabase } from '$lib/server/bookclub/db';
-import { consumeInvitation, getInvitationByToken } from '$lib/server/bookclub/invitations';
-import { cleanupBookclubDataAfterLogin } from '$lib/server/bookclub/maintenance';
+import { createSession, setBookclubSessionCookie } from '#lib/server/bookclub/auth';
+import { getBookclubDatabase } from '#lib/server/bookclub/db';
+import { consumeInvitation, getInvitationByToken } from '#lib/server/bookclub/invitations';
+import { cleanupBookclubDataAfterLogin } from '#lib/server/bookclub/maintenance';
 import type { Actions, PageServerLoad } from './$types';
 
 function validateCode(value: FormDataEntryValue | null): value is string {
