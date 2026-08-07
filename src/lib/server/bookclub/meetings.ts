@@ -1,6 +1,8 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import { prepareChatAnnouncement } from './chat';
 
+export const MEETING_RECURRENCE_MS = 14 * 24 * 60 * 60 * 1000;
+
 export interface BookclubMeeting {
 	id: string;
 	scheduledFor: string;
@@ -11,6 +13,10 @@ interface MeetingRow {
 	id: string;
 	scheduled_for: string;
 	note: string | null;
+}
+
+interface PastMeetingRow extends MeetingRow {
+	scheduled_by_member_id: string;
 }
 
 function toMeeting(row: MeetingRow | null): BookclubMeeting | null {
@@ -89,4 +95,44 @@ export async function clearNextMeeting(database: D1Database, memberId?: string):
 				]
 			: [])
 	]);
+}
+
+// Meetings repeat on a fixed two-week rhythm, so a meeting whose time has passed is
+// rolled forward whole two-week periods until it lands in the future. This keeps the
+// stored UTC clock time identical, which matches how the schedule form records it.
+export async function reschedulePastMeetings(
+	database: D1Database,
+	now = new Date()
+): Promise<void> {
+	const pastMeetings = await database
+		.prepare(
+			`SELECT id, scheduled_for, note, scheduled_by_member_id
+			 FROM bookclub_meetings
+			 WHERE scheduled_for <= ?`
+		)
+		.bind(now.toISOString())
+		.all<PastMeetingRow>();
+
+	if (pastMeetings.results.length === 0) return;
+
+	const statements = pastMeetings.results.flatMap((meeting) => {
+		const scheduledTime = new Date(meeting.scheduled_for).getTime();
+		const periodsSince = Math.floor((now.getTime() - scheduledTime) / MEETING_RECURRENCE_MS);
+		const nextScheduledFor = new Date(
+			scheduledTime + (periodsSince + 1) * MEETING_RECURRENCE_MS
+		).toISOString();
+
+		return [
+			database
+				.prepare('UPDATE bookclub_meetings SET scheduled_for = ? WHERE id = ?')
+				.bind(nextScheduledFor, meeting.id),
+			prepareChatAnnouncement(
+				database,
+				meeting.scheduled_by_member_id,
+				`MEETING UPDATED: ${nextScheduledFor}${meeting.note ? ` (${meeting.note})` : ''} (auto-rescheduled)`
+			)
+		];
+	});
+
+	await database.batch(statements);
 }
