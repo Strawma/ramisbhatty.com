@@ -29,9 +29,22 @@
 			<p class="mt-4"><ModuleMark mark={data.module.mark} /></p>
 		{/if}
 		<p class="mt-5 text-lg leading-8 text-neutral-700">{data.module.summary}</p>
-		{#if data.module.topics.length}<p class="mt-5 text-sm text-neutral-600">
-				{data.module.topics.join(' · ')}
-			</p>{/if}
+		{#if data.module.skills.length || data.module.technologies.length}
+			<div class="mt-5 space-y-1 text-sm text-neutral-600">
+				{#if data.module.skills.length}
+					<p>
+						<span class="font-mono text-xs text-neutral-500">SKILLS</span>
+						{data.module.skills.join(' · ')}
+					</p>
+				{/if}
+				{#if data.module.technologies.length}
+					<p>
+						<span class="font-mono text-xs text-neutral-500">TECHNOLOGIES</span>
+						{data.module.technologies.join(' · ')}
+					</p>
+				{/if}
+			</div>
+		{/if}
 	</header>
 	<div class="mt-8 space-y-8"><Content /></div>
 	{#if data.projects.length}

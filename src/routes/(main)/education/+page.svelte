@@ -132,7 +132,7 @@
 								title: `${module.code}: ${module.title}`,
 								mark: module.mark,
 								summary: module.summary,
-								tags: module.topics,
+								tags: [...module.skills, ...module.technologies],
 								draft: module.status === 'draft'
 							}))}
 						/>
