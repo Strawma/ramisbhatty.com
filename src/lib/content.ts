@@ -32,7 +32,8 @@ export interface AcademicModule extends CollectionMetadata {
 	mark?: number;
 	credits: number;
 	summary: string;
-	topics: string[];
+	skills: string[];
+	technologies: string[];
 }
 
 export interface AcademicYearDetails {
@@ -292,7 +293,8 @@ const moduleDocuments = loadContent(
 		mark: optionalPercentage(metadata, 'mark', source),
 		credits: optionalPositiveNumber(metadata, 'credits', source) ?? 15,
 		summary: requireString(metadata, 'summary', source),
-		topics: stringList(metadata, 'topics', source),
+		skills: stringList(metadata, 'skills', source),
+		technologies: stringList(metadata, 'technologies', source),
 		...collectionMetadata(metadata, source)
 	}),
 	byOrderThen((module) => module.code)

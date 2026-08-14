@@ -35,6 +35,7 @@ import {
 	getArchive,
 	getDashboard,
 	getBookPollSummaries,
+	getDrawReplay,
 	saveSuggestion
 } from '../src/lib/server/bookclub/cycles';
 import {
@@ -42,6 +43,11 @@ import {
 	getNextMeeting,
 	scheduleNextMeeting
 } from '../src/lib/server/bookclub/meetings';
+import {
+	deleteOwnBookReview,
+	getBookReviews,
+	saveBookReview
+} from '../src/lib/server/bookclub/reviews';
 
 const database = env.BOOKCLUB_DB;
 
@@ -646,6 +652,81 @@ describe('book-club cycles and suggestions', () => {
 
 		expect(await getBookPollSummaries(database)).toEqual([]);
 	});
+
+	it('stores editable member reviews only after a book is archived and exposes a stable draw replay', async () => {
+		const admin = await createTestMember('Ramis', 'admin');
+		const member = await createTestMember('Alex');
+
+		await createCycle(database);
+		const firstCycleId = await getOpenCycleId();
+		await saveSuggestion(database, firstCycleId, admin.id, 1, 'Piranesi', 'Susanna Clarke');
+		await saveSuggestion(database, firstCycleId, member.id, 1, 'Dune', 'Frank Herbert');
+		await closeCycle(database, firstCycleId);
+		const firstBook = await drawCycle(database, firstCycleId, admin.id);
+
+		const replay = await getDrawReplay(database, firstCycleId);
+		expect(replay).toMatchObject({
+			cycleId: firstCycleId,
+			book: { id: firstBook.id }
+		});
+		expect(replay?.suggestions).toEqual(
+			expect.arrayContaining(
+				[
+					{ title: 'Piranesi', memberName: 'Ramis' },
+					{ title: 'Dune', memberName: 'Alex' }
+				].map((suggestion) => expect.objectContaining(suggestion))
+			)
+		);
+		expect(
+			replay?.suggestions.some((suggestion) => suggestion.id === replay.winnerSuggestionId)
+		).toBe(true);
+
+		await expect(
+			saveBookReview(database, firstBook.id, member.id, {
+				rating: 4,
+				body: 'Not archived yet.',
+				favouriteQuote: '',
+				spoiler: false,
+				verdict: ''
+			})
+		).rejects.toThrow('completed archived books');
+
+		await createCycle(database);
+		const secondCycleId = await getOpenCycleId();
+		await saveSuggestion(database, secondCycleId, admin.id, 2, 'Beloved', 'Toni Morrison');
+		await closeCycle(database, secondCycleId);
+		await drawCycle(database, secondCycleId, admin.id);
+
+		await saveBookReview(database, firstBook.id, member.id, {
+			rating: 4,
+			body: 'Strange and memorable.',
+			favouriteQuote: 'A favourite line.',
+			spoiler: true,
+			verdict: 'Worth discussing'
+		});
+		await saveBookReview(database, firstBook.id, member.id, {
+			rating: 5,
+			body: 'Even better after the meeting.',
+			favouriteQuote: '',
+			spoiler: false,
+			verdict: 'Excellent'
+		});
+
+		expect(await getBookReviews(database, firstBook.id)).toMatchObject([
+			{
+				memberId: member.id,
+				memberName: 'Alex',
+				rating: 5,
+				body: 'Even better after the meeting.',
+				favouriteQuote: null,
+				spoiler: false,
+				verdict: 'Excellent'
+			}
+		]);
+		expect(await deleteOwnBookReview(database, firstBook.id, admin.id)).toBe(false);
+		expect(await deleteOwnBookReview(database, firstBook.id, member.id)).toBe(true);
+		expect(await getBookReviews(database, firstBook.id)).toEqual([]);
+	});
 });
 
 describe('book-club chat and meetings', () => {
@@ -773,7 +854,7 @@ describe('book-club chat and meetings', () => {
 		);
 	});
 
-	it('enforces the chat cooldown and cleans messages older than seven days', async () => {
+	it('enforces the chat cooldown and cleans messages older than thirty days', async () => {
 		const member = await createTestMember('Ramis');
 		await createChatMessage(database, member.id, 'Fresh message');
 
@@ -789,7 +870,7 @@ describe('book-club chat and meetings', () => {
 				crypto.randomUUID(),
 				member.id,
 				'Old message',
-				new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString()
+				new Date(Date.now() - 31 * 24 * 60 * 60 * 1000).toISOString()
 			)
 			.run();
 
@@ -827,13 +908,6 @@ describe('book-club chat and meetings', () => {
 				'expired-token-hash',
 				new Date(now - 1_000).toISOString()
 			)
-			.run();
-		await database
-			.prepare(
-				`INSERT INTO bookclub_meetings (id, scheduled_for, scheduled_by_member_id)
-				 VALUES (?, ?, ?)`
-			)
-			.bind(crypto.randomUUID(), new Date(now - 1_000).toISOString(), admin.id)
 			.run();
 
 		await database.batch(
@@ -880,14 +954,51 @@ describe('book-club chat and meetings', () => {
 		).toMatchObject({ count: 0 });
 		expect(
 			await database
-				.prepare('SELECT COUNT(*) AS count FROM bookclub_meetings')
-				.first<{ count: number }>()
-		).toMatchObject({ count: 0 });
-		expect(
-			await database
 				.prepare('SELECT COUNT(*) AS count FROM bookclub_invitations')
 				.first<{ count: number }>()
 		).toMatchObject({ count: 51 });
+	});
+
+	it('reschedules past meetings two weeks forward during maintenance', async () => {
+		const admin = await createTestMember('Ramis', 'admin');
+		const now = Date.now();
+		const twoWeeks = 14 * 24 * 60 * 60 * 1000;
+		const meetingId = crypto.randomUUID();
+		const justPassed = new Date(now - 1_000);
+
+		await database
+			.prepare(
+				`INSERT INTO bookclub_meetings (id, scheduled_for, note, scheduled_by_member_id)
+				 VALUES (?, ?, ?, ?)`
+			)
+			.bind(meetingId, justPassed.toISOString(), 'Bring snacks', admin.id)
+			.run();
+
+		await cleanupBookclubData(database, new Date(now));
+
+		const firstReschedule = new Date(justPassed.getTime() + twoWeeks).toISOString();
+		expect(await getNextMeeting(database)).toMatchObject({
+			id: meetingId,
+			scheduledFor: firstReschedule,
+			note: 'Bring snacks'
+		});
+		expect((await getChatMessages(database, admin.id)).map((message) => message.body)).toContain(
+			`MEETING UPDATED: ${firstReschedule} (Bring snacks) (auto-rescheduled)`
+		);
+
+		// A meeting missed by several periods jumps straight to the next future slot.
+		const longPast = new Date(now - 29 * 24 * 60 * 60 * 1000);
+		await database
+			.prepare('UPDATE bookclub_meetings SET scheduled_for = ? WHERE id = ?')
+			.bind(longPast.toISOString(), meetingId)
+			.run();
+
+		await cleanupBookclubData(database, new Date(now));
+
+		expect(await getNextMeeting(database)).toMatchObject({
+			id: meetingId,
+			scheduledFor: new Date(longPast.getTime() + 3 * twoWeeks).toISOString()
+		});
 	});
 
 	it('stores one replaceable upcoming meeting', async () => {

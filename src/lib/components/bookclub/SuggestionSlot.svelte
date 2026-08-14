@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
-	import { untrack } from 'svelte';
+	import { tick, untrack } from 'svelte';
 
 	interface SuggestionValue {
 		id: string;
@@ -42,6 +42,8 @@
 		return async ({ update }) => {
 			try {
 				await update({ reset: false });
+				// Keep the form locked until server-provided suggestion props have reached local input state.
+				await tick();
 			} finally {
 				pending = false;
 			}

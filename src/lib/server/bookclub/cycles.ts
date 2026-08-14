@@ -73,6 +73,15 @@ export interface BookclubBookPollSummary {
 	reviewCount: number;
 }
 
+export interface BookclubDrawReplay {
+	cycleId: string;
+	drawId: string;
+	drawnAt: string;
+	winnerSuggestionId: string;
+	book: BookclubBook;
+	suggestions: BookclubSuggestion[];
+}
+
 interface CycleRow {
 	id: string;
 	status: BookclubCycle['status'];
@@ -456,6 +465,73 @@ export async function getArchiveEntry(
 		.first<ArchiveRow>();
 
 	return row ? toArchiveEntry(row) : null;
+}
+
+export async function getDrawReplay(
+	database: D1Database,
+	cycleId: string
+): Promise<BookclubDrawReplay | null> {
+	const draw = await database
+		.prepare(
+			`SELECT c.id AS cycle_id, d.id AS draw_id, d.suggestion_id, d.drawn_at,
+			        b.id AS book_id, b.title AS book_title, b.author AS book_author,
+			        b.cover_url AS book_cover_url, b.started_at AS book_started_at,
+			        b.completed_at AS book_completed_at
+			 FROM bookclub_cycles AS c
+			 INNER JOIN bookclub_draws AS d ON d.cycle_id = c.id
+			 INNER JOIN bookclub_books AS b ON b.id = c.book_id
+			 WHERE c.id = ? AND c.status = 'drawn'
+			 LIMIT 1`
+		)
+		.bind(cycleId)
+		.first<{
+			cycle_id: string;
+			draw_id: string;
+			suggestion_id: string;
+			drawn_at: string;
+			book_id: string;
+			book_title: string;
+			book_author: string;
+			book_cover_url: string | null;
+			book_started_at: string | null;
+			book_completed_at: string | null;
+		}>();
+
+	if (!draw) return null;
+
+	const suggestions = await database
+		.prepare(
+			`SELECT s.id, s.position, s.title, s.author, s.member_id, m.name AS member_name
+			 FROM bookclub_suggestions AS s
+			 INNER JOIN bookclub_members AS m ON m.id = s.member_id
+			 WHERE s.cycle_id = ?
+			 ORDER BY s.id`
+		)
+		.bind(cycleId)
+		.all<SuggestionRow>();
+
+	return {
+		cycleId: draw.cycle_id,
+		drawId: draw.draw_id,
+		drawnAt: draw.drawn_at,
+		winnerSuggestionId: draw.suggestion_id,
+		book: {
+			id: draw.book_id,
+			title: draw.book_title,
+			author: draw.book_author,
+			coverUrl: draw.book_cover_url,
+			startedAt: draw.book_started_at,
+			completedAt: draw.book_completed_at
+		},
+		suggestions: suggestions.results.map((suggestion) => ({
+			id: suggestion.id,
+			position: suggestion.position,
+			title: suggestion.title,
+			author: suggestion.author,
+			memberId: suggestion.member_id,
+			memberName: suggestion.member_name
+		}))
+	};
 }
 
 export async function getBookPollSummaries(

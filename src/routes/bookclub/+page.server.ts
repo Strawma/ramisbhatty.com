@@ -1,4 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
+import { resolve } from '$app/paths';
 import { buildTimestamp } from '#lib/data/build-info';
 import { requireBookclubMember } from '#lib/server/bookclub/auth';
 import {
@@ -383,6 +384,6 @@ export const actions: Actions = {
 			// The book remains usable without an automatically matched cover.
 		}
 
-		throw redirect(303, '/bookclub#current-book');
+		throw redirect(303, resolve(`bookclub/draw/${cycle.id}`));
 	}
 };

@@ -27,6 +27,7 @@
 
 <svelte:head>
 	<title>Silly | Ramis Bhatty</title>
+	<link rel="icon" href="/silly/favicon.ico" />
 	<meta
 		name="description"
 		content="A deliberately excessive retro corner of Ramis Bhatty's personal website."

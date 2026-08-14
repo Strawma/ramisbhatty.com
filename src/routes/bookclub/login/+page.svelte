@@ -13,9 +13,7 @@
 	{/if}
 </svelte:head>
 
-<main
-	class="flex min-h-screen items-center justify-center bg-[#008080] p-3 font-mono text-sm text-black sm:p-6"
->
+<main class="flex min-h-screen items-center justify-center p-3 font-mono text-sm text-black sm:p-6">
 	<section class="w-full max-w-lg border-4 border-black bg-[#d4d0c8] shadow-[6px_6px_0_#000]">
 		<header
 			class="flex items-center justify-between gap-3 border-b-4 border-black bg-[#000080] px-3 py-2 font-bold text-white"

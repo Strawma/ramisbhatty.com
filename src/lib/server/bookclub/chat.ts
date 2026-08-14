@@ -3,7 +3,7 @@ import { isReadableChatColor } from './colors';
 
 const CHAT_MESSAGE_LIMIT = 50;
 const CHAT_MESSAGE_COOLDOWN_MS = 5_000;
-export const CHAT_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
+export const CHAT_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 export const CHAT_PRESENCE_WINDOW_MS = 20_000;
 
 export class ChatCooldownError extends Error {

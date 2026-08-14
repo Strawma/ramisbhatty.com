@@ -1,5 +1,6 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import { CHAT_RETENTION_MS } from './chat';
+import { reschedulePastMeetings } from './meetings';
 
 const INVITATION_DISPLAY_LIMIT = 50;
 
@@ -7,10 +8,11 @@ export async function cleanupBookclubData(database: D1Database, now = new Date()
 	const currentTime = now.toISOString();
 	const chatCutoff = new Date(now.getTime() - CHAT_RETENTION_MS).toISOString();
 
+	await reschedulePastMeetings(database, now);
+
 	await database.batch([
 		database.prepare('DELETE FROM bookclub_chat_messages WHERE created_at < ?').bind(chatCutoff),
 		database.prepare('DELETE FROM bookclub_sessions WHERE expires_at <= ?').bind(currentTime),
-		database.prepare('DELETE FROM bookclub_meetings WHERE scheduled_for <= ?').bind(currentTime),
 		database
 			.prepare(
 				`DELETE FROM bookclub_invitations
