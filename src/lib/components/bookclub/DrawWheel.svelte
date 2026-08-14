@@ -97,38 +97,41 @@
 				class="absolute top-0 left-1/2 z-10 h-0 w-0 -translate-x-1/2 border-x-[18px] border-t-[32px] border-x-transparent border-t-black drop-shadow-[2px_2px_0_#fff]"
 				aria-hidden="true"
 			></div>
-			<svg
-				viewBox="0 0 100 100"
-				class="size-full drop-shadow-[6px_6px_0_#000]"
-				style:transform={`rotate(${spinning ? wheel.rotation : 0}deg)`}
-				style:transition-duration={`${spinning ? wheel.duration : 0}ms`}
-				ontransitionend={finishSpin}
-				role="img"
-				aria-label={`${wheel.ordered.length} suggestion tickets spinning toward the saved result`}
-			>
-				<g class="wheel">
-					{#each wheel.ordered as suggestion, index (suggestion.id)}
-						<path
-							d={segmentPath(index, wheel.ordered.length)}
-							fill={colors[index % colors.length]}
-							stroke="black"
-							stroke-width="1"
-						/>
-						{@const label = labelPoint(index, wheel.ordered.length)}
-						<text
-							x={label.x}
-							y={label.y}
-							text-anchor="middle"
-							dominant-baseline="central"
-							font-size={wheel.ordered.length > 12 ? 5 : 7}
-							font-weight="900"
-							fill="black">{index + 1}</text
-						>
-					{/each}
-					<circle cx="50" cy="50" r="8" fill="#d4d0c8" stroke="black" stroke-width="2" />
-					<circle cx="50" cy="50" r="2.5" fill="#800080" stroke="black" stroke-width="1" />
-				</g>
-			</svg>
+			<!-- The stationary housing owns the shadow so it does not rotate with the wheel artwork. -->
+			<div class="absolute inset-0 rounded-full shadow-[6px_6px_0_#000]">
+				<svg
+					viewBox="0 0 100 100"
+					class="size-full"
+					style:transform={`rotate(${spinning ? wheel.rotation : 0}deg)`}
+					style:transition-duration={`${spinning ? wheel.duration : 0}ms`}
+					ontransitionend={finishSpin}
+					role="img"
+					aria-label={`${wheel.ordered.length} suggestion tickets spinning toward the saved result`}
+				>
+					<g class="wheel">
+						{#each wheel.ordered as suggestion, index (suggestion.id)}
+							<path
+								d={segmentPath(index, wheel.ordered.length)}
+								fill={colors[index % colors.length]}
+								stroke="black"
+								stroke-width="1"
+							/>
+							{@const label = labelPoint(index, wheel.ordered.length)}
+							<text
+								x={label.x}
+								y={label.y}
+								text-anchor="middle"
+								dominant-baseline="central"
+								font-size={wheel.ordered.length > 12 ? 5 : 7}
+								font-weight="900"
+								fill="black">{index + 1}</text
+							>
+						{/each}
+						<circle cx="50" cy="50" r="8" fill="#d4d0c8" stroke="black" stroke-width="2" />
+						<circle cx="50" cy="50" r="2.5" fill="#800080" stroke="black" stroke-width="1" />
+					</g>
+				</svg>
+			</div>
 		</div>
 		<button
 			type="button"

@@ -206,7 +206,7 @@
 										{/each}
 									</select>
 
-									<label for="verdict" class="mt-3 block font-bold">SHORT VERDICT</label>
+									<label for="verdict" class="mt-3 block font-bold">SHORT VERDICT (OPTIONAL)</label>
 									<input
 										id="verdict"
 										name="verdict"
@@ -215,7 +215,9 @@
 										class="mt-1 w-full border-2 border-black bg-white px-2 py-2"
 									/>
 
-									<label for="review-body" class="mt-3 block font-bold">REVIEW / NOTES</label>
+									<label for="review-body" class="mt-3 block font-bold"
+										>REVIEW / NOTES (OPTIONAL)</label
+									>
 									<textarea
 										id="review-body"
 										name="body"
@@ -224,7 +226,9 @@
 										value={data.myReview?.body ?? ''}
 										class="mt-1 w-full border-2 border-black bg-white px-2 py-2"></textarea>
 
-									<label for="favourite-quote" class="mt-3 block font-bold">FAVOURITE QUOTE</label>
+									<label for="favourite-quote" class="mt-3 block font-bold"
+										>FAVOURITE QUOTE (OPTIONAL)</label
+									>
 									<textarea
 										id="favourite-quote"
 										name="favouriteQuote"
