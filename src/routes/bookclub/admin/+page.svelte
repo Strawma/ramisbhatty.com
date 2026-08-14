@@ -38,7 +38,7 @@
 	/>
 </svelte:head>
 
-<main class="min-h-screen bg-[#008080] p-2 font-mono text-sm text-black sm:p-4">
+<main class="min-h-screen p-2 font-mono text-sm text-black sm:p-4">
 	<div class="mx-auto max-w-7xl border-4 border-black bg-[#d4d0c8] shadow-[6px_6px_0_#000]">
 		<header
 			class="flex flex-wrap items-center justify-between gap-2 border-b-4 border-black bg-[#000080] px-3 py-2 font-bold text-white"
