@@ -27,6 +27,8 @@ function cleanupTestMembers(): void {
 	const memberList = MEMBER_IDS.map((id) => `'${id}'`).join(', ');
 	executeLocalSql(
 		`DELETE FROM bookclub_chat_messages WHERE member_id IN (${memberList});
+		 DELETE FROM bookclub_reviews WHERE member_id IN (${memberList});
+		 DELETE FROM bookclub_suggestions WHERE member_id IN (${memberList});
 		 DELETE FROM bookclub_sessions WHERE member_id IN (${memberList});
 		 DELETE FROM bookclub_members WHERE id IN (${memberList})`
 	);
