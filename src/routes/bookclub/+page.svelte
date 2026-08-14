@@ -392,6 +392,14 @@
 												author.
 											{/if}
 										</p>
+										{#if data.dashboard.currentCycle}
+											<a
+												href={resolve(`bookclub/draw/${data.dashboard.currentCycle.id}`)}
+												class="mt-4 inline-block border-2 border-black bg-[#ffffcc] px-3 py-2 font-bold underline shadow-[2px_2px_0_#000] hover:bg-white focus:ring-2 focus:ring-[#000080] focus:outline-none"
+											>
+												REPLAY DRAW &gt;
+											</a>
+										{/if}
 									</div>
 								</div>
 							</section>

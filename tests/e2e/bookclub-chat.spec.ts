@@ -156,6 +156,47 @@ test('suggestion slots add, update, and clear reliably on a narrow screen', asyn
 	await memberContext.close();
 });
 
+test('members review archived books and replay the saved draw with submitter names', async ({
+	browser
+}) => {
+	const { aliceToken } = getTestSessions();
+	const memberContext = await createSessionContext(browser, aliceToken);
+	const memberPage = await memberContext.newPage();
+	await memberPage.emulateMedia({ reducedMotion: 'reduce' });
+
+	await memberPage.goto('/bookclub/archive/bookclub-e2e-archive-cycle');
+	await memberPage.getByLabel('RATING').selectOption('4');
+	await memberPage.getByLabel('SHORT VERDICT').fill('A browser-tested verdict');
+	await memberPage.getByLabel('REVIEW / NOTES').fill('A useful set of private club notes.');
+	await memberPage.getByLabel('FAVOURITE QUOTE').fill('A memorable browser-tested line.');
+	await memberPage.getByLabel('THIS REVIEW CONTAINS SPOILERS').check();
+	// The value checks also establish that client hydration has finished before the enhanced form
+	// serializes the fields. This matters on the fast local server where hydration can race the fills.
+	await expect(memberPage.getByLabel('RATING')).toHaveValue('4');
+	await expect(memberPage.getByLabel('SHORT VERDICT')).toHaveValue('A browser-tested verdict');
+	await expect(memberPage.getByLabel('THIS REVIEW CONTAINS SPOILERS')).toBeChecked();
+	await memberPage.getByRole('button', { name: 'SAVE REVIEW' }).click();
+	await expect(memberPage.getByText('Your review has been saved.')).toBeVisible();
+	await expect(memberPage.getByText('4.0 / 5')).toBeVisible();
+	await expect(memberPage.getByText('SHOW SPOILERS')).toBeVisible();
+
+	await memberPage.getByRole('link', { name: 'REPLAY DRAW' }).click();
+	await expect(memberPage).toHaveURL('/bookclub/draw/bookclub-e2e-archive-cycle');
+	await expect(memberPage.getByText('Archived Browser Book', { exact: true }).last()).toBeVisible();
+	await expect(memberPage.getByText('TICKET 1 // E2E ALICE')).toBeVisible();
+	await expect(memberPage.getByText('DRAW COMPLETE // RESULT CONFIRMED')).toBeVisible();
+
+	await memberPage.goto('/bookclub/draw/bookclub-e2e-current-cycle');
+	const ticketLedger = memberPage.locator('ol').innerText();
+	await expect(memberPage.getByText(/TICKET \d+ \/\/ E2E ALICE/)).toBeVisible();
+	await expect(memberPage.getByText(/TICKET \d+ \/\/ E2E BOB/)).toBeVisible();
+	const firstOrder = await ticketLedger;
+	await memberPage.reload();
+	await expect(memberPage.locator('ol')).toHaveText(firstOrder);
+
+	await memberContext.close();
+});
+
 test('desktop dashboard windows drag, resize, stack, minimize, and persist', async ({
 	browser
 }) => {

@@ -35,6 +35,7 @@ import {
 	getArchive,
 	getDashboard,
 	getBookPollSummaries,
+	getDrawReplay,
 	saveSuggestion
 } from '../src/lib/server/bookclub/cycles';
 import {
@@ -42,6 +43,11 @@ import {
 	getNextMeeting,
 	scheduleNextMeeting
 } from '../src/lib/server/bookclub/meetings';
+import {
+	deleteOwnBookReview,
+	getBookReviews,
+	saveBookReview
+} from '../src/lib/server/bookclub/reviews';
 
 const database = env.BOOKCLUB_DB;
 
@@ -645,6 +651,81 @@ describe('book-club cycles and suggestions', () => {
 		).toEqual({ reviews: 0, draws: 0, suggestions: 0, cycles: 0, books: 0 });
 
 		expect(await getBookPollSummaries(database)).toEqual([]);
+	});
+
+	it('stores editable member reviews only after a book is archived and exposes a stable draw replay', async () => {
+		const admin = await createTestMember('Ramis', 'admin');
+		const member = await createTestMember('Alex');
+
+		await createCycle(database);
+		const firstCycleId = await getOpenCycleId();
+		await saveSuggestion(database, firstCycleId, admin.id, 1, 'Piranesi', 'Susanna Clarke');
+		await saveSuggestion(database, firstCycleId, member.id, 1, 'Dune', 'Frank Herbert');
+		await closeCycle(database, firstCycleId);
+		const firstBook = await drawCycle(database, firstCycleId, admin.id);
+
+		const replay = await getDrawReplay(database, firstCycleId);
+		expect(replay).toMatchObject({
+			cycleId: firstCycleId,
+			book: { id: firstBook.id }
+		});
+		expect(replay?.suggestions).toEqual(
+			expect.arrayContaining(
+				[
+					{ title: 'Piranesi', memberName: 'Ramis' },
+					{ title: 'Dune', memberName: 'Alex' }
+				].map((suggestion) => expect.objectContaining(suggestion))
+			)
+		);
+		expect(
+			replay?.suggestions.some((suggestion) => suggestion.id === replay.winnerSuggestionId)
+		).toBe(true);
+
+		await expect(
+			saveBookReview(database, firstBook.id, member.id, {
+				rating: 4,
+				body: 'Not archived yet.',
+				favouriteQuote: '',
+				spoiler: false,
+				verdict: ''
+			})
+		).rejects.toThrow('completed archived books');
+
+		await createCycle(database);
+		const secondCycleId = await getOpenCycleId();
+		await saveSuggestion(database, secondCycleId, admin.id, 2, 'Beloved', 'Toni Morrison');
+		await closeCycle(database, secondCycleId);
+		await drawCycle(database, secondCycleId, admin.id);
+
+		await saveBookReview(database, firstBook.id, member.id, {
+			rating: 4,
+			body: 'Strange and memorable.',
+			favouriteQuote: 'A favourite line.',
+			spoiler: true,
+			verdict: 'Worth discussing'
+		});
+		await saveBookReview(database, firstBook.id, member.id, {
+			rating: 5,
+			body: 'Even better after the meeting.',
+			favouriteQuote: '',
+			spoiler: false,
+			verdict: 'Excellent'
+		});
+
+		expect(await getBookReviews(database, firstBook.id)).toMatchObject([
+			{
+				memberId: member.id,
+				memberName: 'Alex',
+				rating: 5,
+				body: 'Even better after the meeting.',
+				favouriteQuote: null,
+				spoiler: false,
+				verdict: 'Excellent'
+			}
+		]);
+		expect(await deleteOwnBookReview(database, firstBook.id, admin.id)).toBe(false);
+		expect(await deleteOwnBookReview(database, firstBook.id, member.id)).toBe(true);
+		expect(await getBookReviews(database, firstBook.id)).toEqual([]);
 	});
 });
 
