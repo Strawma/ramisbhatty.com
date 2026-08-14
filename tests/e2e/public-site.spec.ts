@@ -38,6 +38,7 @@ for (const route of mainRoutes) {
 		await expect(page).toHaveTitle(route.title);
 		await expect(page.getByRole('heading', { level: 1, name: route.heading })).toBeVisible();
 		await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /\S+/);
+		await expect(page.locator('link[rel="icon"]')).toHaveCount(0);
 
 		const accessibility = await new AxeBuilder({ page }).analyze();
 		expect(accessibility.violations).toEqual([]);
@@ -154,6 +155,7 @@ test('the silly route remains separate, titled, and usable on mobile', async ({ 
 
 	expect(response?.ok()).toBe(true);
 	await expect(page).toHaveTitle(/^Silly \| Ramis Bhatty$/);
+	await expect(page.locator('link[rel="icon"]')).toHaveAttribute('href', '/silly/favicon.ico');
 	await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 	await expect(page.locator('canvas')).toHaveAttribute('aria-hidden', 'true');
 
@@ -174,6 +176,15 @@ test('the silly route loads its bundled pixel font', async ({ page }) => {
 
 	await page.goto('/silly');
 	await fontResponse;
+});
+
+test('the retro favicon asset is available only beneath the silly route', async ({ request }) => {
+	const rootIcon = await request.get('/favicon.ico');
+	const sillyIcon = await request.get('/silly/favicon.ico');
+
+	expect(rootIcon.status()).toBe(404);
+	expect(sillyIcon.ok()).toBe(true);
+	expect(sillyIcon.headers()['content-type']).toContain('image/');
 });
 
 test('the streaming scene respects utility indexing and reduced-motion preferences', async ({
