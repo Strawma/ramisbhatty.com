@@ -20,8 +20,8 @@ test('local preview link opens an authenticated dashboard', async ({ page }) => 
 	await expect(page.getByRole('heading', { name: 'Hello, Local Preview.' })).toBeVisible();
 });
 
-async function createSessionContext(browser: Browser, token: string) {
-	const context = await browser.newContext();
+async function createSessionContext(browser: Browser, token: string, javaScriptEnabled = true) {
+	const context = await browser.newContext({ javaScriptEnabled });
 	await context.addCookies([
 		{
 			name: 'bookclub_session',
@@ -179,6 +179,18 @@ test('members review archived books and replay the saved draw with submitter nam
 	await expect(memberPage.getByText('Your review has been saved.')).toBeVisible();
 	await expect(memberPage.getByText('4.0 / 5')).toBeVisible();
 	await expect(memberPage.getByText('SHOW SPOILERS')).toBeVisible();
+
+	// Saved textarea content must be present in the server response, not added during hydration.
+	const noScriptContext = await createSessionContext(browser, aliceToken, false);
+	const noScriptPage = await noScriptContext.newPage();
+	await noScriptPage.goto('/bookclub/archive/bookclub-e2e-archive-cycle');
+	await expect(noScriptPage.getByLabel('REVIEW / NOTES')).toHaveValue(
+		'A useful set of private club notes.'
+	);
+	await expect(noScriptPage.getByLabel('FAVOURITE QUOTE')).toHaveValue(
+		'A memorable browser-tested line.'
+	);
+	await noScriptContext.close();
 
 	await memberPage.getByRole('link', { name: 'REPLAY DRAW' }).click();
 	await expect(memberPage).toHaveURL('/bookclub/draw/bookclub-e2e-archive-cycle');
