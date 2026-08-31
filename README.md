@@ -78,6 +78,10 @@ The deliberately retro `/silly` section also contains a fictional biography at
 with the same visible HTML to visitors and crawlers. Its copy and metadata live in
 `src/content/pages/who-is-ramis-bhatty.md`; the route component only supplies the retro presentation.
 
+Crawler discovery files are generated at `/sitemap.xml` and `/robots.txt`. The sitemap includes
+published content and indexable public sections, while excluding drafts and utility routes carrying
+`noindex` metadata. The canonical production origin is configured in `src/lib/data/config.ts`.
+
 ### Building
 
 To create a production version of your app:

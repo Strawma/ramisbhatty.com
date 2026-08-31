@@ -157,10 +157,7 @@ test('the silly route remains separate, titled, and usable on mobile', async ({ 
 	await expect(page).toHaveTitle(/^Silly \| Ramis Bhatty$/);
 	await expect(page.locator('link[rel="icon"]')).toHaveAttribute('href', '/silly/favicon.ico');
 	await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-	await expect(page.getByRole('link', { name: 'Comprehensive Biography' })).toHaveAttribute(
-		'href',
-		'/silly/who-is-ramis-bhatty'
-	);
+	await expect(page.locator('a[href="/silly/who-is-ramis-bhatty"]')).toBeVisible();
 	await expect(page.locator('canvas')).toHaveAttribute('aria-hidden', 'true');
 
 	const dimensions = await page.evaluate(() => ({
@@ -193,11 +190,16 @@ test('the dubious biography is public, crawlable, and usable on mobile', async (
 	await expect(page).toHaveTitle(/^Who Is Ramis Bhatty\? \| A Comprehensive Biography$/);
 	await expect(page.locator('meta[name="description"]')).toHaveAttribute(
 		'content',
-		/esteemed pirate captain.*2,000 years old.*madly in love with you/
+		/experienced pirate captain.*2,000 years old.*madly in love with you/
+	);
+	await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+		'href',
+		'https://ramisbhatty.com/silly/who-is-ramis-bhatty'
 	);
 	await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
 	await expect(page.getByRole('heading', { level: 1, name: 'Who Is Ramis Bhatty?' })).toBeVisible();
 	await expect(page.getByText('Approximately 2,000 years, subject to carbon dating')).toBeVisible();
+	await expect(page.getByText(/convenience of crawlers/i)).toHaveCount(0);
 	await expect(page.getByRole('link', { name: '← Silly homepage' })).toHaveAttribute(
 		'href',
 		'/silly'
@@ -212,6 +214,29 @@ test('the dubious biography is public, crawlable, and usable on mobile', async (
 	const accessibility = await new AxeBuilder({ page }).disableRules(['color-contrast']).analyze();
 	expect(accessibility.violations).toEqual([]);
 	expect(runtimeErrors).toEqual([]);
+});
+
+test('crawler discovery files advertise only indexable public routes', async ({ request }) => {
+	const robots = await request.get('/robots.txt');
+	expect(robots.ok()).toBe(true);
+	expect(robots.headers()['content-type']).toContain('text/plain');
+	expect(await robots.text()).toBe(
+		'User-agent: *\nAllow: /\n\nSitemap: https://ramisbhatty.com/sitemap.xml\n'
+	);
+
+	const sitemap = await request.get('/sitemap.xml');
+	expect(sitemap.ok()).toBe(true);
+	expect(sitemap.headers()['content-type']).toContain('application/xml');
+	const sitemapBody = await sitemap.text();
+	expect(sitemapBody).toContain('<loc>https://ramisbhatty.com/silly/who-is-ramis-bhatty</loc>');
+	expect(sitemapBody).toContain('<loc>https://ramisbhatty.com/education/comp1201</loc>');
+	expect(sitemapBody).toContain(
+		'<loc>https://ramisbhatty.com/work/experience/research-internship</loc>'
+	);
+	expect(sitemapBody).not.toContain('<loc>https://ramisbhatty.com/blog</loc>');
+	expect(sitemapBody).not.toContain('module-project-placeholder');
+	expect(sitemapBody).not.toContain('/bookclub');
+	expect(sitemapBody).not.toContain('/streaming');
 });
 
 test('the retro favicon asset is available only beneath the silly route', async ({ request }) => {

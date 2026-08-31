@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { pageContent } from '#lib/content';
-	import { nav } from '#lib/data/config';
+	import { nav, site } from '#lib/data/config';
 
 	let { data } = $props();
 	const Content = pageContent['who-is-ramis-bhatty'];
@@ -10,6 +10,7 @@
 <svelte:head>
 	<title>{data.page.title} | A Comprehensive Biography</title>
 	<link rel="icon" href="/silly/favicon.ico" />
+	<link rel="canonical" href={`${site.origin}/silly/who-is-ramis-bhatty`} />
 	<meta name="description" content={data.page.description} />
 </svelte:head>
 
