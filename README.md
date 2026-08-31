@@ -73,6 +73,11 @@ The main site's editable copy lives in `src/content`. Markdown bodies hold the p
 frontmatter blocks provide titles, summaries, dates, and draft status used automatically by the
 site's layouts and indexes.
 
+The deliberately retro `/silly` section also contains a fictional biography at
+`/silly/who-is-ramis-bhatty`. It is a regular public page, linked from the silly homepage and served
+with the same visible HTML to visitors and crawlers. Its copy and metadata live in
+`src/content/pages/who-is-ramis-bhatty.md`; the route component only supplies the retro presentation.
+
 ### Building
 
 To create a production version of your app:

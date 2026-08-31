@@ -16,7 +16,7 @@
 	<!-- Visitor counter -->
 	<div class="retro-panel mb-4 bg-white p-2 text-center">
 		<span class="mr-2 inline-block h-4 w-4 animate-pulse bg-red-500"></span>
-		<span class="font-bold text-red-600">FICTIONAL VISITOR NUMBER:</span>
+		<span class="font-bold text-red-600">TOTALLY REAL VISITOR NUMBER:</span>
 		<span class="mx-2 bg-black px-3 py-1 font-mono text-xl text-lime-400">
 			{visitorCount.toLocaleString()}
 		</span>

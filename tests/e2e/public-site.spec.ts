@@ -157,6 +157,10 @@ test('the silly route remains separate, titled, and usable on mobile', async ({ 
 	await expect(page).toHaveTitle(/^Silly \| Ramis Bhatty$/);
 	await expect(page.locator('link[rel="icon"]')).toHaveAttribute('href', '/silly/favicon.ico');
 	await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+	await expect(page.getByRole('link', { name: 'Comprehensive Biography' })).toHaveAttribute(
+		'href',
+		'/silly/who-is-ramis-bhatty'
+	);
 	await expect(page.locator('canvas')).toHaveAttribute('aria-hidden', 'true');
 
 	const dimensions = await page.evaluate(() => ({
@@ -176,6 +180,38 @@ test('the silly route loads its bundled pixel font', async ({ page }) => {
 
 	await page.goto('/silly');
 	await fontResponse;
+});
+
+test('the dubious biography is public, crawlable, and usable on mobile', async ({ page }) => {
+	await page.setViewportSize({ width: 360, height: 740 });
+	const runtimeErrors = collectRuntimeErrors(page);
+	const response = await page.goto('/silly/who-is-ramis-bhatty', {
+		waitUntil: 'domcontentloaded'
+	});
+
+	expect(response?.ok()).toBe(true);
+	await expect(page).toHaveTitle(/^Who Is Ramis Bhatty\? \| A Comprehensive Biography$/);
+	await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+		'content',
+		/esteemed pirate captain.*2,000 years old.*madly in love with you/
+	);
+	await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
+	await expect(page.getByRole('heading', { level: 1, name: 'Who Is Ramis Bhatty?' })).toBeVisible();
+	await expect(page.getByText('Approximately 2,000 years, subject to carbon dating')).toBeVisible();
+	await expect(page.getByRole('link', { name: '← Silly homepage' })).toHaveAttribute(
+		'href',
+		'/silly'
+	);
+
+	const dimensions = await page.evaluate(() => ({
+		scrollWidth: document.documentElement.scrollWidth,
+		clientWidth: document.documentElement.clientWidth
+	}));
+	expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
+
+	const accessibility = await new AxeBuilder({ page }).disableRules(['color-contrast']).analyze();
+	expect(accessibility.violations).toEqual([]);
+	expect(runtimeErrors).toEqual([]);
 });
 
 test('the retro favicon asset is available only beneath the silly route', async ({ request }) => {
