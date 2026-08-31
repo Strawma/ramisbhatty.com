@@ -27,16 +27,11 @@
 		return () => clearInterval(interval);
 	});
 
-	interface NavLink {
-		label: string;
-		href: string;
-		internal: boolean;
-	}
-
-	const navLinks: NavLink[] = [
+	const navLinks = [
 		{ label: 'Home', href: nav.home, internal: true },
+		{ label: 'About Me', href: 'silly/who-is-ramis-bhatty', internal: true },
 		{ label: 'legacy', href: nav.legacy, internal: false }
-	];
+	] as const;
 </script>
 
 <aside class="space-y-4 md:col-span-1">
@@ -47,7 +42,7 @@
 			{#each navLinks as link (link.label)}
 				<li>
 					{#if link.internal}
-						<a href={resolve(nav.home)} class="text-blue-600 underline hover:text-red-600">
+						<a href={resolve(link.href)} class="text-blue-600 underline hover:text-red-600">
 							> {link.label}
 						</a>
 					{:else}
