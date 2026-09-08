@@ -30,7 +30,7 @@
 	const navLinks = [
 		{ label: 'Home', href: nav.home, internal: true },
 		{ label: 'About Me', href: 'silly/who-is-ramis-bhatty', internal: true },
-		{ label: 'legacy', href: nav.legacy, internal: false }
+		{ label: 'legacy', href: nav.legacy, internal: true }
 	] as const;
 </script>
 
