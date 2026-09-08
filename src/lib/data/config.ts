@@ -21,7 +21,6 @@ export const nav = {
 	interests: 'interests',
 	cv: 'cv',
 	silly: 'silly',
-	legacy: 'https://legacy.ramisbhatty.com'
 } as const;
 
 export const documents = {

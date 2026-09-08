@@ -31,6 +31,7 @@ export const GET: RequestHandler = () => {
 		'/education',
 		'/silly',
 		'/silly/who-is-ramis-bhatty',
+		'/silly/legacy',
 		...visibleExperience().map((entry) => `/work/experience/${entry.slug}`),
 		...visibleProjects().map((project) => `/work/${project.slug}`),
 		...visibleModules().map((module) => `/education/${module.slug}`)
