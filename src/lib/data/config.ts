@@ -21,6 +21,7 @@ export const nav = {
 	interests: 'interests',
 	cv: 'cv',
 	silly: 'silly',
+	legacy: 'silly/legacy'
 } as const;
 
 export const documents = {
