@@ -37,6 +37,12 @@ pnpm update
 To request newer major versions as well, use `pnpm update --latest` and run the validation
 commands before committing the resulting lockfile.
 
+Security overrides in `pnpm-workspace.yaml` currently raise Miniflare's pinned `sharp` and
+`undici` dependencies to patched releases. They apply only to affected versions and allow
+compatible updates. Recheck them with `pnpm why sharp undici` and `pnpm audit` when upgrading
+Wrangler or the Cloudflare Workers test pool; remove them once upstream dependencies no longer
+need them.
+
 ### Updating
 
 Update using:

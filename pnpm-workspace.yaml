@@ -11,10 +11,7 @@ onlyBuiltDependencies:
   - workerd
 
 overrides:
-  'static-eval@<=2.0.1': '>=2.0.2'
-  'static-eval@<2.0.0': '>=2.0.0'
-  'minimist@<0.2.1': '>=0.2.1'
-  'minimist@<0.2.4': '>=0.2.4'
-  'cookie@<0.7.0': '>=0.7.0 <2.0.0'
-  'sharp@<0.35.0': '0.35.3'
-  undici: 7.29.0
+  # Miniflare pins an affected release; require the libheif security fix.
+  'sharp@<0.35.4': '^0.35.4'
+  # The Workers test pool's Miniflare still pins vulnerable undici 7.28.0.
+  'undici@>=7.0.0 <7.29.0': '^7.29.0'
