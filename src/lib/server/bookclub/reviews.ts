@@ -81,14 +81,8 @@ async function assertBookIsArchived(database: D1Database, bookId: string): Promi
 			`SELECT b.id
 			 FROM bookclub_books AS b
 			 INNER JOIN bookclub_cycles AS c ON c.book_id = b.id
-			 WHERE b.id = ? AND b.completed_at IS NOT NULL AND c.status = 'drawn'
-			   AND c.id != COALESCE(
-				   (SELECT id FROM bookclub_cycles
-				    WHERE status = 'drawn'
-				    ORDER BY created_at DESC, id DESC
-				    LIMIT 1),
-				   ''
-			   )
+			 WHERE b.id = ? AND b.started_at IS NOT NULL
+			   AND b.completed_at IS NOT NULL AND c.status = 'drawn'
 			 LIMIT 1`
 		)
 		.bind(bookId)

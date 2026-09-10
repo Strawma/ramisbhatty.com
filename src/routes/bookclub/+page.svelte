@@ -45,6 +45,12 @@
 		)
 	);
 
+	$effect(() => {
+		// An enhanced start replaces the book without remounting this page.
+		void data.dashboard.currentBook?.id;
+		coverFailed = false;
+	});
+
 	onMount(() => {
 		timezoneOffset = new Date().getTimezoneOffset();
 		const preferences = loadDashboardPreferences();
@@ -270,7 +276,7 @@
 							<div class="border-2 border-black bg-white p-3">
 								<p class="text-xs font-bold text-[#000080]">CURRENT BOOK</p>
 								<p class="mt-2 font-bold">
-									{data.dashboard.currentBook?.title ?? 'No book selected yet.'}
+									{data.dashboard.currentBook?.title ?? 'No book started yet.'}
 								</p>
 							</div>
 							<div class="border-2 border-black bg-white p-3">
@@ -283,6 +289,36 @@
 								<p class="mt-2 font-bold">{systemMessage}</p>
 							</div>
 						</div>
+
+						{#if data.dashboard.upcomingCycle?.book}
+							<section id="upcoming-book" class="mt-4 border-2 border-black bg-[#ffffcc] p-3">
+								<h3 class="text-xs font-bold text-[#800000]">UPCOMING BOOK</h3>
+								<p class="mt-2 font-bold">{data.dashboard.upcomingCycle.book.title}</p>
+								<p class="mt-1">By {data.dashboard.upcomingCycle.book.author}.</p>
+								<p class="mt-2 text-xs">
+									Pick up a copy in advance. An admin will start this book when the club is ready.
+								</p>
+								<a
+									href={resolve(`bookclub/draw/${data.dashboard.upcomingCycle.id}`)}
+									class="mt-3 inline-block font-bold underline">REPLAY UPCOMING DRAW &gt;</a
+								>
+								{#if data.member.role === 'admin'}
+									<form method="POST" action="?/advanceBook" use:enhance class="mt-3">
+										<input type="hidden" name="cycleId" value={data.dashboard.upcomingCycle.id} />
+										{#if data.dashboard.currentBook}
+											<p class="mb-2 text-xs">
+												Starting this book moves the current book into the archive.
+											</p>
+										{/if}
+										<button
+											type="submit"
+											class="border-2 border-black bg-[#d4d0c8] px-3 py-2 font-bold shadow-[2px_2px_0_#000] hover:bg-white focus:ring-2 focus:ring-[#000080] focus:outline-none"
+											>START THIS BOOK</button
+										>
+									</form>
+								{/if}
+							</section>
+						{/if}
 						<div class="mt-4 border-2 border-black bg-[#ffffcc] p-3">
 							<p class="text-xs font-bold text-[#800000]">NEXT MEETING</p>
 							{#if data.dashboard.nextMeeting}
@@ -374,11 +410,11 @@
 											{#if data.dashboard.currentBook?.startedAt}
 												Current book started {formatDateTime(data.dashboard.currentBook.startedAt)}
 											{:else}
-												No book has been drawn yet.
+												No book has been started yet.
 											{/if}
 										</p>
 										<h2 class="mt-2 text-2xl font-black">
-											{data.dashboard.currentBook?.title ?? 'The next book is classified.'}
+											{data.dashboard.currentBook?.title ?? 'No current book yet.'}
 										</h2>
 										<p class="mt-3 leading-6">
 											{#if data.dashboard.currentBook}
@@ -388,7 +424,7 @@
 													Book completed {formatDateTime(data.dashboard.currentBook.completedAt)}.
 												{/if}
 											{:else}
-												Once an admin runs the draw, this panel will show the winning book and
+												Once an admin starts the upcoming book, this panel will show its title and
 												author.
 											{/if}
 										</p>
@@ -534,7 +570,7 @@
 										</div>
 									{:else}
 										<p class="leading-6">
-											Past books will appear here once a newer book has been drawn.
+											Past books will appear here once the next book has been started.
 										</p>
 									{/if}
 								</div>
@@ -595,7 +631,7 @@
 											<p class="font-bold">BOOK POLL OPEN</p>
 											<p class="mt-1 text-xs">
 												Opened {formatDateTime(data.dashboard.activeCycle.openedAt)}. The current
-												book stays active until the next draw.
+												book stays active until an admin starts the upcoming book.
 											</p>
 											<p class="mt-1 text-xs">
 												{data.dashboard.suggestionProgress.reduce(
@@ -625,12 +661,17 @@
 												{data.dashboard.suggestionProgress.reduce(
 													(total, item) => total + item.count,
 													0
-												)} tickets submitted. The suggestion pool is locked. This draw cannot be rerun.
+												)} tickets submitted. The draw saves an upcoming book and cannot be rerun.
 											</p>
+
+											{#if data.dashboard.upcomingCycle}
+												<p class="mt-2 text-xs">Start the upcoming book before spinning another.</p>
+											{/if}
 											<form method="POST" action="?/draw" use:enhance class="mt-3">
 												<button
 													type="submit"
-													class="border-2 border-black bg-[#d4d0c8] px-3 py-2 font-bold shadow-[2px_2px_0_#000] hover:bg-white"
+													disabled={Boolean(data.dashboard.upcomingCycle)}
+													class="border-2 border-black bg-[#d4d0c8] px-3 py-2 font-bold shadow-[2px_2px_0_#000] hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
 												>
 													SPIN NEXT BOOK
 												</button>

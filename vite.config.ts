@@ -19,7 +19,15 @@ export default defineConfig({
 			csrf: {
 				trustedOrigins: ['https://ramisbhatty.com', 'https://www.ramisbhatty.com']
 			},
-			adapter: adapter()
+			adapter: adapter({
+				platformProxy: process.env.BOOKCLUB_E2E_PERSIST_DIR
+					? {
+							// Wrangler adds /v3 to --persist-to; the proxy expects the full path.
+							persist: { path: `${process.env.BOOKCLUB_E2E_PERSIST_DIR}/v3` },
+							remoteBindings: false
+						}
+					: undefined
+			})
 		})
 	]
 });

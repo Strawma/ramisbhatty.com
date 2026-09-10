@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
-import { unlinkSync, writeFileSync } from 'node:fs';
+import { rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -18,7 +18,9 @@ const DRAW_FIXTURE = {
 } as const;
 
 function runWrangler(args: string[]): void {
-	execFileSync('pnpm', ['exec', 'wrangler', ...args], {
+	const persistDir = process.env.BOOKCLUB_E2E_PERSIST_DIR;
+	if (!persistDir) throw new Error('The isolated browser-test database was not configured.');
+	execFileSync('pnpm', ['exec', 'wrangler', ...args, '--persist-to', persistDir], {
 		cwd: process.cwd(),
 		stdio: 'inherit',
 		env: { ...process.env, WRANGLER_SEND_METRICS: 'false' }
@@ -33,25 +35,8 @@ function hashSessionToken(token: string): string {
 	return createHash('sha256').update(token).digest('base64url');
 }
 
-function cleanupTestMembers(): void {
-	const memberList = MEMBER_IDS.map((id) => `'${id}'`).join(', ');
-	const fixtureCycleList = `'${DRAW_FIXTURE.archiveCycleId}', '${DRAW_FIXTURE.currentCycleId}'`;
-	const fixtureBookList = `'${DRAW_FIXTURE.archiveBookId}', '${DRAW_FIXTURE.currentBookId}'`;
-	executeLocalSql(
-		`DELETE FROM bookclub_chat_messages WHERE member_id IN (${memberList});
-		 DELETE FROM bookclub_reviews WHERE member_id IN (${memberList});
-		 DELETE FROM bookclub_draws WHERE cycle_id IN (${fixtureCycleList});
-		 DELETE FROM bookclub_suggestions WHERE member_id IN (${memberList});
-		 DELETE FROM bookclub_cycles WHERE id IN (${fixtureCycleList});
-		 DELETE FROM bookclub_books WHERE id IN (${fixtureBookList});
-		 DELETE FROM bookclub_sessions WHERE member_id IN (${memberList});
-		 DELETE FROM bookclub_members WHERE id IN (${memberList})`
-	);
-}
-
 export default async function globalSetup(): Promise<() => void> {
 	runWrangler(['d1', 'migrations', 'apply', DATABASE_NAME, '--local']);
-	cleanupTestMembers();
 
 	const aliceToken = randomBytes(32).toString('base64url');
 	const bobToken = randomBytes(32).toString('base64url');
@@ -95,7 +80,7 @@ export default async function globalSetup(): Promise<() => void> {
 	process.env.BOOKCLUB_E2E_SESSION_FILE = sessionFile;
 
 	return () => {
-		cleanupTestMembers();
 		unlinkSync(sessionFile);
+		rmSync(process.env.BOOKCLUB_E2E_PERSIST_DIR!, { recursive: true, force: true });
 	};
 }

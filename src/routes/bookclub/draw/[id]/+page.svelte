@@ -7,7 +7,9 @@
 	let returnHref = $derived(
 		data.replay.book.completedAt
 			? resolve(`bookclub/archive/${data.replay.cycleId}`)
-			: resolve('bookclub#current-book')
+			: data.replay.book.startedAt
+				? resolve('bookclub#current-book')
+				: resolve('bookclub#upcoming-book')
 	);
 </script>
 
@@ -46,6 +48,12 @@
 							: 'S'}
 					</div>
 					<div class="p-4 sm:p-5">
+						{#if !data.replay.book.startedAt}
+							<p class="mb-4 border-2 border-black bg-[#ffffcc] p-3 font-bold">
+								UPCOMING BOOK: {data.replay.book.title} by {data.replay.book.author}. Pick up a copy
+								before an admin starts it.
+							</p>
+						{/if}
 						<DrawWheel
 							drawId={data.replay.drawId}
 							suggestions={data.replay.suggestions}
