@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { DrawSound } from './draw-sound';
 	import type { BookclubSuggestion } from '#lib/server/bookclub/cycles';
 
 	let {
@@ -74,20 +75,99 @@
 	let winner = $derived(
 		wheel.ordered.find((suggestion) => suggestion.id === winnerSuggestionId) ?? null
 	);
-	let spinning = $state(false);
+	let rotation = $state(0);
 	let finished = $state(false);
+	let soundEnabled = $state(false);
+	let enablingSound = $state(false);
+	let soundUnavailable = $state(false);
+	let frame: number | null = null;
+	let reducedMotion = false;
+	let destroyed = false;
+	const sound = new DrawSound();
 
-	function play(): void {
-		spinning = false;
+	function stopAnimation(): void {
+		if (frame !== null) cancelAnimationFrame(frame);
+		frame = null;
+	}
+
+	function play(withSound = soundEnabled): void {
+		stopAnimation();
+		sound.stop();
+		rotation = 0;
 		finished = false;
-		requestAnimationFrame(() => requestAnimationFrame(() => (spinning = true)));
+		const duration = reducedMotion ? 0 : wheel.duration;
+		const startedAt = performance.now();
+		if (withSound) {
+			try {
+				sound.play(wheel.rotation, wheel.ordered.length, duration);
+			} catch {
+				sound.stop();
+				soundEnabled = false;
+				soundUnavailable = true;
+			}
+		}
+		const animate = (now: number) => {
+			const progress = duration === 0 ? 1 : Math.min(1, (now - startedAt) / duration);
+			// The audio schedule uses the inverse of this same easing curve.
+			rotation = wheel.rotation * (1 - (1 - progress) ** 4);
+			if (progress < 1) frame = requestAnimationFrame(animate);
+			else {
+				frame = null;
+				finished = true;
+			}
+		};
+		animate(startedAt);
 	}
 
-	function finishSpin(event: TransitionEvent): void {
-		if (event.propertyName === 'transform' && spinning) finished = true;
+	async function replay(): Promise<void> {
+		if (soundEnabled && !(await sound.enable())) {
+			soundEnabled = false;
+			soundUnavailable = true;
+		}
+		if (!destroyed) play();
 	}
 
-	onMount(play);
+	async function toggleSound(): Promise<void> {
+		if (soundEnabled) {
+			soundEnabled = false;
+			sound.stop();
+			return;
+		}
+		enablingSound = true;
+		const enabled = await sound.enable();
+		if (destroyed) return;
+		enablingSound = false;
+		soundEnabled = enabled;
+		soundUnavailable = !enabled;
+		play();
+	}
+
+	onMount(() => {
+		const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
+		reducedMotion = preference.matches;
+		play(false);
+		const updateMotion = () => {
+			reducedMotion = preference.matches;
+			if (reducedMotion) play(false);
+		};
+		const stopWhenHidden = () => {
+			if (document.hidden) {
+				stopAnimation();
+				sound.stop();
+				rotation = wheel.rotation;
+				finished = true;
+			}
+		};
+		preference.addEventListener('change', updateMotion);
+		document.addEventListener('visibilitychange', stopWhenHidden);
+		return () => {
+			destroyed = true;
+			stopAnimation();
+			sound.dispose();
+			preference.removeEventListener('change', updateMotion);
+			document.removeEventListener('visibilitychange', stopWhenHidden);
+		};
+	});
 </script>
 
 <div class="grid items-start gap-5 lg:grid-cols-[minmax(300px,0.9fr)_minmax(0,1.1fr)]">
@@ -97,14 +177,11 @@
 				class="absolute top-0 left-1/2 z-10 h-0 w-0 -translate-x-1/2 border-x-[18px] border-t-[32px] border-x-transparent border-t-black drop-shadow-[2px_2px_0_#fff]"
 				aria-hidden="true"
 			></div>
-			<!-- The stationary housing owns the shadow so it does not rotate with the wheel artwork. -->
-			<div class="absolute inset-0 rounded-full shadow-[6px_6px_0_#000]">
+			<div class="absolute inset-0">
 				<svg
 					viewBox="0 0 100 100"
 					class="size-full"
-					style:transform={`rotate(${spinning ? wheel.rotation : 0}deg)`}
-					style:transition-duration={`${spinning ? wheel.duration : 0}ms`}
-					ontransitionend={finishSpin}
+					style:transform={`rotate(${rotation}deg)`}
 					role="img"
 					aria-label={`${wheel.ordered.length} suggestion tickets spinning toward the saved result`}
 				>
@@ -135,11 +212,27 @@
 		</div>
 		<button
 			type="button"
-			onclick={play}
+			onclick={replay}
 			class="mx-auto mt-5 block border-2 border-black bg-[#d4d0c8] px-4 py-2 font-black shadow-[3px_3px_0_#000] hover:bg-white focus:ring-2 focus:ring-[#000080] focus:outline-none"
 		>
 			REPLAY DRAW
 		</button>
+		<button
+			type="button"
+			onclick={toggleSound}
+			aria-pressed={soundEnabled}
+			disabled={enablingSound}
+			class="mx-auto mt-3 block border-2 border-black bg-[#ffffcc] px-3 py-2 font-bold hover:bg-white focus:ring-2 focus:ring-[#000080] focus:outline-none disabled:opacity-50"
+		>
+			{enablingSound ? 'ENABLING SOUND...' : soundEnabled ? 'MUTE SOUND' : 'ENABLE SOUND'}
+		</button>
+		<p class="mt-2 text-center text-xs" role="status">
+			{soundUnavailable
+				? 'Sound is unavailable in this browser. The wheel still works silently.'
+				: soundEnabled
+					? 'Sound on: ticket ticks and a victory fanfare.'
+					: 'Enable sound to replay with ticket ticks and a victory fanfare.'}
+		</p>
 	</div>
 
 	<div>
@@ -179,16 +272,3 @@
 		</div>
 	</div>
 </div>
-
-<style>
-	svg {
-		transition-property: transform;
-		transition-timing-function: cubic-bezier(0.08, 0.7, 0.08, 1);
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		svg {
-			transition-duration: 1ms !important;
-		}
-	}
-</style>

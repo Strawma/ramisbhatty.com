@@ -54,11 +54,13 @@
 								before an admin starts it.
 							</p>
 						{/if}
-						<DrawWheel
-							drawId={data.replay.drawId}
-							suggestions={data.replay.suggestions}
-							winnerSuggestionId={data.replay.winnerSuggestionId}
-						/>
+						{#key data.replay.drawId}
+							<DrawWheel
+								drawId={data.replay.drawId}
+								suggestions={data.replay.suggestions}
+								winnerSuggestionId={data.replay.winnerSuggestionId}
+							/>
+						{/key}
 					</div>
 				</section>
 			</div>

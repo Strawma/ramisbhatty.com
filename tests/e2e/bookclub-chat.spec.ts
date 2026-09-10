@@ -394,6 +394,109 @@ test('admins pre-roll a book and explicitly start it while members see both sele
 	await adminContext.close();
 });
 
+test('wheel sound follows the spin, celebrates, mutes, and closes on navigation', async ({
+	browser
+}) => {
+	const { bobToken } = getTestSessions();
+	const context = await createSessionContext(browser, bobToken);
+	const page = await context.newPage();
+	await page.emulateMedia({ reducedMotion: 'no-preference' });
+	await page.addInitScript(() => {
+		const metrics = { starts: [] as number[], cancelled: 0, closed: 0 };
+		Object.assign(window, { wheelAudioMetrics: metrics });
+		const createOscillator = AudioContext.prototype.createOscillator;
+		AudioContext.prototype.createOscillator = function () {
+			const voice = createOscillator.call(this);
+			const start = voice.start.bind(voice);
+			const stop = voice.stop.bind(voice);
+			voice.start = (when = 0) => {
+				metrics.starts.push(when);
+				start(when);
+			};
+			voice.stop = (when = 0) => {
+				if (when === 0) metrics.cancelled += 1;
+				stop(when);
+			};
+			return voice;
+		};
+		const close = AudioContext.prototype.close;
+		AudioContext.prototype.close = function () {
+			metrics.closed += 1;
+			return close.call(this);
+		};
+	});
+	const metrics = () =>
+		page.evaluate(
+			() =>
+				(
+					window as unknown as {
+						wheelAudioMetrics: { starts: number[]; cancelled: number; closed: number };
+					}
+				).wheelAudioMetrics
+		);
+	const errors: string[] = [];
+	page.on('pageerror', (error) => errors.push(error.message));
+	await page.goto('/bookclub/draw/bookclub-e2e-current-cycle');
+	await expect(page.getByRole('button', { name: 'ENABLE SOUND' })).toBeVisible();
+	expect((await metrics()).starts).toEqual([]);
+	await page.getByRole('button', { name: 'ENABLE SOUND' }).click();
+	await expect(page.getByRole('button', { name: 'MUTE SOUND' })).toHaveAttribute(
+		'aria-pressed',
+		'true'
+	);
+	const firstSpin = (await metrics()).starts;
+	expect(firstSpin.length).toBeGreaterThan(10);
+	const ticks = firstSpin.slice(0, -8);
+	expect(ticks.at(-1)! - ticks.at(-2)!).toBeGreaterThan(ticks[1] - ticks[0]);
+	expect(firstSpin.at(-8)!).toBeGreaterThan(ticks.at(-1)!);
+	await expect(page.getByText('DRAW COMPLETE // RESULT CONFIRMED')).toBeVisible();
+	await expect(page.getByText('OFFICIAL SAVED RESULT')).toBeVisible();
+	await expect(page.getByText('SELECTED BOOK', { exact: true })).toHaveCount(1);
+	await page.screenshot({ path: '/tmp/bookclub-wheel-desktop.png', fullPage: true });
+
+	await page.getByRole('button', { name: 'REPLAY DRAW', exact: true }).click();
+	await expect(page.getByText('DRAW IN PROGRESS // SHUFFLING TICKETS')).toBeVisible();
+	await page.getByRole('button', { name: 'MUTE SOUND' }).click();
+	expect((await metrics()).cancelled).toBeGreaterThan(0);
+	const mutedCount = (await metrics()).starts.length;
+	await page.getByRole('button', { name: 'REPLAY DRAW', exact: true }).click();
+	expect((await metrics()).starts).toHaveLength(mutedCount);
+
+	await page.emulateMedia({ reducedMotion: 'reduce' });
+	await page.getByRole('button', { name: 'ENABLE SOUND' }).click();
+	await expect(page.getByText('DRAW COMPLETE // RESULT CONFIRMED')).toBeVisible();
+	// Reduced motion skips the divider ticks but retains the explicitly enabled fanfare.
+	expect((await metrics()).starts).toHaveLength(mutedCount + 8);
+	await page.setViewportSize({ width: 360, height: 740 });
+	await page.screenshot({ path: '/tmp/bookclub-wheel-mobile.png', fullPage: true });
+	const dimensions = await page.evaluate(() => ({
+		width: document.documentElement.clientWidth,
+		content: document.documentElement.scrollWidth
+	}));
+	expect(dimensions.content).toBeLessThanOrEqual(dimensions.width);
+	await page.getByRole('link', { name: '< RETURN TO BOOK' }).click();
+	await expect.poll(async () => (await metrics()).closed).toBe(1);
+	expect(errors).toEqual([]);
+	await context.close();
+});
+
+test('wheel remains usable when browser audio is unavailable', async ({ browser }) => {
+	const { bobToken } = getTestSessions();
+	const context = await createSessionContext(browser, bobToken);
+	const page = await context.newPage();
+	await page.emulateMedia({ reducedMotion: 'reduce' });
+	await page.addInitScript(() => {
+		Object.defineProperty(window, 'AudioContext', { value: undefined, configurable: true });
+	});
+	await page.goto('/bookclub/draw/bookclub-e2e-archive-cycle');
+	await page.getByRole('button', { name: 'ENABLE SOUND' }).click();
+	await expect(
+		page.getByText('Sound is unavailable in this browser.', { exact: false })
+	).toBeVisible();
+	await expect(page.getByText('DRAW COMPLETE // RESULT CONFIRMED')).toBeVisible();
+	await context.close();
+});
+
 test('ordinary login and logout forms send same-origin CSRF and referrer headers', async ({
 	browser
 }) => {

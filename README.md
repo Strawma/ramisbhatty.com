@@ -86,6 +86,11 @@ upcoming book and moves the previous current book into the archive, where member
 Every book requires this explicit start, including the first one. Drawing or replaying a result
 never advances the reading schedule.
 
+The draw wheel automatically replays silently. Select **ENABLE SOUND** to replay with a tick as
+each ticket passes the pointer and a short victory fanfare on landing; **MUTE SOUND** stops the
+effects immediately. Audio is synthesized in the browser without downloading sound files.
+Reduced-motion mode shows the result immediately and plays only the fanfare when sound is enabled.
+
 Only one upcoming book can wait at a time. A new suggestion poll can open while it waits, carrying
 forward the unselected suggestions, but another draw must wait until the upcoming book starts.
 The admin book-poll list labels upcoming, current, and archived books separately. Deleting an
