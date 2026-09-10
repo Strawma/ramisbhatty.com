@@ -75,6 +75,27 @@ pnpm exec wrangler d1 migrations apply ramis-bookclub --local
 pnpm dev
 ```
 
+### Book-club reading workflow
+
+On the private `/bookclub` homepage, an admin opens a poll, closes suggestions, and selects
+**SPIN NEXT BOOK**. The saved winner appears as **UPCOMING BOOK** in the club bulletin so members
+can get a copy while continuing the current book. The draw replay remains available.
+
+When the club is ready, an admin selects **START THIS BOOK** in the bulletin. This starts the
+upcoming book and moves the previous current book into the archive, where members can review it.
+Every book requires this explicit start, including the first one. Drawing or replaying a result
+never advances the reading schedule.
+
+Only one upcoming book can wait at a time. A new suggestion poll can open while it waits, carrying
+forward the unselected suggestions, but another draw must wait until the upcoming book starts.
+The admin book-poll list labels upcoming, current, and archived books separately. Deleting an
+upcoming poll removes that selection without advancing the current book.
+
+Apply `migrations/0011_bookclub_upcoming_book.sql` before deploying this workflow. Existing current
+and archived books keep their reading dates; the migration enforces a single upcoming selection.
+
+### Site content
+
 The main site's editable copy lives in `src/content`. Markdown bodies hold the prose, while short
 frontmatter blocks provide titles, summaries, dates, and draft status used automatically by the
 site's layouts and indexes.
@@ -120,9 +141,12 @@ pnpm test:e2e:bookclub
 
 The public suite starts the local app without touching D1. It checks public routes, metadata,
 navigation hierarchy, responsive overflow, draft pages, runtime errors, and accessibility. The
-book-club suite additionally applies local D1 migrations, creates temporary test sessions, and
-removes its test members when it finishes. It never uses production credentials or the remote D1
-database. On Debian or Ubuntu, install Chromium's system dependencies once with `pnpm exec playwright
+book-club suite starts its own server on port 5174 and applies D1 migrations to a fresh temporary
+database for each run. It checks chat, suggestions, reviews, and the draw-to-start workflow, then
+removes its temporary database and session file. It never uses production credentials, the remote
+D1 database, or the local preview database. `BOOKCLUB_E2E_PERSIST_DIR` is supplied by the browser-test
+configuration to keep Wrangler setup and the test server on the same temporary storage.
+On Debian or Ubuntu, install Chromium's system dependencies once with `pnpm exec playwright
 install-deps chromium` if the browser cannot launch.
 Run `pnpm test:e2e` separately from `pnpm test` because both test commands use local worker/database
 resources and can contend when started at the same time.

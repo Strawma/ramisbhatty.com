@@ -46,6 +46,7 @@ export interface SuggestionProgress {
 export interface BookclubDashboard {
 	currentBook: BookclubBook | null;
 	currentCycle: BookclubCycle | null;
+	upcomingCycle: BookclubCycle | null;
 	activeCycle: BookclubCycle | null;
 	drawReadyCycle: BookclubCycle | null;
 	mySuggestions: BookclubSuggestion[];
@@ -142,7 +143,8 @@ interface BookPollSummaryRow extends ArchiveRow {
 	suggestion_count: number;
 }
 
-export type SuggestionConflictKind = 'duplicate-suggestion' | 'previously-read';
+export type SuggestionConflictKind =
+	'duplicate-suggestion' | 'previously-read' | 'already-selected';
 
 export class SuggestionConflictError extends Error {
 	constructor(
@@ -153,7 +155,9 @@ export class SuggestionConflictError extends Error {
 		super(
 			kind === 'previously-read'
 				? `The club has already read ${matchedTitle} by ${matchedAuthor}.`
-				: `You have already suggested ${matchedTitle} by ${matchedAuthor}.`
+				: kind === 'already-selected'
+					? `The club has already selected ${matchedTitle} by ${matchedAuthor}.`
+					: `You have already suggested ${matchedTitle} by ${matchedAuthor}.`
 		);
 		this.name = 'SuggestionConflictError';
 	}
@@ -227,8 +231,8 @@ async function assertSuggestionIsAvailable(
 			.bind(cycleId, memberId, suggestionId ?? null, suggestionId ?? null)
 			.all<{ title: string; author: string }>(),
 		database
-			.prepare('SELECT title, author FROM bookclub_books')
-			.all<{ title: string; author: string }>()
+			.prepare('SELECT title, author, completed_at FROM bookclub_books')
+			.all<{ title: string; author: string; completed_at: string | null }>()
 	]);
 
 	const duplicate = suggestions.results.find(
@@ -245,7 +249,7 @@ async function assertSuggestionIsAvailable(
 	);
 	if (previouslyRead) {
 		throw new SuggestionConflictError(
-			'previously-read',
+			previouslyRead.completed_at ? 'previously-read' : 'already-selected',
 			previouslyRead.title,
 			previouslyRead.author
 		);
@@ -319,6 +323,7 @@ export async function getDashboard(
 ): Promise<BookclubDashboard> {
 	const [
 		currentCycle,
+		upcomingCycle,
 		actionCycle,
 		mySuggestions,
 		suggestionProgress,
@@ -334,11 +339,12 @@ export async function getDashboard(
 				        c.opened_at, c.closed_at
 					 FROM bookclub_cycles AS c
 					 LEFT JOIN bookclub_books AS b ON b.id = c.book_id
-					 WHERE c.status = 'drawn'
-					 ORDER BY c.created_at DESC
+					 WHERE c.status = 'drawn' AND b.started_at IS NOT NULL AND b.completed_at IS NULL
+					 ORDER BY b.started_at DESC, c.created_at DESC, c.id DESC
 				 LIMIT 1`
 			)
 			.all<CycleRow>(),
+		getUpcomingCycle(database),
 		database
 			.prepare(
 				`SELECT c.id, c.status, c.suggestion_limit, c.book_id,
@@ -392,6 +398,7 @@ export async function getDashboard(
 	return {
 		currentBook: currentCycleValue?.book ?? null,
 		currentCycle: currentCycleValue,
+		upcomingCycle,
 		activeCycle: actionCycleValue?.status === 'open' ? actionCycleValue : null,
 		drawReadyCycle: actionCycleValue?.status === 'closed' ? actionCycleValue : null,
 		mySuggestions: mySuggestions.results.map((suggestion) => ({
@@ -412,6 +419,22 @@ export async function getDashboard(
 		chatMembers: chatroomState.members,
 		archive
 	};
+}
+
+export async function getUpcomingCycle(database: D1Database): Promise<BookclubCycle | null> {
+	const row = await database
+		.prepare(
+			`SELECT c.id, c.status, c.suggestion_limit, c.book_id,
+			        b.title AS book_title, b.author AS book_author, b.cover_url AS book_cover_url,
+			        b.started_at AS book_started_at, b.completed_at AS book_completed_at,
+			        c.opened_at, c.closed_at
+			 FROM bookclub_cycles AS c
+			 INNER JOIN bookclub_books AS b ON b.id = c.book_id
+			 WHERE c.status = 'drawn' AND b.started_at IS NULL
+			 LIMIT 1`
+		)
+		.first<CycleRow>();
+	return toCycle(row);
 }
 
 export async function getLatestActionCycle(database: D1Database): Promise<BookclubCycle | null> {
@@ -441,10 +464,7 @@ const ARCHIVE_BOOK_QUERY = `
 	FROM bookclub_cycles AS c
 	INNER JOIN bookclub_books AS b ON b.id = c.book_id
 	WHERE c.status = 'drawn'
-	  AND c.id != COALESCE(
-		  (SELECT id FROM bookclub_cycles WHERE status = 'drawn' ORDER BY created_at DESC, id DESC LIMIT 1),
-		  ''
-	  )
+	  AND b.started_at IS NOT NULL AND b.completed_at IS NOT NULL
 `;
 
 export async function getArchive(database: D1Database): Promise<BookclubArchiveEntry[]> {
@@ -591,10 +611,16 @@ export async function deleteBookPoll(database: D1Database, cycleId: string): Pro
 			`UPDATE bookclub_books
 				 SET completed_at = NULL
 				 WHERE id = (
-					 SELECT book_id FROM bookclub_cycles
-					 WHERE status = 'drawn'
-					 ORDER BY created_at DESC, id DESC
+					 SELECT c.book_id FROM bookclub_cycles AS c
+					 INNER JOIN bookclub_books AS b ON b.id = c.book_id
+					 WHERE c.status = 'drawn' AND b.started_at IS NOT NULL
+					 ORDER BY b.started_at DESC, c.created_at DESC, c.id DESC
 					 LIMIT 1
+				 ) AND NOT EXISTS (
+					 SELECT 1 FROM bookclub_books AS active_book
+					 INNER JOIN bookclub_cycles AS active_cycle ON active_cycle.book_id = active_book.id
+					 WHERE active_cycle.status = 'drawn'
+					   AND active_book.started_at IS NOT NULL AND active_book.completed_at IS NULL
 				 )`
 		)
 	]);
@@ -766,6 +792,10 @@ export async function drawCycle(
 		throw new Error('Close the book poll before drawing the next book.');
 	}
 
+	if (await getUpcomingCycle(database)) {
+		throw new Error('Start the upcoming book before drawing another.');
+	}
+
 	const suggestions = await database
 		.prepare(
 			`SELECT id, title, author
@@ -785,25 +815,14 @@ export async function drawCycle(
 	const bookId = crypto.randomUUID();
 	const now = new Date().toISOString();
 
+	// A saved result reserves the book; reading dates belong to the separate start action.
 	await database.batch([
 		database
 			.prepare(
-				`UPDATE bookclub_books
-				 SET completed_at = ?
-				 WHERE id = (
-					 SELECT book_id FROM bookclub_cycles
-					 WHERE status = 'drawn'
-					 ORDER BY created_at DESC, id DESC
-					 LIMIT 1
-				 ) AND completed_at IS NULL`
+				`INSERT INTO bookclub_books (id, title, author)
+				 VALUES (?, ?, ?)`
 			)
-			.bind(now),
-		database
-			.prepare(
-				`INSERT INTO bookclub_books (id, title, author, started_at)
-				 VALUES (?, ?, ?, ?)`
-			)
-			.bind(bookId, winner.title, winner.author, now),
+			.bind(bookId, winner.title, winner.author),
 		database
 			.prepare(
 				`UPDATE bookclub_cycles
@@ -814,7 +833,7 @@ export async function drawCycle(
 		prepareChatAnnouncement(
 			database,
 			drawnByMemberId,
-			`CURRENT BOOK: ${winner.title} by ${winner.author}.`
+			`UPCOMING BOOK: ${winner.title} by ${winner.author}. Time to find a copy!`
 		),
 		database
 			.prepare(
@@ -829,9 +848,43 @@ export async function drawCycle(
 		title: winner.title,
 		author: winner.author,
 		coverUrl: null,
-		startedAt: now,
+		startedAt: null,
 		completedAt: null
 	};
+}
+
+export async function advanceBook(
+	database: D1Database,
+	cycleId: string,
+	memberId: string
+): Promise<boolean> {
+	const now = new Date().toISOString();
+	const pendingBook = `SELECT b.id FROM bookclub_books AS b
+		INNER JOIN bookclub_cycles AS c ON c.book_id = b.id
+		WHERE c.id = ? AND c.status = 'drawn' AND b.started_at IS NULL`;
+
+	// Every statement checks the submitted reservation in one atomic batch. Repeated
+	// or stale submissions must neither finish another book nor announce it twice.
+	const results = await database.batch([
+		database
+			.prepare(
+				`UPDATE bookclub_books SET completed_at = ?
+				 WHERE started_at IS NOT NULL AND completed_at IS NULL
+				   AND EXISTS (${pendingBook})`
+			)
+			.bind(now, cycleId),
+		database
+			.prepare(
+				`INSERT INTO bookclub_chat_messages (id, member_id, body, message_type)
+				 SELECT ?, ?, 'CURRENT BOOK: ' || title || ' by ' || author || '.', 'announcement'
+				 FROM bookclub_books WHERE id IN (${pendingBook})`
+			)
+			.bind(crypto.randomUUID(), memberId, cycleId),
+		database
+			.prepare(`UPDATE bookclub_books SET started_at = ? WHERE id IN (${pendingBook})`)
+			.bind(now, cycleId)
+	]);
+	return Boolean(results[2].meta.changes);
 }
 
 export async function setBookCover(

@@ -11,6 +11,7 @@ import {
 import { findBookCover } from '#lib/server/bookclub/covers';
 import { getBookclubDatabase } from '#lib/server/bookclub/db';
 import {
+	advanceBook,
 	closeCycle,
 	createCycle,
 	deleteSuggestion,
@@ -36,6 +37,23 @@ export const load: PageServerLoad = async (event) => {
 };
 
 export const actions: Actions = {
+	advanceBook: async (event) => {
+		const member = await requireBookclubMember(event);
+		if (member.role !== 'admin') {
+			return fail(403, { error: 'Only the club admin can start the upcoming book.' });
+		}
+
+		const form = await event.request.formData();
+		const cycleId = form.get('cycleId');
+		if (typeof cycleId !== 'string' || !cycleId) {
+			return fail(400, { error: 'Choose the upcoming book to start.' });
+		}
+		if (!(await advanceBook(getBookclubDatabase(event.platform), cycleId, member.id))) {
+			return fail(400, { error: 'That book is no longer waiting to start. Refresh the page.' });
+		}
+		return { success: 'The upcoming book is now current.' };
+	},
+
 	createCycle: async (event) => {
 		const member = await requireBookclubMember(event);
 

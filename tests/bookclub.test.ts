@@ -27,6 +27,7 @@ import {
 	setMemberDisplayName
 } from '../src/lib/server/bookclub/invitations';
 import {
+	advanceBook,
 	closeCycle,
 	createCycle,
 	deleteBookPoll,
@@ -331,6 +332,176 @@ describe('book-club cover lookup', () => {
 });
 
 describe('book-club cycles and suggestions', () => {
+	it('keeps a draw upcoming until an explicit start, then archives only when the next book starts', async () => {
+		const admin = await createTestMember('Ramis', 'admin');
+		await createCycle(database);
+		const firstCycleId = await getOpenCycleId();
+		await saveSuggestion(database, firstCycleId, admin.id, 1, 'Piranesi', 'Susanna Clarke');
+		await closeCycle(database, firstCycleId);
+		const firstBook = await drawCycle(database, firstCycleId, admin.id);
+		expect(firstBook.startedAt).toBeNull();
+		expect(await getDashboard(database, admin)).toMatchObject({
+			currentBook: null,
+			upcomingCycle: { id: firstCycleId, book: { id: firstBook.id, startedAt: null } },
+			archive: []
+		});
+		expect((await getChatMessages(database, admin.id)).map((message) => message.body)).toEqual([
+			'UPCOMING BOOK: Piranesi by Susanna Clarke. Time to find a copy!'
+		]);
+		expect((await getDrawReplay(database, firstCycleId))?.book.startedAt).toBeNull();
+		await expect(
+			saveBookReview(database, firstBook.id, admin.id, {
+				rating: 4,
+				body: 'Too early',
+				favouriteQuote: '',
+				spoiler: false,
+				verdict: ''
+			})
+		).rejects.toThrow('completed archived books');
+
+		expect(await advanceBook(database, firstCycleId, admin.id)).toBe(true);
+		const current = (await getDashboard(database, admin)).currentBook;
+		expect(current).toMatchObject({
+			id: firstBook.id,
+			startedAt: expect.any(String),
+			completedAt: null
+		});
+
+		await createCycle(database);
+		const secondCycleId = await getOpenCycleId();
+		await saveSuggestion(database, secondCycleId, admin.id, 1, 'Dune', 'Frank Herbert');
+		await closeCycle(database, secondCycleId);
+		const secondBook = await drawCycle(database, secondCycleId, admin.id);
+		expect(await getDashboard(database, admin)).toMatchObject({
+			currentBook: current,
+			upcomingCycle: { id: secondCycleId, book: { id: secondBook.id, startedAt: null } },
+			archive: []
+		});
+		expect(await advanceBook(database, firstCycleId, admin.id)).toBe(false);
+		expect(await advanceBook(database, 'missing-cycle', admin.id)).toBe(false);
+		expect((await getDashboard(database, admin)).currentBook).toEqual(current);
+		await expect(
+			saveBookReview(database, firstBook.id, admin.id, {
+				rating: 4,
+				body: 'Still reading',
+				favouriteQuote: '',
+				spoiler: false,
+				verdict: ''
+			})
+		).rejects.toThrow('completed archived books');
+
+		// Collecting suggestions can continue, but there is only one reserved book.
+		await createCycle(database);
+		const thirdCycleId = await getOpenCycleId();
+		await saveSuggestion(database, thirdCycleId, admin.id, 1, 'Beloved', 'Toni Morrison');
+		await expect(
+			saveSuggestion(database, thirdCycleId, admin.id, 2, 'Dune', 'Frank Herbert')
+		).rejects.toThrow('already selected');
+		await closeCycle(database, thirdCycleId);
+		await expect(drawCycle(database, thirdCycleId, admin.id)).rejects.toThrow(
+			'Start the upcoming book'
+		);
+		await expect(advanceBook(database, secondCycleId, 'missing-member')).rejects.toThrow();
+		expect((await getDashboard(database, admin)).currentBook).toEqual(current);
+		expect(await advanceBook(database, secondCycleId, admin.id)).toBe(true);
+		const dashboard = await getDashboard(database, admin);
+		expect(dashboard.upcomingCycle).toBeNull();
+		expect(dashboard.currentBook).toMatchObject({
+			id: secondBook.id,
+			startedAt: expect.any(String),
+			completedAt: null
+		});
+		expect(dashboard.archive).toMatchObject([
+			{ id: firstCycleId, book: { completedAt: dashboard.currentBook?.startedAt } }
+		]);
+		await expect(
+			saveBookReview(database, firstBook.id, admin.id, {
+				rating: 4,
+				body: 'Finished',
+				favouriteQuote: '',
+				spoiler: false,
+				verdict: ''
+			})
+		).resolves.toBeUndefined();
+		await expect(drawCycle(database, thirdCycleId, admin.id)).resolves.toMatchObject({
+			title: 'Beloved',
+			startedAt: null
+		});
+	});
+
+	it('persists one draw and one start announcement under concurrent submissions', async () => {
+		const admin = await createTestMember('Ramis', 'admin');
+		await createCycle(database);
+		const cycleId = await getOpenCycleId();
+		await saveSuggestion(database, cycleId, admin.id, 1, 'Dune', 'Frank Herbert');
+		await closeCycle(database, cycleId);
+		const draws = await Promise.allSettled([
+			drawCycle(database, cycleId, admin.id),
+			drawCycle(database, cycleId, admin.id)
+		]);
+		expect(draws.filter((result) => result.status === 'fulfilled')).toHaveLength(1);
+		expect(await database.prepare('SELECT COUNT(*) AS count FROM bookclub_books').first()).toEqual({
+			count: 1
+		});
+		const starts = await Promise.all([
+			advanceBook(database, cycleId, admin.id),
+			advanceBook(database, cycleId, admin.id)
+		]);
+		expect(starts.sort()).toEqual([false, true]);
+		const messages = await getChatMessages(database, admin.id);
+		expect(messages.filter((message) => message.body.startsWith('UPCOMING BOOK:'))).toHaveLength(1);
+		expect(messages.filter((message) => message.body.startsWith('CURRENT BOOK:'))).toHaveLength(1);
+		expect((await getDashboard(database, admin)).currentBook?.completedAt).toBeNull();
+	});
+
+	it('allows only one upcoming winner across concurrent draws from different closed polls', async () => {
+		const admin = await createTestMember('Ramis', 'admin');
+		const cycleIds: string[] = [];
+		for (const title of ['Piranesi', 'Dune']) {
+			await createCycle(database);
+			const cycleId = await getOpenCycleId();
+			cycleIds.push(cycleId);
+			await saveSuggestion(database, cycleId, admin.id, 1, title, 'An Author');
+			await closeCycle(database, cycleId);
+		}
+		const draws = await Promise.allSettled(cycleIds.map((id) => drawCycle(database, id, admin.id)));
+		expect(draws.filter((result) => result.status === 'fulfilled')).toHaveLength(1);
+		expect(await database.prepare('SELECT COUNT(*) AS count FROM bookclub_books').first()).toEqual({
+			count: 1
+		});
+		expect(
+			await database
+				.prepare(
+					"SELECT COUNT(*) AS count FROM bookclub_cycles WHERE status = 'closed' AND book_id IS NULL"
+				)
+				.first()
+		).toEqual({ count: 1 });
+		expect(await getChatMessages(database, admin.id)).toHaveLength(1);
+	});
+
+	it('deletes an upcoming selection without changing the current book or archive', async () => {
+		const admin = await createTestMember('Ramis', 'admin');
+		await createCycle(database);
+		const firstCycleId = await getOpenCycleId();
+		await saveSuggestion(database, firstCycleId, admin.id, 1, 'Piranesi', 'Susanna Clarke');
+		await closeCycle(database, firstCycleId);
+		await drawCycle(database, firstCycleId, admin.id);
+		await advanceBook(database, firstCycleId, admin.id);
+		const current = (await getDashboard(database, admin)).currentBook;
+		await createCycle(database);
+		const nextCycleId = await getOpenCycleId();
+		await saveSuggestion(database, nextCycleId, admin.id, 1, 'Dune', 'Frank Herbert');
+		await closeCycle(database, nextCycleId);
+		await drawCycle(database, nextCycleId, admin.id);
+		expect(await deleteBookPoll(database, nextCycleId)).toBe(true);
+		expect(await getDashboard(database, admin)).toMatchObject({
+			currentBook: current,
+			upcomingCycle: null,
+			archive: []
+		});
+		expect(await advanceBook(database, nextCycleId, admin.id)).toBe(false);
+	});
+
 	it('enforces member-owned suggestion slots and reports progress', async () => {
 		const firstMember = await createTestMember('Ramis');
 		const secondMember = await createTestMember('Alex');
@@ -382,6 +553,7 @@ describe('book-club cycles and suggestions', () => {
 		).rejects.toThrow('no longer open');
 
 		await drawCycle(database, cycleId, members[0].id);
+		await advanceBook(database, cycleId, members[0].id);
 		expect(
 			(await getChatMessages(database, members[0].id)).some((message) =>
 				message.body.startsWith('CURRENT BOOK:')
@@ -423,7 +595,7 @@ describe('book-club cycles and suggestions', () => {
 		).resolves.toBeUndefined();
 	});
 
-	it('rejects a previously read book despite small title and author misspellings', async () => {
+	it('rejects an already selected book despite small title and author misspellings', async () => {
 		const member = await createTestMember('Ramis');
 		await createCycle(database);
 		const firstCycleId = await getOpenCycleId();
@@ -437,6 +609,7 @@ describe('book-club cycles and suggestions', () => {
 		);
 		await closeCycle(database, firstCycleId);
 		await drawCycle(database, firstCycleId, member.id);
+		await advanceBook(database, firstCycleId, member.id);
 
 		await createCycle(database);
 		const secondCycleId = await getOpenCycleId();
@@ -449,7 +622,7 @@ describe('book-club cycles and suggestions', () => {
 				'The Left Hand of Darknes',
 				'Ursula K LeGuin'
 			)
-		).rejects.toThrow('already read The Left Hand of Darkness by Ursula K. Le Guin');
+		).rejects.toThrow('already selected The Left Hand of Darkness by Ursula K. Le Guin');
 	});
 
 	it('allows an existing suggestion to be saved without conflicting with itself', async () => {
@@ -489,6 +662,7 @@ describe('book-club cycles and suggestions', () => {
 		await saveSuggestion(database, firstCycleId, member.id, 3, 'Beloved', 'Toni Morrison');
 		await closeCycle(database, firstCycleId);
 		const selectedBook = await drawCycle(database, firstCycleId, member.id);
+		await advanceBook(database, firstCycleId, member.id);
 
 		expect(await createCycle(database)).toBe(2);
 		const secondCycleId = await getOpenCycleId();
@@ -560,6 +734,7 @@ describe('book-club cycles and suggestions', () => {
 		await saveSuggestion(database, firstCycleId, secondMember.id, 1, 'Dune!', 'Frank  Herbert');
 		await closeCycle(database, firstCycleId);
 		await drawCycle(database, firstCycleId, firstMember.id);
+		await advanceBook(database, firstCycleId, firstMember.id);
 
 		expect(await createCycle(database)).toBe(0);
 		expect((await getDashboard(database, firstMember)).mySuggestions).toEqual([]);
@@ -581,6 +756,7 @@ describe('book-club cycles and suggestions', () => {
 		);
 		await closeCycle(database, firstCycleId);
 		const firstBook = await drawCycle(database, firstCycleId, member.id);
+		await advanceBook(database, firstCycleId, member.id);
 		await database
 			.prepare(
 				`INSERT INTO bookclub_reviews (id, book_id, member_id, rating, body)
@@ -603,12 +779,13 @@ describe('book-club cycles and suggestions', () => {
 		await closeCycle(database, secondCycleId);
 		expect((await getDashboard(database, member)).currentBook?.id).toBe(firstBook.id);
 		await drawCycle(database, secondCycleId, member.id);
+		await advanceBook(database, secondCycleId, member.id);
 		expect(
 			await database
 				.prepare('SELECT started_at, completed_at FROM bookclub_books WHERE id = ?')
 				.bind(firstBook.id)
 				.first<{ started_at: string; completed_at: string | null }>()
-		).toMatchObject({ started_at: firstBook.startedAt, completed_at: expect.any(String) });
+		).toMatchObject({ started_at: expect.any(String), completed_at: expect.any(String) });
 
 		expect(await getArchive(database)).toMatchObject([
 			{
@@ -663,6 +840,7 @@ describe('book-club cycles and suggestions', () => {
 		await saveSuggestion(database, firstCycleId, member.id, 1, 'Dune', 'Frank Herbert');
 		await closeCycle(database, firstCycleId);
 		const firstBook = await drawCycle(database, firstCycleId, admin.id);
+		await advanceBook(database, firstCycleId, admin.id);
 
 		const replay = await getDrawReplay(database, firstCycleId);
 		expect(replay).toMatchObject({
@@ -696,6 +874,7 @@ describe('book-club cycles and suggestions', () => {
 		await saveSuggestion(database, secondCycleId, admin.id, 2, 'Beloved', 'Toni Morrison');
 		await closeCycle(database, secondCycleId);
 		await drawCycle(database, secondCycleId, admin.id);
+		await advanceBook(database, secondCycleId, admin.id);
 
 		await saveBookReview(database, firstBook.id, member.id, {
 			rating: 4,

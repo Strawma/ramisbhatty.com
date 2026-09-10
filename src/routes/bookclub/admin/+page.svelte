@@ -266,7 +266,11 @@
 											</td>
 											<td class="border border-black px-2 py-2 font-bold">
 												{poll.status === 'drawn'
-													? 'BOOK DRAWN'
+													? !poll.book?.startedAt
+														? 'UPCOMING'
+														: poll.book.completedAt
+															? 'ARCHIVED'
+															: 'CURRENT'
 													: `POLL ${poll.status.toUpperCase()}`}
 											</td>
 											<td class="border border-black px-2 py-2">

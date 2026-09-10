@@ -121,7 +121,7 @@ test('suggestion slots add, update, and clear reliably on a narrow screen', asyn
 	const startPollButton = memberPage.getByRole('button', { name: 'START POLL' });
 	if ((await startPollButton.count()) > 0) {
 		await startPollButton.click();
-		await expect(memberPage.getByText('A new book poll is open.', { exact: true })).toBeVisible();
+		await expect(memberPage.getByText(/^A new book poll is open/)).toBeVisible();
 	}
 
 	const titleInput = memberPage.getByLabel('Book title for slot 1');
@@ -321,6 +321,77 @@ test('desktop dashboard windows drag, resize, stack, minimize, and persist', asy
 	).toBeVisible();
 
 	await memberContext.close();
+});
+
+test('admins pre-roll a book and explicitly start it while members see both selections', async ({
+	browser
+}) => {
+	const { aliceToken, bobToken } = getTestSessions();
+	const adminContext = await createSessionContext(browser, aliceToken);
+	const memberContext = await createSessionContext(browser, bobToken);
+	const admin = await adminContext.newPage();
+	const member = await memberContext.newPage();
+	await admin.setViewportSize({ width: 360, height: 740 });
+	await admin.emulateMedia({ reducedMotion: 'reduce' });
+	await admin.goto('/bookclub');
+	const startPoll = admin.getByRole('button', { name: 'START POLL', exact: true });
+	if (await startPoll.count()) await startPoll.click();
+	const title = admin.getByLabel('Book title for slot 1');
+	await title.fill('Upcoming Browser Book');
+	await admin.getByLabel('Author for slot 1').fill('Upcoming Author');
+	await admin
+		.locator('form')
+		.filter({ has: title })
+		.getByRole('button', { name: 'SAVE', exact: true })
+		.click();
+	await expect(title).toHaveValue('Upcoming Browser Book');
+	await admin.getByRole('button', { name: 'CLOSE BOOK POLL' }).click();
+	await admin.getByRole('button', { name: 'SPIN NEXT BOOK' }).click();
+	await expect(admin).toHaveURL(/\/bookclub\/draw\//);
+	const cycleId = new URL(admin.url()).pathname.split('/').at(-1)!;
+	await expect(admin.getByText('UPCOMING BOOK:', { exact: false })).toBeVisible();
+	await admin.getByRole('link', { name: '< RETURN TO BOOK' }).click();
+	await expect(admin).toHaveURL(/#upcoming-book$/);
+	const upcoming = admin.locator('#upcoming-book');
+	const upcomingTitle = await upcoming.locator('p').first().innerText();
+	await expect(admin.locator('#current-book h2')).toHaveText('Current Browser Book');
+	await expect(admin.locator('#archive')).not.toContainText('Current Browser Book');
+	await expect(admin.getByRole('button', { name: 'START THIS BOOK' })).toBeVisible();
+
+	await member.goto('/bookclub');
+	await expect(member.locator('#upcoming-book')).toContainText(upcomingTitle);
+	await expect(member.locator('#current-book h2')).toHaveText('Current Browser Book');
+	await expect(member.getByRole('button', { name: 'START THIS BOOK' })).toHaveCount(0);
+	const denied = await member.request.post('/bookclub?/advanceBook', {
+		form: { cycleId },
+		headers: { origin: new URL(member.url()).origin }
+	});
+	expect(denied.status()).toBe(403);
+
+	const dimensions = await admin.evaluate(() => ({
+		scrollWidth: document.documentElement.scrollWidth,
+		clientWidth: document.documentElement.clientWidth
+	}));
+	expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
+
+	// The transition works without JavaScript; the original page then submits a stale start.
+	const plainContext = await createSessionContext(browser, aliceToken, false);
+	const plain = await plainContext.newPage();
+	await plain.goto('/bookclub');
+	await plain.getByRole('button', { name: 'START THIS BOOK' }).click();
+	await expect(plain.locator('#current-book h2')).toHaveText(upcomingTitle);
+	await expect(plain.locator('#upcoming-book')).toHaveCount(0);
+	await expect(plain.locator('#archive')).toContainText('Current Browser Book');
+	await admin.getByRole('button', { name: 'START THIS BOOK' }).click();
+	await expect(admin.getByRole('alert')).toContainText('no longer waiting to start');
+	await admin.reload();
+	await expect(admin.locator('#current-book h2')).toHaveText(upcomingTitle);
+	await member.reload();
+	await expect(member.locator('#current-book h2')).toHaveText(upcomingTitle);
+	await expect(member.locator('#upcoming-book')).toHaveCount(0);
+	await plainContext.close();
+	await memberContext.close();
+	await adminContext.close();
 });
 
 test('ordinary login and logout forms send same-origin CSRF and referrer headers', async ({
