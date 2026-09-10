@@ -1,21 +1,8 @@
 export class DrawSound {
-	private context: AudioContext | null = null;
 	private voices = new Set<OscillatorNode>();
 
-	async enable(): Promise<boolean> {
-		try {
-			this.context ??= new AudioContext();
-			await this.context.resume();
-			return this.context.state === 'running';
-		} catch {
-			return false;
-		}
-	}
-
-	play(rotation: number, tickets: number, duration: number): void {
+	play(context: AudioContext, rotation: number, tickets: number, duration: number): void {
 		this.stop();
-		const context = this.context;
-		if (!context || context.state !== 'running') return;
 		const start = context.currentTime;
 		const slice = 360 / Math.max(1, tickets);
 		if (duration > 0) {
@@ -23,21 +10,22 @@ export class DrawSound {
 				// Invert the wheel's quartic ease-out to click exactly when a divider
 				// reaches the pointer, even when rendering frames are delayed.
 				const time = start + ((1 - (1 - angle / rotation) ** 0.25) * duration) / 1000;
-				this.tone(1100, time, 0.025, 0.035, 'triangle', 550);
+				this.tone(context, 1100, time, 0.025, 0.035, 'triangle', 550);
 			}
 		}
 
 		const landing = start + duration / 1000;
 		// A rising major arpeggio resolves into a short chord, like a retro game win.
 		[523.25, 659.25, 783.99, 1046.5].forEach((frequency, index) => {
-			this.tone(frequency, landing + index * 0.09, 0.19, 0.045, 'triangle');
+			this.tone(context, frequency, landing + index * 0.09, 0.19, 0.045, 'triangle');
 		});
 		[523.25, 659.25, 783.99, 1046.5].forEach((frequency) => {
-			this.tone(frequency, landing + 0.38, 0.55, 0.025, 'triangle');
+			this.tone(context, frequency, landing + 0.38, 0.55, 0.025, 'triangle');
 		});
 	}
 
 	private tone(
+		context: AudioContext,
 		frequency: number,
 		start: number,
 		duration: number,
@@ -45,7 +33,6 @@ export class DrawSound {
 		type: OscillatorType,
 		endFrequency = frequency
 	): void {
-		const context = this.context!;
 		const oscillator = context.createOscillator();
 		const gain = context.createGain();
 		oscillator.type = type;
@@ -71,11 +58,5 @@ export class DrawSound {
 			voice.disconnect();
 		}
 		this.voices.clear();
-	}
-
-	dispose(): void {
-		this.stop();
-		void this.context?.close().catch(() => {});
-		this.context = null;
 	}
 }

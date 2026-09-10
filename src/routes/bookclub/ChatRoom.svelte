@@ -4,9 +4,12 @@
 	import { onMount, untrack } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import {
-		loadAudioPreferences,
-		saveAudioPreferences
-	} from '#lib/components/bookclub/audio-preferences';
+		getSoundEffectsSnapshot,
+		initializeSoundEffects,
+		playSoundTone,
+		subscribeToSoundEffects,
+		type SoundEffectsSnapshot
+	} from '#lib/components/bookclub/sound-effects';
 
 	const CHAT_POLL_INTERVAL_MS = 5_000;
 	const CHAT_POLL_TIMEOUT_MS = 10_000;
@@ -53,9 +56,7 @@
 	let onlineMemberCount = $derived(visibleMembers.filter((member) => member.isOnline).length);
 	let pollError = $state<string | null>(null);
 	let chatActionPending = $state(false);
-	let soundsEnabled = $state(false);
-	let soundUnavailable = $state(false);
-	let audioContext: AudioContext | null = null;
+	let soundEffects = $state<SoundEffectsSnapshot>(getSoundEffectsSnapshot());
 	let messageList = $state<HTMLDivElement | null>(null);
 	let stickToBottom = $state(true);
 	let hasSeenMessages = false;
@@ -69,34 +70,8 @@
 	let pollStopped = false;
 
 	onMount(() => {
-		soundsEnabled = loadAudioPreferences().soundsEnabled;
-
-		const activateSounds = () => {
-			if (!soundsEnabled || audioContext?.state === 'running') return;
-
-			try {
-				const context = getAudioContext();
-				void context.resume().catch(() => {
-					soundsEnabled = false;
-					soundUnavailable = true;
-					savePreferences();
-				});
-			} catch {
-				soundsEnabled = false;
-				soundUnavailable = true;
-				savePreferences();
-			}
-		};
-
-		window.addEventListener('pointerdown', activateSounds);
-		window.addEventListener('keydown', activateSounds);
-
-		return () => {
-			window.removeEventListener('pointerdown', activateSounds);
-			window.removeEventListener('keydown', activateSounds);
-			audioContext?.close();
-			audioContext = null;
-		};
+		initializeSoundEffects();
+		return subscribeToSoundEffects((nextSnapshot) => (soundEffects = nextSnapshot));
 	});
 
 	$effect(() => {
@@ -215,7 +190,7 @@
 
 		if (!hasSeenPresence) {
 			hasSeenPresence = true;
-		} else if (soundsEnabled) {
+		} else if (soundEffects.enabled) {
 			for (const member of currentMembers) {
 				if (
 					member.isOnline &&
@@ -248,87 +223,32 @@
 			return;
 		}
 
-		if (soundsEnabled) {
+		if (soundEffects.enabled) {
 			for (const message of newMessages) {
 				if (!message.isOwn) playMessageSound(message);
 			}
 		}
 	});
 
-	function getAudioContext(): AudioContext {
-		return (audioContext ??= new AudioContext());
-	}
-
-	function savePreferences(): void {
-		const preferences = loadAudioPreferences();
-		saveAudioPreferences({
-			soundsEnabled,
-			musicEnabled: preferences.musicEnabled,
-			musicVolume: preferences.musicVolume
-		});
-	}
-
-	function playTone(
-		frequency: number,
-		duration: number,
-		delay: number,
-		type: OscillatorType
-	): void {
-		if (!audioContext || audioContext.state !== 'running') return;
-
-		const start = audioContext.currentTime + delay;
-		const oscillator = audioContext.createOscillator();
-		const gain = audioContext.createGain();
-		oscillator.type = type;
-		oscillator.frequency.setValueAtTime(frequency, start);
-		gain.gain.setValueAtTime(0.0001, start);
-		gain.gain.exponentialRampToValueAtTime(0.09, start + 0.01);
-		gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-		oscillator.connect(gain).connect(audioContext.destination);
-		oscillator.start(start);
-		oscillator.stop(start + duration + 0.02);
-	}
-
 	function playMessageSound(message: Message): void {
 		if (message.isAnnouncement) {
 			if (message.body.startsWith('MEMBER REMOVED:')) {
-				playTone(240, 0.12, 0, 'sawtooth');
-				playTone(150, 0.2, 0.12, 'sawtooth');
+				playSoundTone(240, 0.12, 0, 'sawtooth');
+				playSoundTone(150, 0.2, 0.12, 'sawtooth');
 				return;
 			}
 
-			playTone(520, 0.1, 0, 'triangle');
-			playTone(780, 0.16, 0.1, 'triangle');
+			playSoundTone(520, 0.1, 0, 'triangle');
+			playSoundTone(780, 0.16, 0.1, 'triangle');
 			return;
 		}
 
-		playTone(660, 0.12, 0, 'sine');
+		playSoundTone(660, 0.12, 0, 'sine');
 	}
 
 	function playMemberOnlineSound(): void {
-		playTone(740, 0.08, 0, 'sine');
-		playTone(1040, 0.14, 0.08, 'sine');
-	}
-
-	async function toggleSounds(): Promise<void> {
-		if (soundsEnabled) {
-			soundsEnabled = false;
-			savePreferences();
-			return;
-		}
-
-		try {
-			const context = getAudioContext();
-			if (context.state === 'suspended') await context.resume();
-			soundsEnabled = true;
-			soundUnavailable = false;
-			savePreferences();
-			if (soundsEnabled) playTone(660, 0.12, 0, 'sine');
-		} catch {
-			soundsEnabled = false;
-			soundUnavailable = true;
-			savePreferences();
-		}
+		playSoundTone(740, 0.08, 0, 'sine');
+		playSoundTone(1040, 0.14, 0.08, 'sine');
 	}
 
 	function updateScrollPosition(): void {
@@ -360,25 +280,10 @@
 	class="border-4 border-black bg-[#d4d0c8] shadow-[4px_4px_0_#000]"
 >
 	<div class="flex min-h-56 flex-col p-3">
-		<div class="mb-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-gray-600">
-			<span>Incoming messages and new arrivals use browser-generated tones.</span>
-			<button
-				type="button"
-				onclick={toggleSounds}
-				class="border-2 border-black bg-[#d4d0c8] px-2 py-1 font-bold text-black hover:bg-white focus:ring-2 focus:ring-[#000080] focus:outline-none"
-				aria-pressed={soundsEnabled}
-			>
-				{soundsEnabled ? 'SOUNDS: ON' : 'SOUNDS: OFF'}
-			</button>
-		</div>
-		{#if soundUnavailable}
-			<p
-				class="mb-3 border-2 border-black bg-[#fff0f0] px-2 py-1 text-[10px] text-[#800000]"
-				role="status"
-			>
-				Browser audio is unavailable.
-			</p>
-		{/if}
+		<p class="mb-3 text-[10px] text-gray-600">
+			Incoming messages and new arrivals use browser-generated tones. Toggle them with SOUND FX in
+			the club menu.
+		</p>
 		{#if pollError}
 			<p
 				class="mb-3 border-2 border-black bg-[#fff0f0] px-2 py-1 text-[10px] text-[#800000]"

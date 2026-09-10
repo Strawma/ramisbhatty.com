@@ -394,15 +394,13 @@ test('admins pre-roll a book and explicitly start it while members see both sele
 	await adminContext.close();
 });
 
-test('wheel sound follows the spin, celebrates, mutes, and closes on navigation', async ({
-	browser
-}) => {
+test('global sound effects toggle drives the wheel, persists, and mutes', async ({ browser }) => {
 	const { bobToken } = getTestSessions();
 	const context = await createSessionContext(browser, bobToken);
 	const page = await context.newPage();
 	await page.emulateMedia({ reducedMotion: 'no-preference' });
 	await page.addInitScript(() => {
-		const metrics = { starts: [] as number[], cancelled: 0, closed: 0 };
+		const metrics = { starts: [] as number[], cancelled: 0 };
 		Object.assign(window, { wheelAudioMetrics: metrics });
 		const createOscillator = AudioContext.prototype.createOscillator;
 		AudioContext.prototype.createOscillator = function () {
@@ -419,31 +417,29 @@ test('wheel sound follows the spin, celebrates, mutes, and closes on navigation'
 			};
 			return voice;
 		};
-		const close = AudioContext.prototype.close;
-		AudioContext.prototype.close = function () {
-			metrics.closed += 1;
-			return close.call(this);
-		};
 	});
 	const metrics = () =>
 		page.evaluate(
 			() =>
 				(
 					window as unknown as {
-						wheelAudioMetrics: { starts: number[]; cancelled: number; closed: number };
+						wheelAudioMetrics: { starts: number[]; cancelled: number };
 					}
 				).wheelAudioMetrics
 		);
 	const errors: string[] = [];
 	page.on('pageerror', (error) => errors.push(error.message));
+
 	await page.goto('/bookclub/draw/bookclub-e2e-current-cycle');
-	await expect(page.getByRole('button', { name: 'ENABLE SOUND' })).toBeVisible();
+	const soundToggle = page.getByRole('button', { name: 'Toggle sound effects' });
+	await expect(soundToggle).toHaveAttribute('aria-pressed', 'false');
+	await expect(page.getByText('DRAW COMPLETE // RESULT CONFIRMED')).toBeVisible();
+	// The automatic replay stays silent until sound effects are enabled.
 	expect((await metrics()).starts).toEqual([]);
-	await page.getByRole('button', { name: 'ENABLE SOUND' }).click();
-	await expect(page.getByRole('button', { name: 'MUTE SOUND' })).toHaveAttribute(
-		'aria-pressed',
-		'true'
-	);
+
+	await soundToggle.click();
+	await expect(soundToggle).toHaveAttribute('aria-pressed', 'true');
+	await expect(page.getByText('DRAW IN PROGRESS // SHUFFLING TICKETS')).toBeVisible();
 	const firstSpin = (await metrics()).starts;
 	expect(firstSpin.length).toBeGreaterThan(10);
 	const ticks = firstSpin.slice(0, -8);
@@ -454,19 +450,37 @@ test('wheel sound follows the spin, celebrates, mutes, and closes on navigation'
 	await expect(page.getByText('SELECTED BOOK', { exact: true })).toHaveCount(1);
 	await page.screenshot({ path: '/tmp/bookclub-wheel-desktop.png', fullPage: true });
 
+	// The sidebar choice is stored in the browser and survives a full reload.
+	await page.reload();
+	await expect(soundToggle).toHaveAttribute('aria-pressed', 'true');
+	await expect(page.getByText('DRAW COMPLETE // RESULT CONFIRMED')).toBeVisible();
+	// A fresh page cannot start audio without a gesture, so the automatic replay stays silent.
+	expect((await metrics()).starts).toEqual([]);
+
 	await page.getByRole('button', { name: 'REPLAY DRAW', exact: true }).click();
 	await expect(page.getByText('DRAW IN PROGRESS // SHUFFLING TICKETS')).toBeVisible();
-	await page.getByRole('button', { name: 'MUTE SOUND' }).click();
+	// The replay matches the first spin apart from the enable confirmation chime.
+	await expect
+		.poll(async () => (await metrics()).starts.length)
+		.toBeGreaterThanOrEqual(firstSpin.length - 1);
+
+	await soundToggle.click();
+	await expect(soundToggle).toHaveAttribute('aria-pressed', 'false');
 	expect((await metrics()).cancelled).toBeGreaterThan(0);
 	const mutedCount = (await metrics()).starts.length;
 	await page.getByRole('button', { name: 'REPLAY DRAW', exact: true }).click();
 	expect((await metrics()).starts).toHaveLength(mutedCount);
 
 	await page.emulateMedia({ reducedMotion: 'reduce' });
-	await page.getByRole('button', { name: 'ENABLE SOUND' }).click();
+	await expect
+		.poll(() => page.evaluate(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches))
+		.toBe(true);
+	await page.waitForTimeout(100);
+	const beforeReducedEnable = (await metrics()).starts.length;
+	await soundToggle.click();
 	await expect(page.getByText('DRAW COMPLETE // RESULT CONFIRMED')).toBeVisible();
-	// Reduced motion skips the divider ticks but retains the explicitly enabled fanfare.
-	expect((await metrics()).starts).toHaveLength(mutedCount + 8);
+	// Reduced motion skips the divider ticks but keeps the confirmation and the fanfare.
+	expect((await metrics()).starts).toHaveLength(beforeReducedEnable + 9);
 	await page.setViewportSize({ width: 360, height: 740 });
 	await page.screenshot({ path: '/tmp/bookclub-wheel-mobile.png', fullPage: true });
 	const dimensions = await page.evaluate(() => ({
@@ -474,13 +488,67 @@ test('wheel sound follows the spin, celebrates, mutes, and closes on navigation'
 		content: document.documentElement.scrollWidth
 	}));
 	expect(dimensions.content).toBeLessThanOrEqual(dimensions.width);
-	await page.getByRole('link', { name: '< RETURN TO BOOK' }).click();
-	await expect.poll(async () => (await metrics()).closed).toBe(1);
 	expect(errors).toEqual([]);
 	await context.close();
 });
 
-test('wheel remains usable when browser audio is unavailable', async ({ browser }) => {
+test('sidebar sound effects toggle gates chat tones', async ({ browser }) => {
+	const { aliceToken, bobToken } = getTestSessions();
+	const contextAlice = await createSessionContext(browser, aliceToken);
+	const contextBob = await createSessionContext(browser, bobToken);
+	await contextAlice.addInitScript(() => {
+		const metrics = { oscillators: 0 };
+		Object.assign(window, { chatAudioMetrics: metrics });
+		const createOscillator = AudioContext.prototype.createOscillator;
+		AudioContext.prototype.createOscillator = function () {
+			metrics.oscillators += 1;
+			return createOscillator.call(this);
+		};
+	});
+	const alice = await contextAlice.newPage();
+	const bob = await contextBob.newPage();
+	await Promise.all([
+		alice.goto('/bookclub', { waitUntil: 'domcontentloaded' }),
+		bob.goto('/bookclub', { waitUntil: 'domcontentloaded' })
+	]);
+	await expect(alice.locator('#chatroom')).toBeVisible();
+	await expect(bob.locator('#chatroom')).toBeVisible();
+	await expect(alice.locator('.dashboard-workspace')).toHaveAttribute('data-ready', 'true');
+
+	const metric = () =>
+		alice.evaluate(
+			() =>
+				(window as unknown as { chatAudioMetrics: { oscillators: number } }).chatAudioMetrics
+					.oscillators
+		);
+	const soundToggle = alice.getByRole('button', { name: 'Toggle sound effects' });
+	await expect(soundToggle).toHaveAttribute('aria-pressed', 'false');
+	await soundToggle.click();
+	await expect(soundToggle).toHaveAttribute('aria-pressed', 'true');
+	const afterEnable = await metric();
+	expect(afterEnable).toBeGreaterThan(0);
+
+	const firstMessage = `Sound on check ${Date.now()}`;
+	await bob.getByPlaceholder('type a message...').fill(firstMessage);
+	await bob.getByRole('button', { name: 'SEND' }).click();
+	await expect(alice.getByText(firstMessage, { exact: true })).toBeVisible({ timeout: 8_000 });
+	await expect.poll(metric).toBeGreaterThan(afterEnable);
+
+	await soundToggle.click();
+	await expect(soundToggle).toHaveAttribute('aria-pressed', 'false');
+	const afterMute = await metric();
+	const secondMessage = `Sound off check ${Date.now()}`;
+	await bob.getByPlaceholder('type a message...').fill(secondMessage);
+	await bob.getByRole('button', { name: 'SEND' }).click();
+	await expect(alice.getByText(secondMessage, { exact: true })).toBeVisible({ timeout: 8_000 });
+	await alice.waitForTimeout(1_000);
+	expect(await metric()).toBe(afterMute);
+
+	await contextAlice.close();
+	await contextBob.close();
+});
+
+test('sound effects toggle reports unavailable browser audio', async ({ browser }) => {
 	const { bobToken } = getTestSessions();
 	const context = await createSessionContext(browser, bobToken);
 	const page = await context.newPage();
@@ -489,7 +557,11 @@ test('wheel remains usable when browser audio is unavailable', async ({ browser 
 		Object.defineProperty(window, 'AudioContext', { value: undefined, configurable: true });
 	});
 	await page.goto('/bookclub/draw/bookclub-e2e-archive-cycle');
-	await page.getByRole('button', { name: 'ENABLE SOUND' }).click();
+	await expect(page.getByText('DRAW COMPLETE // RESULT CONFIRMED')).toBeVisible();
+	const soundToggle = page.getByRole('button', { name: 'Toggle sound effects' });
+	await soundToggle.click();
+	await expect(soundToggle).toHaveAttribute('aria-pressed', 'false');
+	await expect(page.getByText('Browser audio is unavailable.')).toBeVisible();
 	await expect(
 		page.getByText('Sound is unavailable in this browser.', { exact: false })
 	).toBeVisible();

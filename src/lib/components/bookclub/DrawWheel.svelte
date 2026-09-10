@@ -1,6 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { DrawSound } from './draw-sound';
+	import {
+		ensureSoundEffects,
+		getSoundEffectsContext,
+		getSoundEffectsSnapshot,
+		initializeSoundEffects,
+		subscribeToSoundEffects,
+		type SoundEffectsSnapshot
+	} from './sound-effects';
 	import type { BookclubSuggestion } from '#lib/server/bookclub/cycles';
 
 	let {
@@ -77,33 +85,30 @@
 	);
 	let rotation = $state(0);
 	let finished = $state(false);
-	let soundEnabled = $state(false);
-	let enablingSound = $state(false);
-	let soundUnavailable = $state(false);
+	let soundEffects = $state<SoundEffectsSnapshot>(getSoundEffectsSnapshot());
 	let frame: number | null = null;
 	let reducedMotion = false;
 	let destroyed = false;
-	const sound = new DrawSound();
+	const wheelSound = new DrawSound();
 
 	function stopAnimation(): void {
 		if (frame !== null) cancelAnimationFrame(frame);
 		frame = null;
 	}
 
-	function play(withSound = soundEnabled): void {
+	function play(withSound = soundEffects.enabled): void {
 		stopAnimation();
-		sound.stop();
+		wheelSound.stop();
 		rotation = 0;
 		finished = false;
 		const duration = reducedMotion ? 0 : wheel.duration;
 		const startedAt = performance.now();
-		if (withSound) {
+		const context = getSoundEffectsContext();
+		if (withSound && context?.state === 'running') {
 			try {
-				sound.play(wheel.rotation, wheel.ordered.length, duration);
+				wheelSound.play(context, wheel.rotation, wheel.ordered.length, duration);
 			} catch {
-				sound.stop();
-				soundEnabled = false;
-				soundUnavailable = true;
+				wheelSound.stop();
 			}
 		}
 		const animate = (now: number) => {
@@ -120,32 +125,26 @@
 	}
 
 	async function replay(): Promise<void> {
-		if (soundEnabled && !(await sound.enable())) {
-			soundEnabled = false;
-			soundUnavailable = true;
-		}
+		if (soundEffects.enabled) await ensureSoundEffects();
 		if (!destroyed) play();
-	}
-
-	async function toggleSound(): Promise<void> {
-		if (soundEnabled) {
-			soundEnabled = false;
-			sound.stop();
-			return;
-		}
-		enablingSound = true;
-		const enabled = await sound.enable();
-		if (destroyed) return;
-		enablingSound = false;
-		soundEnabled = enabled;
-		soundUnavailable = !enabled;
-		play();
 	}
 
 	onMount(() => {
 		const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
 		reducedMotion = preference.matches;
-		play(false);
+		initializeSoundEffects();
+		soundEffects = getSoundEffectsSnapshot();
+		let previousEnabled = soundEffects.enabled;
+		const unsubscribe = subscribeToSoundEffects((nextSnapshot) => {
+			const wasEnabled = previousEnabled;
+			previousEnabled = nextSnapshot.enabled;
+			soundEffects = nextSnapshot;
+			if (nextSnapshot.enabled === wasEnabled) return;
+			if (nextSnapshot.enabled) void replay();
+			else wheelSound.stop();
+		});
+		play(soundEffects.enabled && getSoundEffectsContext()?.state === 'running');
+
 		const updateMotion = () => {
 			reducedMotion = preference.matches;
 			if (reducedMotion) play(false);
@@ -153,7 +152,7 @@
 		const stopWhenHidden = () => {
 			if (document.hidden) {
 				stopAnimation();
-				sound.stop();
+				wheelSound.stop();
 				rotation = wheel.rotation;
 				finished = true;
 			}
@@ -163,7 +162,8 @@
 		return () => {
 			destroyed = true;
 			stopAnimation();
-			sound.dispose();
+			wheelSound.stop();
+			unsubscribe();
 			preference.removeEventListener('change', updateMotion);
 			document.removeEventListener('visibilitychange', stopWhenHidden);
 		};
@@ -217,21 +217,12 @@
 		>
 			REPLAY DRAW
 		</button>
-		<button
-			type="button"
-			onclick={toggleSound}
-			aria-pressed={soundEnabled}
-			disabled={enablingSound}
-			class="mx-auto mt-3 block border-2 border-black bg-[#ffffcc] px-3 py-2 font-bold hover:bg-white focus:ring-2 focus:ring-[#000080] focus:outline-none disabled:opacity-50"
-		>
-			{enablingSound ? 'ENABLING SOUND...' : soundEnabled ? 'MUTE SOUND' : 'ENABLE SOUND'}
-		</button>
-		<p class="mt-2 text-center text-xs" role="status">
-			{soundUnavailable
+		<p class="mt-3 text-center text-xs" role="status">
+			{soundEffects.unavailable
 				? 'Sound is unavailable in this browser. The wheel still works silently.'
-				: soundEnabled
+				: soundEffects.enabled
 					? 'Sound on: ticket ticks and a victory fanfare.'
-					: 'Enable sound to replay with ticket ticks and a victory fanfare.'}
+					: 'Enable SOUND FX in the club menu for ticket ticks and a victory fanfare.'}
 		</p>
 	</div>
 
