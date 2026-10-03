@@ -1,7 +1,11 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
 	import ClubhouseBackdrop from '#lib/components/bookclub/ClubhouseBackdrop.svelte';
+	import { disposeSoundEffects } from '#lib/components/bookclub/sound-effects';
 
 	let { children } = $props();
+
+	onDestroy(() => disposeSoundEffects());
 </script>
 
 <svelte:head>

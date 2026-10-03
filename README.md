@@ -81,10 +81,34 @@ On the private `/bookclub` homepage, an admin opens a poll, closes suggestions, 
 **SPIN NEXT BOOK**. The saved winner appears as **UPCOMING BOOK** in the club bulletin so members
 can get a copy while continuing the current book. The draw replay remains available.
 
+If an upcoming selection cannot go ahead, an admin opens **REPLAY UPCOMING DRAW**, expands
+**ADMIN: REROLL UPCOMING BOOK**, enters a reason, and selects **RESPIN BOOK**. The replacement is
+saved immediately. Members can see the rejected titles and reasons in the replay's reroll history,
+and chat announces the replacement. Rerolls are unavailable once the book starts. Rejected books,
+including matching suggestions from other members, stay out of further rerolls of that poll.
+
+The member whose ticket wins sits out the next two draws from separate polls. Their suggestions
+remain editable and carry forward as usual, but they are excluded from the eligible wheel tickets
+until the cooldown expires. Existing draw history counts toward the cooldown. Rerolling the same
+poll does not consume another cooldown draw; only its final winner receives the cooldown.
+Saved replays retain the eligible ticket pool used for that result.
+
+If no eligible suggestions remain, the draw stops. An admin can select **REOPEN SUGGESTIONS** to
+collect suggestions from eligible members, then close the poll again. Failed draws and reopened
+polls do not advance cooldowns. A club needs at least three participating submitters to keep
+drawing under this rule. A reroll with no eligible alternatives also stops and keeps the saved book.
+
 When the club is ready, an admin selects **START THIS BOOK** in the bulletin. This starts the
 upcoming book and moves the previous current book into the archive, where members can review it.
 Every book requires this explicit start, including the first one. Drawing or replaying a result
 never advances the reading schedule.
+
+The draw wheel automatically replays silently. Enable **SOUND FX** in the sidebar to replay with a
+tick as each ticket passes the pointer and a short victory fanfare on landing. The same toggle
+controls chat message tones and arrival dings, stops effects immediately when turned off, and is
+saved in the browser. Audio is synthesized in the browser without downloading sound files.
+Reduced-motion mode shows the result immediately and plays only the fanfare when sound effects are
+enabled.
 
 Only one upcoming book can wait at a time. A new suggestion poll can open while it waits, carrying
 forward the unselected suggestions, but another draw must wait until the upcoming book starts.
@@ -93,6 +117,8 @@ upcoming poll removes that selection without advancing the current book.
 
 Apply `migrations/0011_bookclub_upcoming_book.sql` before deploying this workflow. Existing current
 and archived books keep their reading dates; the migration enforces a single upcoming selection.
+Apply `migrations/0012_bookclub_rerolls.sql` before deploying rerolls and cooldowns. It adds saved
+ticket pools and reroll history without changing existing books or reading dates.
 
 ### Site content
 

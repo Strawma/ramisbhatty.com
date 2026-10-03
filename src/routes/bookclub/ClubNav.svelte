@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import BackgroundMusic from '#lib/components/bookclub/BackgroundMusic.svelte';
+	import SoundEffectsToggle from '#lib/components/bookclub/SoundEffectsToggle.svelte';
 
 	type Member = {
 		name: string;
@@ -56,6 +57,8 @@
 	</div>
 
 	<BackgroundMusic />
+
+	<SoundEffectsToggle />
 
 	<form method="POST" action="/bookclub/logout" class="mt-3">
 		<button
