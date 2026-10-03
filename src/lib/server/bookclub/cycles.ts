@@ -1,14 +1,10 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import type { BookclubMember } from './db';
-import {
-	getChatroomState,
-	prepareChatAnnouncement,
-	type BookclubChatMember,
-	type BookclubChatMessage
-} from './chat';
+import { getChatroomState, type BookclubChatMember, type BookclubChatMessage } from './chat';
 import { getNextMeeting, type BookclubMeeting } from './meetings';
 
 const SUGGESTION_LIMIT = 3;
+const WINNER_COOLDOWN_DRAWS = 2;
 
 export interface BookclubBook {
 	id: string;
@@ -41,6 +37,7 @@ export interface SuggestionProgress {
 	memberId: string;
 	memberName: string;
 	count: number;
+	cooldownDraws: number;
 }
 
 export interface BookclubDashboard {
@@ -81,6 +78,16 @@ export interface BookclubDrawReplay {
 	winnerSuggestionId: string;
 	book: BookclubBook;
 	suggestions: BookclubSuggestion[];
+	rerolls: BookclubReroll[];
+}
+
+export interface BookclubReroll {
+	id: string;
+	previousTitle: string;
+	previousAuthor: string;
+	reason: string;
+	memberName: string;
+	rerolledAt: string;
 }
 
 interface CycleRow {
@@ -392,6 +399,7 @@ export async function getDashboard(
 		getArchive(database)
 	]);
 
+	const cooldowns = await getWinnerCooldowns(database);
 	const currentCycleValue = toCycle(currentCycle.results[0] ?? null);
 	const actionCycleValue = toCycle(actionCycle.results[0] ?? null);
 
@@ -412,7 +420,8 @@ export async function getDashboard(
 		suggestionProgress: suggestionProgress.results.map((progress) => ({
 			memberId: progress.member_id,
 			memberName: progress.member_name,
-			count: progress.count
+			count: progress.count,
+			cooldownDraws: cooldowns.get(progress.member_id) ?? 0
 		})),
 		nextMeeting,
 		chatMessages: chatroomState.messages,
@@ -493,7 +502,7 @@ export async function getDrawReplay(
 ): Promise<BookclubDrawReplay | null> {
 	const draw = await database
 		.prepare(
-			`SELECT c.id AS cycle_id, d.id AS draw_id, d.suggestion_id, d.drawn_at,
+			`SELECT c.id AS cycle_id, d.id AS draw_id, d.suggestion_id, d.drawn_at, d.tickets_json,
 			        b.id AS book_id, b.title AS book_title, b.author AS book_author,
 			        b.cover_url AS book_cover_url, b.started_at AS book_started_at,
 			        b.completed_at AS book_completed_at
@@ -509,6 +518,7 @@ export async function getDrawReplay(
 			draw_id: string;
 			suggestion_id: string;
 			drawn_at: string;
+			tickets_json: string | null;
 			book_id: string;
 			book_title: string;
 			book_author: string;
@@ -519,16 +529,26 @@ export async function getDrawReplay(
 
 	if (!draw) return null;
 
-	const suggestions = await database
+	// Older draws predate saved pools and retain their original full-poll replay.
+	const suggestions = draw.tickets_json
+		? (JSON.parse(draw.tickets_json) as BookclubSuggestion[])
+		: await getCycleSuggestions(database, cycleId);
+	const history = await database
 		.prepare(
-			`SELECT s.id, s.position, s.title, s.author, s.member_id, m.name AS member_name
-			 FROM bookclub_suggestions AS s
-			 INNER JOIN bookclub_members AS m ON m.id = s.member_id
-			 WHERE s.cycle_id = ?
-			 ORDER BY s.id`
+			`SELECT r.id, r.previous_title, r.previous_author, r.reason, r.rerolled_at, m.name
+			 FROM bookclub_rerolls AS r
+			 INNER JOIN bookclub_members AS m ON m.id = r.rerolled_by_member_id
+			 WHERE r.cycle_id = ? ORDER BY r.rowid`
 		)
 		.bind(cycleId)
-		.all<SuggestionRow>();
+		.all<{
+			id: string;
+			previous_title: string;
+			previous_author: string;
+			reason: string;
+			rerolled_at: string;
+			name: string;
+		}>();
 
 	return {
 		cycleId: draw.cycle_id,
@@ -543,13 +563,14 @@ export async function getDrawReplay(
 			startedAt: draw.book_started_at,
 			completedAt: draw.book_completed_at
 		},
-		suggestions: suggestions.results.map((suggestion) => ({
-			id: suggestion.id,
-			position: suggestion.position,
-			title: suggestion.title,
-			author: suggestion.author,
-			memberId: suggestion.member_id,
-			memberName: suggestion.member_name
+		suggestions,
+		rerolls: history.results.map((row) => ({
+			id: row.id,
+			previousTitle: row.previous_title,
+			previousAuthor: row.previous_author,
+			reason: row.reason,
+			memberName: row.name,
+			rerolledAt: row.rerolled_at
 		}))
 	};
 }
@@ -596,6 +617,7 @@ export async function deleteBookPoll(database: D1Database, cycleId: string): Pro
 				 WHERE book_id = ? ${bookIsShared}`
 			)
 			.bind(cycle.book_id, ...bookBindings),
+		database.prepare('DELETE FROM bookclub_rerolls WHERE cycle_id = ?').bind(cycle.id),
 		database.prepare('DELETE FROM bookclub_draws WHERE cycle_id = ?').bind(cycle.id),
 		database.prepare('DELETE FROM bookclub_suggestions WHERE cycle_id = ?').bind(cycle.id),
 		database.prepare('DELETE FROM bookclub_cycles WHERE id = ?').bind(cycle.id),
@@ -754,6 +776,16 @@ export async function deleteSuggestion(
 	return Boolean(result.meta.changes);
 }
 
+export async function reopenCycle(database: D1Database, cycleId: string): Promise<boolean> {
+	const result = await database
+		.prepare(
+			`UPDATE bookclub_cycles SET status = 'open', closed_at = NULL WHERE id = ? AND status = 'closed'`
+		)
+		.bind(cycleId)
+		.run();
+	return Boolean(result.meta.changes);
+}
+
 export async function closeCycle(database: D1Database, cycleId: string): Promise<void> {
 	const result = await database
 		.prepare(
@@ -767,6 +799,174 @@ export async function closeCycle(database: D1Database, cycleId: string): Promise
 	if (!result.meta.changes) {
 		throw new Error('This book poll is no longer open.');
 	}
+}
+
+async function getCycleSuggestions(
+	database: D1Database,
+	cycleId: string
+): Promise<BookclubSuggestion[]> {
+	const rows = await database
+		.prepare(
+			`SELECT s.id, s.position, s.title, s.author, s.member_id, m.name AS member_name
+		 FROM bookclub_suggestions AS s
+		 INNER JOIN bookclub_members AS m ON m.id = s.member_id
+		 WHERE s.cycle_id = ? ORDER BY s.id`
+		)
+		.bind(cycleId)
+		.all<SuggestionRow>();
+	return rows.results.map((row) => ({
+		id: row.id,
+		position: row.position,
+		title: row.title,
+		author: row.author,
+		memberId: row.member_id,
+		memberName: row.member_name
+	}));
+}
+
+async function getWinnerCooldowns(
+	database: D1Database,
+	excludeCycleId = ''
+): Promise<Map<string, number>> {
+	// Updating a draw during a reroll preserves its rowid and its place in the poll sequence.
+	const draws = await database
+		.prepare(
+			`SELECT s.member_id FROM bookclub_draws AS d
+		 INNER JOIN bookclub_suggestions AS s ON s.id = d.suggestion_id
+		 WHERE d.cycle_id != ? ORDER BY d.rowid DESC LIMIT ?`
+		)
+		.bind(excludeCycleId, WINNER_COOLDOWN_DRAWS)
+		.all<{ member_id: string }>();
+	const cooldowns = new Map<string, number>();
+	draws.results.forEach((draw, index) => {
+		if (!cooldowns.has(draw.member_id))
+			cooldowns.set(draw.member_id, WINNER_COOLDOWN_DRAWS - index);
+	});
+	return cooldowns;
+}
+
+async function getEligibleSuggestions(
+	database: D1Database,
+	cycleId: string
+): Promise<BookclubSuggestion[]> {
+	const [suggestions, cooldowns, rejected, books] = await Promise.all([
+		getCycleSuggestions(database, cycleId),
+		getWinnerCooldowns(database, cycleId),
+		database
+			.prepare(
+				'SELECT previous_title AS title, previous_author AS author FROM bookclub_rerolls WHERE cycle_id = ?'
+			)
+			.bind(cycleId)
+			.all<{ title: string; author: string }>(),
+		database
+			.prepare('SELECT title, author FROM bookclub_books')
+			.all<{ title: string; author: string }>()
+	]);
+	// A following poll may already contain carried tickets for a newly rerolled winner.
+	// Check selected books here as well as on save so those copies cannot win again.
+	const unavailable = [...rejected.results, ...books.results];
+	return suggestions.filter(
+		(suggestion) =>
+			!cooldowns.has(suggestion.memberId) &&
+			!unavailable.some(
+				(book) =>
+					bookFieldMatches(suggestion.title, book.title) &&
+					bookFieldMatches(suggestion.author, book.author)
+			)
+	);
+}
+
+export async function rerollCycle(
+	database: D1Database,
+	cycleId: string,
+	expectedDrawId: string,
+	memberId: string,
+	reason: string
+): Promise<BookclubBook> {
+	const admin = await database
+		.prepare("SELECT id FROM bookclub_members WHERE id = ? AND role = 'admin' AND active = 1")
+		.bind(memberId)
+		.first();
+	if (!admin) throw new Error('Only the club admin can reroll a book.');
+	if (!reason.trim() || reason.trim().length > 300)
+		throw new Error('Enter a reason between 1 and 300 characters.');
+	const replay = await getDrawReplay(database, cycleId);
+	if (!replay || replay.drawId !== expectedDrawId || replay.book.startedAt) {
+		throw new Error('That result is no longer waiting for a reroll. Refresh the page.');
+	}
+	const suggestions = await getEligibleSuggestions(database, cycleId);
+	if (!suggestions.length) throw new Error('No eligible alternatives remain for this poll.');
+	const winner = suggestions[crypto.getRandomValues(new Uint32Array(1))[0] % suggestions.length];
+	const bookId = crypto.randomUUID();
+	const drawId = crypto.randomUUID();
+	const claimed = 'SELECT 1 FROM bookclub_draws WHERE cycle_id = ? AND id = ?';
+	// Claim the exact displayed result in the same transaction as the audit, replacement,
+	// and announcement. A competing reroll or start makes the whole batch a no-op.
+	const results = await database.batch([
+		database
+			.prepare(
+				`INSERT INTO bookclub_rerolls
+			 (id, cycle_id, previous_draw_id, previous_suggestion_id, previous_title, previous_author, reason, rerolled_by_member_id)
+			 SELECT ?, d.cycle_id, d.id, d.suggestion_id, b.title, b.author, ?, ?
+			 FROM bookclub_draws AS d
+			 INNER JOIN bookclub_cycles AS c ON c.id = d.cycle_id
+			 INNER JOIN bookclub_books AS b ON b.id = c.book_id
+			 WHERE d.cycle_id = ? AND d.id = ? AND b.started_at IS NULL`
+			)
+			.bind(crypto.randomUUID(), reason.trim(), memberId, cycleId, expectedDrawId),
+		database
+			.prepare(
+				`UPDATE bookclub_draws SET id = ?, suggestion_id = ?, drawn_by_member_id = ?,
+			 drawn_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'), tickets_json = ?
+			 WHERE cycle_id = ? AND id = ? AND EXISTS (
+			 SELECT 1 FROM bookclub_cycles AS c INNER JOIN bookclub_books AS b ON b.id = c.book_id
+			 WHERE c.id = ? AND b.started_at IS NULL)`
+			)
+			.bind(
+				drawId,
+				winner.id,
+				memberId,
+				JSON.stringify(suggestions),
+				cycleId,
+				expectedDrawId,
+				cycleId
+			),
+		database
+			.prepare(
+				`DELETE FROM bookclub_books WHERE id = ? AND started_at IS NULL AND EXISTS (${claimed})`
+			)
+			.bind(replay.book.id, cycleId, drawId),
+		database
+			.prepare(
+				`INSERT INTO bookclub_books (id, title, author) SELECT ?, ?, ? WHERE EXISTS (${claimed})`
+			)
+			.bind(bookId, winner.title, winner.author, cycleId, drawId),
+		database
+			.prepare(`UPDATE bookclub_cycles SET book_id = ? WHERE id = ? AND EXISTS (${claimed})`)
+			.bind(bookId, cycleId, cycleId, drawId),
+		database
+			.prepare(
+				`INSERT INTO bookclub_chat_messages (id, member_id, body, message_type)
+			 SELECT ?, ?, ?, 'announcement' WHERE EXISTS (${claimed})`
+			)
+			.bind(
+				crypto.randomUUID(),
+				memberId,
+				`BOOK REROLL: ${winner.title} by ${winner.author}. See the draw replay for the reason.`,
+				cycleId,
+				drawId
+			)
+	]);
+	if (!results[1].meta.changes)
+		throw new Error('That result is no longer waiting for a reroll. Refresh the page.');
+	return {
+		id: bookId,
+		title: winner.title,
+		author: winner.author,
+		coverUrl: null,
+		startedAt: null,
+		completedAt: null
+	};
 }
 
 export async function drawCycle(
@@ -796,52 +996,67 @@ export async function drawCycle(
 		throw new Error('Start the upcoming book before drawing another.');
 	}
 
-	const suggestions = await database
-		.prepare(
-			`SELECT id, title, author
-			 FROM bookclub_suggestions
-			 WHERE cycle_id = ?
-			 ORDER BY id`
-		)
-		.bind(cycleId)
-		.all<{ id: string; title: string; author: string }>();
-
-	if (suggestions.results.length === 0) {
-		throw new Error('Add at least one suggestion before drawing.');
+	const suggestions = await getEligibleSuggestions(database, cycleId);
+	if (suggestions.length === 0) {
+		throw new Error(
+			'No eligible suggestions remain. Recent winners sit out two draws. Reopen suggestions to collect tickets from another member.'
+		);
 	}
 
-	const winner =
-		suggestions.results[crypto.getRandomValues(new Uint32Array(1))[0] % suggestions.results.length];
+	const winner = suggestions[crypto.getRandomValues(new Uint32Array(1))[0] % suggestions.length];
 	const bookId = crypto.randomUUID();
 	const now = new Date().toISOString();
 
 	// A saved result reserves the book; reading dates belong to the separate start action.
-	await database.batch([
+	const results = await database.batch([
 		database
 			.prepare(
 				`INSERT INTO bookclub_books (id, title, author)
-				 VALUES (?, ?, ?)`
+				 SELECT ?, ?, ? WHERE EXISTS (
+				 SELECT 1 FROM bookclub_cycles WHERE id = ? AND status = 'closed'
+				 )`
 			)
-			.bind(bookId, winner.title, winner.author),
+			.bind(bookId, winner.title, winner.author, cycleId),
 		database
 			.prepare(
 				`UPDATE bookclub_cycles
 					 SET status = 'drawn', book_id = ?, closed_at = COALESCE(closed_at, ?)
-					 WHERE id = ? AND status IN ('open', 'closed')`
+					 WHERE id = ? AND status = 'closed'`
 			)
 			.bind(bookId, now, cycleId),
-		prepareChatAnnouncement(
-			database,
-			drawnByMemberId,
-			`UPCOMING BOOK: ${winner.title} by ${winner.author}. Time to find a copy!`
-		),
 		database
 			.prepare(
-				`INSERT INTO bookclub_draws (id, cycle_id, suggestion_id, drawn_by_member_id)
-				 VALUES (?, ?, ?, ?)`
+				`INSERT INTO bookclub_chat_messages (id, member_id, body, message_type)
+			 SELECT ?, ?, ?, 'announcement' WHERE EXISTS (
+			 SELECT 1 FROM bookclub_cycles WHERE id = ? AND status = 'drawn' AND book_id = ?)`
 			)
-			.bind(crypto.randomUUID(), cycleId, winner.id, drawnByMemberId)
+			.bind(
+				crypto.randomUUID(),
+				drawnByMemberId,
+				`UPCOMING BOOK: ${winner.title} by ${winner.author}. Time to find a copy!`,
+				cycleId,
+				bookId
+			),
+		database
+			.prepare(
+				`INSERT INTO bookclub_draws (id, cycle_id, suggestion_id, drawn_by_member_id, tickets_json)
+				 SELECT ?, ?, ?, ?, ? WHERE EXISTS (
+				 SELECT 1 FROM bookclub_cycles WHERE id = ? AND status = 'drawn' AND book_id = ?
+				 )`
+			)
+			.bind(
+				crypto.randomUUID(),
+				cycleId,
+				winner.id,
+				drawnByMemberId,
+				JSON.stringify(suggestions),
+				cycleId,
+				bookId
+			)
 	]);
+
+	if (!results[3].meta.changes)
+		throw new Error('This book poll is no longer available for drawing.');
 
 	return {
 		id: bookId,
@@ -856,12 +1071,14 @@ export async function drawCycle(
 export async function advanceBook(
 	database: D1Database,
 	cycleId: string,
-	memberId: string
+	memberId: string,
+	expectedBookId?: string
 ): Promise<boolean> {
 	const now = new Date().toISOString();
 	const pendingBook = `SELECT b.id FROM bookclub_books AS b
 		INNER JOIN bookclub_cycles AS c ON c.book_id = b.id
-		WHERE c.id = ? AND c.status = 'drawn' AND b.started_at IS NULL`;
+		WHERE c.id = ? AND c.status = 'drawn' AND b.started_at IS NULL
+		  AND (? IS NULL OR b.id = ?)`;
 
 	// Every statement checks the submitted reservation in one atomic batch. Repeated
 	// or stale submissions must neither finish another book nor announce it twice.
@@ -872,17 +1089,17 @@ export async function advanceBook(
 				 WHERE started_at IS NOT NULL AND completed_at IS NULL
 				   AND EXISTS (${pendingBook})`
 			)
-			.bind(now, cycleId),
+			.bind(now, cycleId, expectedBookId ?? null, expectedBookId ?? null),
 		database
 			.prepare(
 				`INSERT INTO bookclub_chat_messages (id, member_id, body, message_type)
 				 SELECT ?, ?, 'CURRENT BOOK: ' || title || ' by ' || author || '.', 'announcement'
 				 FROM bookclub_books WHERE id IN (${pendingBook})`
 			)
-			.bind(crypto.randomUUID(), memberId, cycleId),
+			.bind(crypto.randomUUID(), memberId, cycleId, expectedBookId ?? null, expectedBookId ?? null),
 		database
 			.prepare(`UPDATE bookclub_books SET started_at = ? WHERE id IN (${pendingBook})`)
-			.bind(now, cycleId)
+			.bind(now, cycleId, expectedBookId ?? null, expectedBookId ?? null)
 	]);
 	return Boolean(results[2].meta.changes);
 }

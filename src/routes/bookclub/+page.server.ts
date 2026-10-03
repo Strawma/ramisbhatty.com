@@ -13,6 +13,7 @@ import { getBookclubDatabase } from '#lib/server/bookclub/db';
 import {
 	advanceBook,
 	closeCycle,
+	reopenCycle,
 	createCycle,
 	deleteSuggestion,
 	drawCycle,
@@ -45,10 +46,11 @@ export const actions: Actions = {
 
 		const form = await event.request.formData();
 		const cycleId = form.get('cycleId');
-		if (typeof cycleId !== 'string' || !cycleId) {
+		const bookId = form.get('bookId');
+		if (typeof cycleId !== 'string' || !cycleId || typeof bookId !== 'string' || !bookId) {
 			return fail(400, { error: 'Choose the upcoming book to start.' });
 		}
-		if (!(await advanceBook(getBookclubDatabase(event.platform), cycleId, member.id))) {
+		if (!(await advanceBook(getBookclubDatabase(event.platform), cycleId, member.id, bookId))) {
 			return fail(400, { error: 'That book is no longer waiting to start. Refresh the page.' });
 		}
 		return { success: 'The upcoming book is now current.' };
@@ -150,6 +152,19 @@ export const actions: Actions = {
 		}
 
 		return { success: 'Suggestion removed.' };
+	},
+
+	reopenCycle: async (event) => {
+		const member = await requireBookclubMember(event);
+		if (member.role !== 'admin')
+			return fail(403, { error: 'Only the club admin can reopen a poll.' });
+		const database = getBookclubDatabase(event.platform);
+		const form = await event.request.formData();
+		const cycleId = form.get('cycleId');
+		if (typeof cycleId !== 'string' || !(await reopenCycle(database, cycleId))) {
+			return fail(400, { error: 'That poll is no longer closed.' });
+		}
+		return { success: 'The poll is open for more suggestions.' };
 	},
 
 	closeCycle: async (event) => {

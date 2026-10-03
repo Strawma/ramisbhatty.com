@@ -1,9 +1,10 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import DrawWheel from '#lib/components/bookclub/DrawWheel.svelte';
 	import ClubNav from '../../ClubNav.svelte';
 
-	let { data } = $props();
+	let { data, form } = $props();
 	let returnHref = $derived(
 		data.replay.book.completedAt
 			? resolve(`bookclub/archive/${data.replay.cycleId}`)
@@ -54,6 +55,9 @@
 								before an admin starts it.
 							</p>
 						{/if}
+						{#if form?.error}
+							<p role="alert" class="mb-4 border-2 border-black bg-[#ffcccc] p-3">{form.error}</p>
+						{/if}
 						{#key data.replay.drawId}
 							<DrawWheel
 								drawId={data.replay.drawId}
@@ -61,6 +65,41 @@
 								winnerSuggestionId={data.replay.winnerSuggestionId}
 							/>
 						{/key}
+						{#if data.member.role === 'admin' && !data.replay.book.startedAt}
+							<details class="mt-5 border-2 border-black bg-[#ffffcc] p-3">
+								<summary class="cursor-pointer font-bold">ADMIN: REROLL UPCOMING BOOK</summary>
+								<p class="mt-2">
+									Use only when the selection cannot go ahead. The rejected book stays out of this
+									poll, and the reason is visible to all members.
+								</p>
+								<form method="POST" action="?/reroll" use:enhance class="mt-3 space-y-2">
+									<input type="hidden" name="drawId" value={data.replay.drawId} />
+									<label for="reroll-reason" class="block font-bold">Reason for reroll</label>
+									<textarea
+										id="reroll-reason"
+										name="reason"
+										required
+										maxlength="300"
+										rows="2"
+										class="w-full border-2 border-black bg-white p-2"></textarea>
+									<button
+										type="submit"
+										class="border-2 border-black bg-[#d4d0c8] px-3 py-2 font-bold shadow-[2px_2px_0_#000]"
+										>RESPIN BOOK</button
+									>
+								</form>
+							</details>
+						{/if}
+						{#if data.replay.rerolls.length}
+							<section aria-label="Reroll history" class="mt-5 border-2 border-black bg-white p-3">
+								<h2 class="font-bold">REROLL HISTORY</h2>
+								{#each data.replay.rerolls as reroll (reroll.id)}
+									<p class="mt-2">
+										{reroll.memberName} rejected {reroll.previousTitle} by {reroll.previousAuthor}: {reroll.reason}
+									</p>
+								{/each}
+							</section>
+						{/if}
 					</div>
 				</section>
 			</div>

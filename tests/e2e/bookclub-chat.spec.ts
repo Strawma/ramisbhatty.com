@@ -345,6 +345,27 @@ test('admins pre-roll a book and explicitly start it while members see both sele
 		.getByRole('button', { name: 'SAVE', exact: true })
 		.click();
 	await expect(title).toHaveValue('Upcoming Browser Book');
+	// Alice won the historical fixture; her new suggestion must sit out this draw.
+	await expect(admin.getByText(/E2E Alice:.*sitting out 2 draws/)).toBeVisible();
+	await member.goto('/bookclub');
+	for (const [slot, bookTitle] of [
+		[1, 'Eligible Browser Book'],
+		[2, 'Replacement Browser Book']
+	] as const) {
+		const memberTitle = member.getByLabel(`Book title for slot ${slot}`);
+		await memberTitle.fill(bookTitle);
+		await member.getByLabel(`Author for slot ${slot}`).fill('Eligible Author');
+		await member
+			.locator('form')
+			.filter({ has: memberTitle })
+			.getByRole('button', { name: /^(SAVE|UPDATE)$/ })
+			.click();
+		await expect(member.locator('form').filter({ has: memberTitle })).toHaveAttribute(
+			'aria-busy',
+			'false'
+		);
+		await expect(memberTitle).toHaveValue(bookTitle);
+	}
 	await admin.getByRole('button', { name: 'CLOSE BOOK POLL' }).click();
 	await admin.getByRole('button', { name: 'SPIN NEXT BOOK' }).click();
 	await expect(admin).toHaveURL(/\/bookclub\/draw\//);
@@ -353,7 +374,7 @@ test('admins pre-roll a book and explicitly start it while members see both sele
 	await admin.getByRole('link', { name: '< RETURN TO BOOK' }).click();
 	await expect(admin).toHaveURL(/#upcoming-book$/);
 	const upcoming = admin.locator('#upcoming-book');
-	const upcomingTitle = await upcoming.locator('p').first().innerText();
+	let upcomingTitle = await upcoming.locator('p').first().innerText();
 	await expect(admin.locator('#current-book h2')).toHaveText('Current Browser Book');
 	await expect(admin.locator('#archive')).not.toContainText('Current Browser Book');
 	await expect(admin.getByRole('button', { name: 'START THIS BOOK' })).toBeVisible();
@@ -368,6 +389,38 @@ test('admins pre-roll a book and explicitly start it while members see both sele
 	});
 	expect(denied.status()).toBe(403);
 
+	const rerollPage = await adminContext.newPage();
+	await rerollPage.emulateMedia({ reducedMotion: 'reduce' });
+	await rerollPage.goto(`/bookclub/draw/${cycleId}`);
+	await expect(rerollPage.getByText('SPIN NEXT BOOK // 2 TICKETS', { exact: true })).toBeVisible();
+	const drawId = await rerollPage.locator('input[name="drawId"]').inputValue();
+	await member.goto(`/bookclub/draw/${cycleId}`);
+	await expect(member.getByText('ADMIN: REROLL UPCOMING BOOK')).toHaveCount(0);
+	const deniedReroll = await member.request.post(`/bookclub/draw/${cycleId}?/reroll`, {
+		form: { drawId, reason: 'Not authorized' },
+		headers: { origin: new URL(member.url()).origin }
+	});
+	expect(deniedReroll.status()).toBe(403);
+	await rerollPage.getByText('ADMIN: REROLL UPCOMING BOOK').click();
+	await rerollPage.getByLabel('Reason for reroll').fill('The library has no copies');
+	await rerollPage.getByRole('button', { name: 'RESPIN BOOK' }).click();
+	await expect(rerollPage.getByRole('region', { name: 'Reroll history' })).toContainText(
+		'The library has no copies'
+	);
+	await expect(rerollPage.getByText('SPIN NEXT BOOK // 1 TICKET', { exact: true })).toBeVisible();
+	await admin.getByRole('button', { name: 'START THIS BOOK' }).click();
+	await expect(admin.getByRole('alert')).toContainText('no longer waiting to start');
+	await admin.reload();
+	const replacementTitle = await admin.locator('#upcoming-book p').first().innerText();
+	expect(replacementTitle).not.toBe(upcomingTitle);
+	upcomingTitle = replacementTitle;
+	await member.reload();
+	await expect(member.getByRole('region', { name: 'Reroll history' })).toContainText(
+		'The library has no copies'
+	);
+	await expect(member.getByText('UPCOMING BOOK:', { exact: false })).toContainText(upcomingTitle);
+	await member.goto('/bookclub');
+
 	const dimensions = await admin.evaluate(() => ({
 		scrollWidth: document.documentElement.scrollWidth,
 		clientWidth: document.documentElement.clientWidth
@@ -377,6 +430,11 @@ test('admins pre-roll a book and explicitly start it while members see both sele
 	// The transition works without JavaScript; the original page then submits a stale start.
 	const plainContext = await createSessionContext(browser, aliceToken, false);
 	const plain = await plainContext.newPage();
+	await plain.goto(`/bookclub/draw/${cycleId}`);
+	await plain.getByText('ADMIN: REROLL UPCOMING BOOK').click();
+	await plain.getByLabel('Reason for reroll').fill('All alternatives exhausted');
+	await plain.getByRole('button', { name: 'RESPIN BOOK' }).click();
+	await expect(plain.getByRole('alert')).toContainText('No eligible alternatives');
 	await plain.goto('/bookclub');
 	await plain.getByRole('button', { name: 'START THIS BOOK' }).click();
 	await expect(plain.locator('#current-book h2')).toHaveText(upcomingTitle);

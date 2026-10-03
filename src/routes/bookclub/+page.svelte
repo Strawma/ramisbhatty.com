@@ -305,6 +305,11 @@
 								{#if data.member.role === 'admin'}
 									<form method="POST" action="?/advanceBook" use:enhance class="mt-3">
 										<input type="hidden" name="cycleId" value={data.dashboard.upcomingCycle.id} />
+										<input
+											type="hidden"
+											name="bookId"
+											value={data.dashboard.upcomingCycle.book.id}
+										/>
 										{#if data.dashboard.currentBook}
 											<p class="mb-2 text-xs">
 												Starting this book moves the current book into the archive.
@@ -470,6 +475,10 @@
 											? 'Submit up to three different books before the poll closes. Books that are not chosen will stay in their slots for the next poll.'
 											: 'No book poll is open. Await further literary instructions.'}
 									</p>
+									<p class="mb-3 text-xs">
+										After a win, your suggestions sit out the next two draws. You can still edit
+										them, and unselected books carry forward.
+									</p>
 									{#each [1, 2, 3] as slot (slot)}
 										<SuggestionSlot
 											{slot}
@@ -483,7 +492,11 @@
 										<div class="mt-4 border-2 border-black bg-black p-3 text-xs text-lime-300">
 											<p class="font-bold text-white">MEMBER PROGRESS</p>
 											{#each data.dashboard.suggestionProgress as progress (progress.memberId)}
-												<p class="mt-1">{progress.memberName}: {progress.count}/3 tickets</p>
+												<p class="mt-1">
+													{progress.memberName}: {progress.count}/3 tickets{progress.cooldownDraws
+														? ` (sitting out ${progress.cooldownDraws} draw${progress.cooldownDraws === 1 ? '' : 's'})`
+														: ''}
+												</p>
 											{/each}
 										</div>
 									{/if}
@@ -661,12 +674,25 @@
 												{data.dashboard.suggestionProgress.reduce(
 													(total, item) => total + item.count,
 													0
-												)} tickets submitted. The draw saves an upcoming book and cannot be rerun.
+												)} tickets submitted. Recent winners sit out two draws. The draw saves an upcoming
+												book; admins can reroll it before it starts.
 											</p>
 
 											{#if data.dashboard.upcomingCycle}
 												<p class="mt-2 text-xs">Start the upcoming book before spinning another.</p>
 											{/if}
+											<form method="POST" action="?/reopenCycle" use:enhance class="mt-3">
+												<input
+													type="hidden"
+													name="cycleId"
+													value={data.dashboard.drawReadyCycle.id}
+												/>
+												<button
+													type="submit"
+													class="border-2 border-black bg-[#d4d0c8] px-3 py-2 font-bold"
+													>REOPEN SUGGESTIONS</button
+												>
+											</form>
 											<form method="POST" action="?/draw" use:enhance class="mt-3">
 												<button
 													type="submit"
