@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import EntryList from '#lib/components/main/EntryList.svelte';
 	import ModuleMark from '#lib/components/main/ModuleMark.svelte';
 	import { pageContent, type AcademicModule, type AcademicYearDetails } from '#lib/content';
@@ -128,7 +129,7 @@
 						{/if}
 						<EntryList
 							entries={semesterGroup.modules.map((module) => ({
-								href: `/education/${module.code.toLowerCase()}`,
+								href: resolve('/(main)/education/[code]', { code: module.code.toLowerCase() }),
 								title: `${module.code}: ${module.title}`,
 								mark: module.mark,
 								summary: module.summary,

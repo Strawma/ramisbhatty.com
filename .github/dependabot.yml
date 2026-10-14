@@ -7,6 +7,11 @@ updates:
       day: 'monday'
     open-pull-requests-limit: 5
     groups:
+      # Framework and adapter releases share APIs and must be reviewed together.
+      sveltekit-framework:
+        patterns:
+          - '@sveltejs/kit'
+          - '@sveltejs/adapter-cloudflare'
       production-minor-patch:
         dependency-type: 'production'
         update-types:
@@ -14,6 +19,20 @@ updates:
           - 'patch'
       development-minor-patch:
         dependency-type: 'development'
+        exclude-patterns:
+          - '@sveltejs/kit'
+          - '@sveltejs/adapter-cloudflare'
+        update-types:
+          - 'minor'
+          - 'patch'
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+    open-pull-requests-limit: 5
+    groups:
+      actions-minor-patch:
         update-types:
           - 'minor'
           - 'patch'

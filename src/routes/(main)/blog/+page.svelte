@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import EntryList from '#lib/components/main/EntryList.svelte';
 	import { pageContent } from '#lib/content';
 
@@ -21,7 +22,7 @@
 {#if data.posts.length}
 	<EntryList
 		entries={data.posts.map((post) => ({
-			href: `/blog/${post.slug}`,
+			href: resolve('/(main)/blog/[slug]', { slug: post.slug }),
 			title: post.title,
 			meta: post.publishedAt,
 			summary: post.summary,
