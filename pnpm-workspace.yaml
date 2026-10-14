@@ -3,6 +3,11 @@ allowBuilds:
   sharp: true
   workerd: true
 
+minimumReleaseAgeExclude:
+  - '@cloudflare/vitest-plugin@1.4.2'
+  - miniflare@5.20261012.0-beta
+  - wrangler@4.151.0
+
 onlyBuiltDependencies:
   - '@tailwindcss/oxide'
   - core-js
@@ -13,5 +18,7 @@ onlyBuiltDependencies:
 overrides:
   # Miniflare pins an affected release; require the libheif security fix.
   'sharp@<0.35.4': '^0.35.4'
-  # The Workers test pool's Miniflare still pins vulnerable undici 7.28.0.
-  'undici@>=7.0.0 <7.29.0': '^7.29.0'
+  # Miniflare pins undici below the TLS and response-handling fixes.
+  'undici@>=7.0.0 <7.29.1': '^7.29.1'
+  # Typography pins parser 6; its parsing and pseudo-selector APIs also work with patched 7.
+  '@tailwindcss/typography>postcss-selector-parser@<7.1.6': '^7.1.6'

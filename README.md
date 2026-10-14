@@ -37,11 +37,29 @@ pnpm update
 To request newer major versions as well, use `pnpm update --latest` and run the validation
 commands before committing the resulting lockfile.
 
-Security overrides in `pnpm-workspace.yaml` currently raise Miniflare's pinned `sharp` and
-`undici` dependencies to patched releases. They apply only to affected versions and allow
-compatible updates. Recheck them with `pnpm why sharp undici` and `pnpm audit` when upgrading
-Wrangler or the Cloudflare Workers test pool; remove them once upstream dependencies no longer
-need them.
+Security overrides in `pnpm-workspace.yaml` raise Miniflare's pinned `sharp` and `undici`
+dependencies and Tailwind Typography's selector parser to patched releases. They apply only to
+affected versions and allow compatible updates. Recheck them with
+`pnpm why sharp undici postcss-selector-parser` and `pnpm audit` when upgrading Wrangler or the
+Cloudflare Vitest plugin; remove them once upstream dependencies no longer need them.
+
+Undici must resolve to 7.29.1 or newer within the 7.x line. The override includes the fixes for
+TLS option handling, retry response bodies, and response caching. Tailwind Typography uses
+`postcss-selector-parser` 7.1.6 or newer through a scoped override for the selector-parsing fix.
+
+The Workers unit tests use `@cloudflare/vitest-plugin`, the maintained replacement for
+`@cloudflare/vitest-pool-workers`. Its configuration and D1 test helpers keep the same API.
+
+### Dependency updates and CI
+
+Dependabot checks npm dependencies and GitHub Actions weekly, grouping routine minor and patch
+updates. These updates can auto-merge after the required `Verify` check passes.
+SvelteKit and the Cloudflare adapter are grouped separately and require manual review, including
+preview-to-stable updates, because their APIs and Cloudflare binding access must stay compatible.
+
+CI runs lint, type checks, unit tests, and a production build for pushes and pull requests targeting
+both `dev` and `main`. Browser suites remain separate commands for checking navigation and the
+book-club workflows before a release.
 
 ### Updating
 

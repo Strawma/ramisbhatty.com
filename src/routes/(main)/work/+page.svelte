@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import EntryList from '#lib/components/main/EntryList.svelte';
 	import { pageContent } from '#lib/content';
 	let { data } = $props();
@@ -18,7 +19,7 @@
 	<h2>Experience</h2>
 	<EntryList
 		entries={data.experience.map((entry) => ({
-			href: `/work/experience/${entry.slug}`,
+			href: resolve('/(main)/work/experience/[slug]', { slug: entry.slug }),
 			title: `${entry.role} — ${entry.organisation}`,
 			meta: entry.period,
 			summary: entry.summary,
@@ -31,7 +32,7 @@
 {#if data.projects.length}
 	<EntryList
 		entries={data.projects.map((project) => ({
-			href: `/work/${project.slug}`,
+			href: resolve('/(main)/work/[slug]', { slug: project.slug }),
 			title: project.title,
 			meta: project.period,
 			summary: project.summary,
