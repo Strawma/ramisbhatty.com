@@ -38,10 +38,10 @@ To request newer major versions as well, use `pnpm update --latest` and run the 
 commands before committing the resulting lockfile.
 
 Security overrides in `pnpm-workspace.yaml` raise Miniflare's pinned `sharp` and `undici`
-dependencies and Tailwind Typography's selector parser to patched releases. They apply only to affected versions and allow
-compatible updates. Recheck them with `pnpm why sharp undici postcss-selector-parser` and `pnpm audit` when upgrading
-Wrangler or the Cloudflare Vitest plugin; remove them once upstream dependencies no longer
-need them.
+dependencies and Tailwind Typography's selector parser to patched releases. They apply only to
+affected versions and allow compatible updates. Recheck them with
+`pnpm why sharp undici postcss-selector-parser` and `pnpm audit` when upgrading Wrangler or the
+Cloudflare Vitest plugin; remove them once upstream dependencies no longer need them.
 
 Undici must resolve to 7.29.1 or newer within the 7.x line. The override includes the fixes for
 TLS option handling, retry response bodies, and response caching. Tailwind Typography uses
