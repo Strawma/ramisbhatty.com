@@ -12,7 +12,7 @@ Installed addons:
 
 Uses pnpm package manager.
 
-The `.node-version` file selects Node.js 24 for Cloudflare Pages and CI. Node.js 22.17 or newer
+The `.node-version` file selects Node.js 24.22.0 for Cloudflare Pages and CI. Node.js 22.17 or newer
 is required by SvelteKit 3.1. Use Unix-native tools in the development environment. The repository
 does not pin a local pnpm version.
 
@@ -80,7 +80,7 @@ SvelteKit and the Cloudflare adapter are grouped separately and require manual r
 their APIs and Cloudflare binding access must stay compatible.
 
 CI uses `actions/checkout@v7`, `pnpm/action-setup@v6`, and `actions/setup-node@v7` on GitHub-hosted
-Ubuntu runners, with Node.js 24 and pnpm 12.9.1 for the project commands.
+Ubuntu runners, with Node.js 24.22.0 and pnpm 12.9.1 for the project commands.
 
 CI runs lint, type checks, unit tests, and a production build for pushes and pull requests targeting
 both `dev` and `main`. Browser suites remain separate commands for checking navigation and the
@@ -230,10 +230,11 @@ pnpm dlx wrangler d1 migrations apply ramis-bookclub --remote
 ### Cloudflare Pages
 
 The site is deployed through Cloudflare Workers/Pages using SvelteKit and Cloudflare Build System
-v3. Pages reads `.node-version` before installing dependencies, selecting Node.js 24 instead of
-the build image's older default. CI reads the same file.
+v3. Pages reads `.node-version` before installing dependencies, selecting the tested Node.js 24.22.0
+release. CI reads the same file. The exact version also meets Corepack 0.36's Node.js 24.15 minimum;
+a major-only value can select an older patch release in the Pages build image.
 
-- Leave the Pages `NODE_VERSION` override unset to use `.node-version`, or set it to `24` for both
+- Leave the Pages `NODE_VERSION` override unset to use `.node-version`, or set it to `24.22.0` for both
   production and preview builds. Node.js 22.16 cannot install SvelteKit 3.1 with engine checks enabled.
 - Use `PNPM_VERSION` in Pages settings when a specific pnpm release is needed.
 - Use `pnpm run build` as the build command.
