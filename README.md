@@ -12,9 +12,9 @@ Installed addons:
 
 Uses pnpm package manager.
 
-The repository does not pin a local Node.js or pnpm version. Use Unix-native tools in the
-development environment and keep the deployment-specific versions in Cloudflare Pages settings.
-Node.js 22.12 or newer is required by the current Vite and Wrangler versions.
+The `.node-version` file selects Node.js 24 for Cloudflare Pages and CI. Node.js 22.17 or newer
+is required by SvelteKit 3.1. Use Unix-native tools in the development environment. The repository
+does not pin a local pnpm version.
 
 ### Local development
 
@@ -22,8 +22,8 @@ Install a current Node.js release and pnpm inside the Unix environment, rather t
 Windows installation exposed through `/mnt/c` in WSL. For example, with `nvm`:
 
 ```bash
-nvm install --lts
-nvm use --lts
+nvm install "$(cat .node-version)"
+nvm use "$(cat .node-version)"
 npm install --global pnpm@latest
 pnpm install
 ```
@@ -230,14 +230,16 @@ pnpm dlx wrangler d1 migrations apply ramis-bookclub --remote
 ### Cloudflare Pages
 
 The site is deployed through Cloudflare Workers/Pages using SvelteKit and Cloudflare Build System
-v3. Configure the deployment-specific versions in the Cloudflare Pages project settings instead of
-adding local version pins to this repository:
+v3. Pages reads `.node-version` before installing dependencies, selecting Node.js 24 instead of
+the build image's older default. CI reads the same file.
 
-- Set `NODE_VERSION` to Node.js 22.12 or newer. Node.js 24 is suitable for the current dependencies.
-- Set `PNPM_VERSION` to the pnpm version required by the Cloudflare deployment.
+- Leave the Pages `NODE_VERSION` override unset to use `.node-version`, or set it to `24` for both
+  production and preview builds. Node.js 22.16 cannot install SvelteKit 3.1 with engine checks enabled.
+- Use `PNPM_VERSION` in Pages settings when a specific pnpm release is needed.
 - Use `pnpm run build` as the build command.
 - Keep `pnpm-lock.yaml` committed so the deployment installs the tested dependency tree.
 
-The Cloudflare project settings are intentionally separate from the Unix developer toolchain.
+The Node.js major version is shared across development, CI, and Pages; other Cloudflare project
+settings remain separate from the Unix developer toolchain.
 The repository is already configured with `@sveltejs/adapter-cloudflare`; no additional deployment
 adapter is required.
