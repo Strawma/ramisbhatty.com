@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import type { SubmitFunction } from '@sveltejs/kit';
+	import type { SubmitFunction } from '$app/forms';
 	import { onMount, untrack } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import {
@@ -9,7 +9,7 @@
 		playSoundTone,
 		subscribeToSoundEffects,
 		type SoundEffectsSnapshot
-	} from '#lib/components/bookclub/sound-effects';
+	} from '#lib/components/bookclub/sound-effects.ts';
 
 	const CHAT_POLL_INTERVAL_MS = 5_000;
 	const CHAT_POLL_TIMEOUT_MS = 10_000;
@@ -172,7 +172,7 @@
 		chatActionPending = true;
 		return async ({ update, result }) => {
 			try {
-				await update({ invalidateAll: false });
+				await update({ refreshAll: false });
 				if (result.type === 'success' || result.type === 'failure') {
 					await refreshMessages();
 				}

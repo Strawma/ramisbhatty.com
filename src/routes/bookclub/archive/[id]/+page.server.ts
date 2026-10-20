@@ -1,8 +1,12 @@
 import { error, fail } from '@sveltejs/kit';
-import { requireBookclubMember } from '#lib/server/bookclub/auth';
-import { getBookclubDatabase } from '#lib/server/bookclub/db';
-import { getArchiveEntry } from '#lib/server/bookclub/cycles';
-import { deleteOwnBookReview, getBookReviews, saveBookReview } from '#lib/server/bookclub/reviews';
+import { requireBookclubMember } from '#lib/server/bookclub/auth.ts';
+import { getBookclubDatabase } from '#lib/server/bookclub/db.ts';
+import { getArchiveEntry } from '#lib/server/bookclub/cycles.ts';
+import {
+	deleteOwnBookReview,
+	getBookReviews,
+	saveBookReview
+} from '#lib/server/bookclub/reviews.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
@@ -12,7 +16,7 @@ export const load: PageServerLoad = async (event) => {
 	});
 	const member = await requireBookclubMember(event);
 
-	const database = getBookclubDatabase(event.platform);
+	const database = getBookclubDatabase();
 	const entry = await getArchiveEntry(database, event.params.id);
 	if (!entry) throw error(404, 'That archived book could not be found.');
 	const reviews = await getBookReviews(database, entry.book.id);
@@ -28,7 +32,7 @@ export const load: PageServerLoad = async (event) => {
 export const actions: Actions = {
 	saveReview: async (event) => {
 		const member = await requireBookclubMember(event);
-		const database = getBookclubDatabase(event.platform);
+		const database = getBookclubDatabase();
 		const entry = await getArchiveEntry(database, event.params.id);
 		if (!entry) return fail(404, { error: 'That archived book could not be found.' });
 
@@ -72,7 +76,7 @@ export const actions: Actions = {
 
 	deleteReview: async (event) => {
 		const member = await requireBookclubMember(event);
-		const database = getBookclubDatabase(event.platform);
+		const database = getBookclubDatabase();
 		const entry = await getArchiveEntry(database, event.params.id);
 		if (!entry) return fail(404, { error: 'That archived book could not be found.' });
 

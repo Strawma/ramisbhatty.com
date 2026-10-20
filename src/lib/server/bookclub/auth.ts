@@ -194,7 +194,7 @@ export async function getSessionMember(event: RequestEvent): Promise<BookclubMem
 		return null;
 	}
 
-	const database = getBookclubDatabase(event.platform);
+	const database = getBookclubDatabase();
 	// The cookie contains the raw token, but D1 only receives its digest if the database is leaked.
 	const tokenHash = await sha256(token);
 	const now = new Date().toISOString();

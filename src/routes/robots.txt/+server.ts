@@ -1,4 +1,4 @@
-import { site } from '#lib/data/config';
+import { site } from '#lib/data/config.ts';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = () => {

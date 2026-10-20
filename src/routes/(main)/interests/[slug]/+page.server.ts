@@ -1,5 +1,5 @@
 import { dev } from '$app/env';
-import { findInterest } from '#lib/content';
+import { findInterest } from '#lib/content.ts';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 

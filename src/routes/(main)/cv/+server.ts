@@ -1,4 +1,4 @@
-import { documents } from '#lib/data/config';
+import { documents } from '#lib/data/config.ts';
 import { redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 

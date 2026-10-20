@@ -1,15 +1,15 @@
 import { fail, redirect } from '@sveltejs/kit';
-import { buildTimestamp } from '#lib/data/build-info';
-import { requireBookclubMember } from '#lib/server/bookclub/auth';
+import { buildTimestamp } from '#lib/data/build-info.ts';
+import { requireBookclubMember } from '#lib/server/bookclub/auth.ts';
 import {
 	ChatCooldownError,
 	createChatMessage,
 	restoreChatMessage,
 	tombstoneChatMessageByAdmin,
 	tombstoneOwnChatMessage
-} from '#lib/server/bookclub/chat';
-import { findBookCover } from '#lib/server/bookclub/covers';
-import { getBookclubDatabase } from '#lib/server/bookclub/db';
+} from '#lib/server/bookclub/chat.ts';
+import { findBookCover } from '#lib/server/bookclub/covers.ts';
+import { getBookclubDatabase } from '#lib/server/bookclub/db.ts';
 import {
 	advanceBook,
 	closeCycle,
@@ -22,16 +22,16 @@ import {
 	saveSuggestion,
 	SuggestionConflictError,
 	setBookCover
-} from '#lib/server/bookclub/cycles';
-import { clearNextMeeting, scheduleNextMeeting } from '#lib/server/bookclub/meetings';
-import { setMemberChatColor, setMemberDisplayName } from '#lib/server/bookclub/invitations';
-import { isValidChatColor, normalizeChatColor } from '#lib/server/bookclub/colors';
+} from '#lib/server/bookclub/cycles.ts';
+import { clearNextMeeting, scheduleNextMeeting } from '#lib/server/bookclub/meetings.ts';
+import { setMemberChatColor, setMemberDisplayName } from '#lib/server/bookclub/invitations.ts';
+import { isValidChatColor, normalizeChatColor } from '#lib/server/bookclub/colors.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
 	event.setHeaders({ 'cache-control': 'no-store' });
 	const member = await requireBookclubMember(event);
-	const database = getBookclubDatabase(event.platform);
+	const database = getBookclubDatabase();
 	const dashboard = await getDashboard(database, member);
 
 	return { member, dashboard, buildTimestamp };
@@ -50,7 +50,7 @@ export const actions: Actions = {
 		if (typeof cycleId !== 'string' || !cycleId || typeof bookId !== 'string' || !bookId) {
 			return fail(400, { error: 'Choose the upcoming book to start.' });
 		}
-		if (!(await advanceBook(getBookclubDatabase(event.platform), cycleId, member.id, bookId))) {
+		if (!(await advanceBook(getBookclubDatabase(), cycleId, member.id, bookId))) {
 			return fail(400, { error: 'That book is no longer waiting to start. Refresh the page.' });
 		}
 		return { success: 'The upcoming book is now current.' };
@@ -63,7 +63,7 @@ export const actions: Actions = {
 			return fail(403, { error: 'Only the club admin can open a book poll.' });
 		}
 
-		const database = getBookclubDatabase(event.platform);
+		const database = getBookclubDatabase();
 		const actionCycle = await getLatestActionCycle(database);
 
 		if (actionCycle) {
@@ -85,7 +85,7 @@ export const actions: Actions = {
 
 	saveSuggestion: async (event) => {
 		const member = await requireBookclubMember(event);
-		const database = getBookclubDatabase(event.platform);
+		const database = getBookclubDatabase();
 		const activeCycle = await getLatestActionCycle(database);
 		const form = await event.request.formData();
 		const position = Number(form.get('position'));
@@ -141,11 +141,7 @@ export const actions: Actions = {
 			return fail(400, { error: 'The suggestion could not be identified.' });
 		}
 
-		const deleted = await deleteSuggestion(
-			getBookclubDatabase(event.platform),
-			suggestionId,
-			member.id
-		);
+		const deleted = await deleteSuggestion(getBookclubDatabase(), suggestionId, member.id);
 
 		if (!deleted) {
 			return fail(400, { error: 'That suggestion is no longer available.' });
@@ -158,7 +154,7 @@ export const actions: Actions = {
 		const member = await requireBookclubMember(event);
 		if (member.role !== 'admin')
 			return fail(403, { error: 'Only the club admin can reopen a poll.' });
-		const database = getBookclubDatabase(event.platform);
+		const database = getBookclubDatabase();
 		const form = await event.request.formData();
 		const cycleId = form.get('cycleId');
 		if (typeof cycleId !== 'string' || !(await reopenCycle(database, cycleId))) {
@@ -174,7 +170,7 @@ export const actions: Actions = {
 			return fail(403, { error: 'Only the club admin can close a book poll.' });
 		}
 
-		const database = getBookclubDatabase(event.platform);
+		const database = getBookclubDatabase();
 		const activeCycle = await getLatestActionCycle(database);
 
 		if (!activeCycle || activeCycle.status !== 'open') {
@@ -199,7 +195,7 @@ export const actions: Actions = {
 			return fail(403, { error: 'Only the club admin can schedule a meeting.' });
 		}
 
-		const database = getBookclubDatabase(event.platform);
+		const database = getBookclubDatabase();
 		const form = await event.request.formData();
 		const scheduledFor = form.get('scheduledFor');
 		const timezoneOffset = Number(form.get('timezoneOffset'));
@@ -235,7 +231,7 @@ export const actions: Actions = {
 			return fail(403, { error: 'Only the club admin can clear the next meeting.' });
 		}
 
-		await clearNextMeeting(getBookclubDatabase(event.platform), member.id);
+		await clearNextMeeting(getBookclubDatabase(), member.id);
 		return { success: 'The next meeting was cleared.' };
 	},
 
@@ -253,13 +249,7 @@ export const actions: Actions = {
 			return fail(400, { error: 'Choose a display name between 1 and 24 characters.' });
 		}
 
-		if (
-			!(await setMemberDisplayName(
-				getBookclubDatabase(event.platform),
-				member.id,
-				displayName.trim()
-			))
-		) {
+		if (!(await setMemberDisplayName(getBookclubDatabase(), member.id, displayName.trim()))) {
 			return fail(400, { error: 'That is already your display name.' });
 		}
 
@@ -276,11 +266,7 @@ export const actions: Actions = {
 		}
 
 		if (
-			!(await setMemberChatColor(
-				getBookclubDatabase(event.platform),
-				member.id,
-				normalizeChatColor(chatColor)
-			))
+			!(await setMemberChatColor(getBookclubDatabase(), member.id, normalizeChatColor(chatColor)))
 		) {
 			return fail(400, { error: 'That chat color is already in use.' });
 		}
@@ -298,7 +284,7 @@ export const actions: Actions = {
 		}
 
 		try {
-			await createChatMessage(getBookclubDatabase(event.platform), member.id, body.trim());
+			await createChatMessage(getBookclubDatabase(), member.id, body.trim());
 		} catch (error) {
 			if (error instanceof ChatCooldownError) {
 				return fail(429, { error: error.message });
@@ -324,13 +310,7 @@ export const actions: Actions = {
 			return fail(400, { error: 'The message could not be identified.' });
 		}
 
-		if (
-			!(await tombstoneChatMessageByAdmin(
-				getBookclubDatabase(event.platform),
-				messageId,
-				member.id
-			))
-		) {
+		if (!(await tombstoneChatMessageByAdmin(getBookclubDatabase(), messageId, member.id))) {
 			return fail(400, {
 				error: "Only another member's undeleted user messages can be moderated."
 			});
@@ -355,7 +335,7 @@ export const actions: Actions = {
 
 		if (
 			!(await restoreChatMessage(
-				getBookclubDatabase(event.platform),
+				getBookclubDatabase(),
 				messageId,
 				member.id,
 				member.role === 'admin'
@@ -376,9 +356,7 @@ export const actions: Actions = {
 			return fail(400, { error: 'The message could not be identified.' });
 		}
 
-		if (
-			!(await tombstoneOwnChatMessage(getBookclubDatabase(event.platform), messageId, member.id))
-		) {
+		if (!(await tombstoneOwnChatMessage(getBookclubDatabase(), messageId, member.id))) {
 			return fail(400, { error: 'Only your own undeleted messages can be removed.' });
 		}
 
@@ -392,7 +370,7 @@ export const actions: Actions = {
 			return fail(403, { error: 'Only the club admin can run the draw.' });
 		}
 
-		const database = getBookclubDatabase(event.platform);
+		const database = getBookclubDatabase();
 		const cycle = await getLatestActionCycle(database);
 
 		if (!cycle) {

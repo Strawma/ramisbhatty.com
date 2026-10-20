@@ -1,14 +1,14 @@
 import { error, fail, redirect } from '@sveltejs/kit';
-import { requireBookclubMember } from '#lib/server/bookclub/auth';
-import { getDrawReplay, rerollCycle, setBookCover } from '#lib/server/bookclub/cycles';
-import { getBookclubDatabase } from '#lib/server/bookclub/db';
-import { findBookCover } from '#lib/server/bookclub/covers';
+import { requireBookclubMember } from '#lib/server/bookclub/auth.ts';
+import { getDrawReplay, rerollCycle, setBookCover } from '#lib/server/bookclub/cycles.ts';
+import { getBookclubDatabase } from '#lib/server/bookclub/db.ts';
+import { findBookCover } from '#lib/server/bookclub/covers.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
 	event.setHeaders({ 'cache-control': 'no-store' });
 	const member = await requireBookclubMember(event);
-	const replay = await getDrawReplay(getBookclubDatabase(event.platform), event.params.id);
+	const replay = await getDrawReplay(getBookclubDatabase(), event.params.id);
 	if (!replay) throw error(404, 'That book draw could not be found.');
 
 	return { member, replay };
@@ -25,7 +25,7 @@ export const actions: Actions = {
 		if (typeof drawId !== 'string' || !drawId || typeof reason !== 'string') {
 			return fail(400, { error: 'Choose a saved result and enter a reason.' });
 		}
-		const database = getBookclubDatabase(event.platform);
+		const database = getBookclubDatabase();
 		let book;
 		try {
 			book = await rerollCycle(database, event.params.id, drawId, member.id, reason);

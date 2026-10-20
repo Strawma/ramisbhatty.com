@@ -4,8 +4,8 @@ import {
 	isValidUsername,
 	normalizeUsername,
 	requireBookclubMember
-} from '#lib/server/bookclub/auth';
-import { getBookclubDatabase } from '#lib/server/bookclub/db';
+} from '#lib/server/bookclub/auth.ts';
+import { getBookclubDatabase } from '#lib/server/bookclub/db.ts';
 import {
 	createInvitation,
 	getInvitationSummaries,
@@ -15,9 +15,9 @@ import {
 	setMemberChatColor,
 	setMemberDisplayName,
 	setMemberUsername
-} from '#lib/server/bookclub/invitations';
-import { isValidChatColor, normalizeChatColor } from '#lib/server/bookclub/colors';
-import { deleteBookPoll, getBookPollSummaries } from '#lib/server/bookclub/cycles';
+} from '#lib/server/bookclub/invitations.ts';
+import { isValidChatColor, normalizeChatColor } from '#lib/server/bookclub/colors.ts';
+import { deleteBookPoll, getBookPollSummaries } from '#lib/server/bookclub/cycles.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 async function requireAdmin(event: RequestEvent) {
@@ -34,7 +34,7 @@ async function requireAdmin(event: RequestEvent) {
 
 export const load: PageServerLoad = async (event) => {
 	const member = await requireAdmin(event);
-	const database = getBookclubDatabase(event.platform);
+	const database = getBookclubDatabase();
 
 	return {
 		member,
@@ -59,13 +59,7 @@ export const actions: Actions = {
 			return fail(400, { error: 'Choose a display name between 1 and 24 characters.' });
 		}
 
-		if (
-			!(await setMemberDisplayName(
-				getBookclubDatabase(event.platform),
-				member.id,
-				displayName.trim()
-			))
-		) {
+		if (!(await setMemberDisplayName(getBookclubDatabase(), member.id, displayName.trim()))) {
 			return fail(400, { error: 'That is already your display name.' });
 		}
 
@@ -82,11 +76,7 @@ export const actions: Actions = {
 		}
 
 		if (
-			!(await setMemberChatColor(
-				getBookclubDatabase(event.platform),
-				member.id,
-				normalizeChatColor(chatColor)
-			))
+			!(await setMemberChatColor(getBookclubDatabase(), member.id, normalizeChatColor(chatColor)))
 		) {
 			return fail(400, { error: 'That chat color is already in use.' });
 		}
@@ -117,7 +107,7 @@ export const actions: Actions = {
 		let invitation;
 		try {
 			invitation = await createInvitation(
-				getBookclubDatabase(event.platform),
+				getBookclubDatabase(),
 				member.id,
 				'invite',
 				normalizeUsername(username),
@@ -142,7 +132,7 @@ export const actions: Actions = {
 			return fail(400, { error: 'Choose a member whose login code should be reset.' });
 		}
 
-		const database = getBookclubDatabase(event.platform);
+		const database = getBookclubDatabase();
 		let invitation;
 		try {
 			invitation = await createInvitation(database, member.id, 'reset', memberId);
@@ -164,7 +154,7 @@ export const actions: Actions = {
 			return fail(400, { error: 'The invitation could not be identified.' });
 		}
 
-		if (!(await revokeInvitation(getBookclubDatabase(event.platform), invitationId))) {
+		if (!(await revokeInvitation(getBookclubDatabase(), invitationId))) {
 			return fail(400, { error: 'That invitation is no longer active.' });
 		}
 
@@ -185,7 +175,7 @@ export const actions: Actions = {
 			return fail(400, { error: 'You cannot deactivate your own admin account.' });
 		}
 
-		const database = getBookclubDatabase(event.platform);
+		const database = getBookclubDatabase();
 		const target = await database
 			.prepare('SELECT id, username, name, role, active FROM bookclub_members WHERE id = ? LIMIT 1')
 			.bind(memberId)
@@ -242,7 +232,7 @@ export const actions: Actions = {
 		}
 
 		try {
-			if (!(await setMemberUsername(getBookclubDatabase(event.platform), memberId, username))) {
+			if (!(await setMemberUsername(getBookclubDatabase(), memberId, username))) {
 				return fail(404, { error: 'That member no longer exists.' });
 			}
 		} catch {
@@ -261,7 +251,7 @@ export const actions: Actions = {
 			return fail(400, { error: 'The member could not be identified.' });
 		}
 
-		await invalidateMemberSessions(getBookclubDatabase(event.platform), memberId);
+		await invalidateMemberSessions(getBookclubDatabase(), memberId);
 		return { success: 'All sessions for that member were invalidated.' };
 	},
 
@@ -274,7 +264,7 @@ export const actions: Actions = {
 			return fail(400, { error: 'The book poll could not be identified.' });
 		}
 
-		if (!(await deleteBookPoll(getBookclubDatabase(event.platform), pollId))) {
+		if (!(await deleteBookPoll(getBookclubDatabase(), pollId))) {
 			return fail(404, { error: 'That book poll no longer exists.' });
 		}
 

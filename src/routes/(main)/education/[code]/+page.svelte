@@ -1,6 +1,6 @@
 <script lang="ts">
 	import ModuleMark from '#lib/components/main/ModuleMark.svelte';
-	import { moduleContent } from '#lib/content';
+	import { moduleContent } from '#lib/content.ts';
 	import { resolve } from '$app/paths';
 	let { data } = $props();
 	let Content = $derived(moduleContent[data.module.slug]);
