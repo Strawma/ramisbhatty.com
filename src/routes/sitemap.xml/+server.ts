@@ -4,8 +4,8 @@ import {
 	visibleModules,
 	visiblePosts,
 	visibleProjects
-} from '#lib/content';
-import { site } from '#lib/data/config';
+} from '#lib/content.ts';
+import { site } from '#lib/data/config.ts';
 import type { RequestHandler } from './$types';
 
 function escapeXml(value: string): string {

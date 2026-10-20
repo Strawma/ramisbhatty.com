@@ -37,25 +37,50 @@ pnpm update
 To request newer major versions as well, use `pnpm update --latest` and run the validation
 commands before committing the resulting lockfile.
 
-Security overrides in `pnpm-workspace.yaml` raise Miniflare's pinned `sharp` and `undici`
-dependencies and Tailwind Typography's selector parser to patched releases. They apply only to
-affected versions and allow compatible updates. Recheck them with
-`pnpm why sharp undici postcss-selector-parser` and `pnpm audit` when upgrading Wrangler or the
-Cloudflare Vitest plugin; remove them once upstream dependencies no longer need them.
+The security override in `pnpm-workspace.yaml` raises Tailwind Typography's
+`postcss-selector-parser` dependency to 7.1.6 or newer. Recheck it with
+`pnpm why postcss-selector-parser` and `pnpm audit` when upgrading Typography; remove it once
+upstream no longer needs it. Miniflare now pins patched `sharp` and `undici` releases itself,
+so those overrides are no longer needed.
 
-Undici must resolve to 7.29.1 or newer within the 7.x line. The override includes the fixes for
-TLS option handling, retry response bodies, and response caching. Tailwind Typography uses
-`postcss-selector-parser` 7.1.6 or newer through a scoped override for the selector-parsing fix.
+The app uses stable SvelteKit 3 and Cloudflare adapter 8. Import Cloudflare bindings from
+`cloudflare:workers`; their shared types live in `Cloudflare.Env` in `src/app.d.ts`. Bindings are
+read when handling requests, and local development uses the adapter's platform proxy. The
+`#lib/*` import map uses explicit file extensions so Vite and TypeScript resolve the same files.
 
-The Workers unit tests use `@cloudflare/vitest-plugin`, the maintained replacement for
-`@cloudflare/vitest-pool-workers`. Its configuration and D1 test helpers keep the same API.
+The Workers unit tests use Vitest 5 with `@cloudflare/vitest-plugin`. Their SvelteKit configuration
+omits the deployment adapter because the test plugin supplies native Workers bindings and an
+isolated D1 database. Adapter emulation would shadow those test bindings.
+
+### TypeScript compatibility
+
+Keep `typescript` on 6.0.3 while the toolchain requires the JavaScript compiler API. SvelteKit 3.1
+declares TypeScript `^6.0.0`, `svelte-check` 4.7.7 supports TypeScript 5 and 6, and
+`typescript-eslint` 8.71.2 requires TypeScript `<6.1.0`.
+
+TypeScript 7.0 uses the native compiler and does not expose the API these tools need. Microsoft
+expects a new API in TypeScript 7.1; the tooling must then adopt it and publish compatible releases.
+Track [Svelte tooling support](https://github.com/sveltejs/language-tools/issues/3063) and
+[typescript-eslint support](https://github.com/typescript-eslint/typescript-eslint/issues/10940).
+The [typescript-eslint native backend](https://github.com/typescript-eslint/typescript-eslint/pull/12803)
+is still a draft. Svelte's [content mapper](https://github.com/sveltejs/language-tools/pull/3111)
+is also unreleased and focuses on editor support, with `svelte-check` integration to follow.
+Svelte's optional `--tsgo` modes can run TypeScript 7 alongside TypeScript 6 through an npm alias,
+but still require TypeScript 6 and do not make it safe to replace the project's dependency.
+The [package-import resolution fix](https://github.com/sveltejs/language-tools/pull/3143) also affects
+this app's `#lib/*.svelte` imports under `--tsgo` and `--incremental`.
+See the [Svelte check documentation](https://github.com/sveltejs/language-tools/tree/master/packages/svelte-check#typescript-7-supports)
+and [TypeScript 7 announcement](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/).
 
 ### Dependency updates and CI
 
 Dependabot checks npm dependencies and GitHub Actions weekly, grouping routine minor and patch
 updates. These updates can auto-merge after the required `Verify` check passes.
-SvelteKit and the Cloudflare adapter are grouped separately and require manual review, including
-preview-to-stable updates, because their APIs and Cloudflare binding access must stay compatible.
+SvelteKit and the Cloudflare adapter are grouped separately and require manual review because
+their APIs and Cloudflare binding access must stay compatible.
+
+CI uses `actions/checkout@v7`, `pnpm/action-setup@v6`, and `actions/setup-node@v7` on GitHub-hosted
+Ubuntu runners, with Node.js 24 and pnpm 12.9.1 for the project commands.
 
 CI runs lint, type checks, unit tests, and a production build for pushes and pull requests targeting
 both `dev` and `main`. Browser suites remain separate commands for checking navigation and the

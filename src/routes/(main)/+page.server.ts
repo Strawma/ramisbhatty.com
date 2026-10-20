@@ -6,7 +6,7 @@ import {
 	pageIntroductions,
 	visibleModules,
 	visibleProjects
-} from '#lib/content';
+} from '#lib/content.ts';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = () => {

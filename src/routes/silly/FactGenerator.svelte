@@ -16,7 +16,13 @@
 			if (!response.ok) throw new Error(`Fact request failed with status ${response.status}`);
 			const data = await response.json();
 
-			if (data.text) {
+			if (
+				data &&
+				typeof data === 'object' &&
+				'text' in data &&
+				typeof data.text === 'string' &&
+				data.text
+			) {
 				currentFact = data.text;
 			} else {
 				currentFact = 'Failed to generate fact. Please try again!';

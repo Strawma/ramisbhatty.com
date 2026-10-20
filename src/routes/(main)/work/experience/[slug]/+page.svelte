@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { experienceContent } from '#lib/content';
+	import { experienceContent } from '#lib/content.ts';
 
 	let { data } = $props();
 	let Content = $derived(experienceContent[data.experience.slug]);

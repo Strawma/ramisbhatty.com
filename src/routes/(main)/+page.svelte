@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { contact, nav } from '#lib/data/config';
-	import { pageContent } from '#lib/content';
+	import { contact, nav } from '#lib/data/config.ts';
+	import { pageContent } from '#lib/content.ts';
 	import { resolve } from '$app/paths';
 
 	let { data } = $props();

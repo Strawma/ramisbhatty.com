@@ -1,4 +1,4 @@
-import type { Handle } from '@sveltejs/kit';
+import type { Handle } from '@sveltejs/kit/hooks';
 
 const PROD_HOST = 'ramisbhatty.com';
 

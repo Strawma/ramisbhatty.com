@@ -1,4 +1,4 @@
-import { pageIntroductions } from '#lib/content';
+import { pageIntroductions } from '#lib/content.ts';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = () => ({

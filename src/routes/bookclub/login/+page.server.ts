@@ -1,4 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 import {
 	createSession,
 	findMemberByUsernameAndInviteCode,
@@ -6,10 +7,10 @@ import {
 	isValidUsername,
 	normalizeUsername,
 	setBookclubSessionCookie
-} from '#lib/server/bookclub/auth';
-import { getBookclubDatabase } from '#lib/server/bookclub/db';
-import { cleanupBookclubDataAfterLogin } from '#lib/server/bookclub/maintenance';
-import { verifyTurnstileToken } from '#lib/server/bookclub/turnstile';
+} from '#lib/server/bookclub/auth.ts';
+import { getBookclubDatabase } from '#lib/server/bookclub/db.ts';
+import { cleanupBookclubDataAfterLogin } from '#lib/server/bookclub/maintenance.ts';
+import { verifyTurnstileToken } from '#lib/server/bookclub/turnstile.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
@@ -19,7 +20,7 @@ export const load: PageServerLoad = async (event) => {
 		throw redirect(303, '/bookclub');
 	}
 
-	return { turnstileSiteKey: event.platform?.env.TURNSTILE_SITE_KEY ?? null };
+	return { turnstileSiteKey: env.TURNSTILE_SITE_KEY ?? null };
 };
 
 export const actions: Actions = {
@@ -40,7 +41,7 @@ export const actions: Actions = {
 
 		// Verify the bot challenge before reading member hashes or creating a session.
 		const turnstileToken = form.get('cf-turnstile-response');
-		const turnstileSecret = event.platform?.env.TURNSTILE_SECRET_KEY;
+		const turnstileSecret = env.TURNSTILE_SECRET_KEY;
 
 		if (typeof turnstileToken !== 'string' || !turnstileSecret) {
 			return fail(503, { error: 'The club entrance is temporarily unavailable.' });
@@ -56,7 +57,7 @@ export const actions: Actions = {
 			return fail(400, { error: 'Please complete the bot check and try again.' });
 		}
 
-		const database = getBookclubDatabase(event.platform);
+		const database = getBookclubDatabase();
 		const member = await findMemberByUsernameAndInviteCode(database, username, inviteCode);
 
 		if (!member) {

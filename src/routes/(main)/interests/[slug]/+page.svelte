@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { interestContent } from '#lib/content';
+	import { interestContent } from '#lib/content.ts';
 
 	let { data } = $props();
 	let Content = $derived(interestContent[data.category.slug]);

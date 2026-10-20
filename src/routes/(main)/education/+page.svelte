@@ -2,7 +2,7 @@
 	import { resolve } from '$app/paths';
 	import EntryList from '#lib/components/main/EntryList.svelte';
 	import ModuleMark from '#lib/components/main/ModuleMark.svelte';
-	import { pageContent, type AcademicModule, type AcademicYearDetails } from '#lib/content';
+	import { pageContent, type AcademicModule, type AcademicYearDetails } from '#lib/content.ts';
 	let { data } = $props();
 	const Content = pageContent.education;
 

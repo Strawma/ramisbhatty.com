@@ -1,7 +1,7 @@
 import { dev } from '$app/env';
 import { error, redirect } from '@sveltejs/kit';
-import { createSession, setBookclubSessionCookie } from '#lib/server/bookclub/auth';
-import { getBookclubDatabase } from '#lib/server/bookclub/db';
+import { createSession, setBookclubSessionCookie } from '#lib/server/bookclub/auth.ts';
+import { getBookclubDatabase } from '#lib/server/bookclub/db.ts';
 import type { PageServerLoad } from './$types';
 
 const PREVIEW_MEMBER_ID = 'local-preview-member';
@@ -21,7 +21,7 @@ export const load: PageServerLoad = async (event) => {
 		throw error(404, 'Not found');
 	}
 
-	const database = getBookclubDatabase(event.platform);
+	const database = getBookclubDatabase();
 	await database
 		.prepare(
 			`INSERT INTO bookclub_members (id, username, name, invite_code_hash, role, chat_color)

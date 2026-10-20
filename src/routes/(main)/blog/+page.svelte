@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import EntryList from '#lib/components/main/EntryList.svelte';
-	import { pageContent } from '#lib/content';
+	import { pageContent } from '#lib/content.ts';
 
 	let { data } = $props();
 	const Content = pageContent.blog;

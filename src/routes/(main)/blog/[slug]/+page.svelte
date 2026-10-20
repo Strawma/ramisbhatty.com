@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { postContent } from '#lib/content';
+	import { postContent } from '#lib/content.ts';
 
 	let { data } = $props();
 	let Content = $derived(postContent[data.post.slug]);

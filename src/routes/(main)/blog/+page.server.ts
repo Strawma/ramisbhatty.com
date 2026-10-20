@@ -1,5 +1,5 @@
 import { dev } from '$app/env';
-import { pageIntroductions, visiblePosts } from '#lib/content';
+import { pageIntroductions, visiblePosts } from '#lib/content.ts';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = () => ({

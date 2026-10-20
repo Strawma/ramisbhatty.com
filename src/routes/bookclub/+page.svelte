@@ -14,7 +14,7 @@
 		saveDashboardPreferences,
 		type DashboardPanelId,
 		type DashboardWindowGeometry
-	} from '#lib/components/bookclub/dashboard-preferences';
+	} from '#lib/components/bookclub/dashboard-preferences.ts';
 	import ChatRoom from './ChatRoom.svelte';
 	import ClubNav from './ClubNav.svelte';
 

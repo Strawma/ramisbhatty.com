@@ -1,6 +1,5 @@
 import path from 'node:path';
 import { cloudflareTest, readD1Migrations } from '@cloudflare/vitest-plugin';
-import adapter from '@sveltejs/adapter-cloudflare';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { mdsvex } from 'mdsvex';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
@@ -11,13 +10,13 @@ export default defineConfig(async () => {
 
 	return {
 		plugins: [
+			// cloudflareTest supplies real Workers bindings; adapter emulation would shadow them.
 			sveltekit({
 				extensions: ['.svelte', '.md'],
 				preprocess: [vitePreprocess(), mdsvex({ extensions: ['.md'] })],
 				csrf: {
 					trustedOrigins: ['https://ramisbhatty.com', 'https://www.ramisbhatty.com']
-				},
-				adapter: adapter()
+				}
 			}),
 			cloudflareTest({
 				wrangler: { configPath: './wrangler.jsonc' },

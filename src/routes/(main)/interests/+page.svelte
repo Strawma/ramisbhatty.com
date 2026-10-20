@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { pageContent } from '#lib/content';
+	import { pageContent } from '#lib/content.ts';
 
 	let { data } = $props();
 	const Content = pageContent.interests;

@@ -9,7 +9,7 @@
 		subscribeToSoundEffects,
 		type SoundEffectsSnapshot
 	} from './sound-effects';
-	import type { BookclubSuggestion } from '#lib/server/bookclub/cycles';
+	import type { BookclubSuggestion } from '#lib/server/bookclub/cycles.ts';
 
 	let {
 		drawId,

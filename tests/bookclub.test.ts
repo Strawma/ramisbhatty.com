@@ -1,6 +1,7 @@
 import type {} from './env.d.ts';
-import { env } from 'cloudflare:test';
+import { env, withEnv } from 'cloudflare:workers';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { getBookclubDatabase } from '../src/lib/server/bookclub/db';
 import {
 	createSession,
 	findMemberByUsernameAndInviteCode,
@@ -132,6 +133,24 @@ async function drawAfterClosing(cycleId: string, memberId: string) {
 
 beforeEach(async () => {
 	await clearDatabase();
+});
+
+describe('book-club database binding', () => {
+	it('queries D1 through the Workers environment binding', async () => {
+		const result = await getBookclubDatabase().prepare('SELECT 1 AS available').first();
+		expect(result).toEqual({ available: 1 });
+	});
+
+	it('returns a service error when the database binding is missing', () => {
+		withEnv({}, () => {
+			expect(() => getBookclubDatabase()).toThrow(
+				expect.objectContaining({
+					status: 503,
+					body: { status: 503, message: 'The book club database is not available.' }
+				})
+			);
+		});
+	});
 });
 
 describe('book-club authentication', () => {

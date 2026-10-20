@@ -1,8 +1,8 @@
 import { fail, redirect } from '@sveltejs/kit';
-import { createSession, setBookclubSessionCookie } from '#lib/server/bookclub/auth';
-import { getBookclubDatabase } from '#lib/server/bookclub/db';
-import { consumeInvitation, getInvitationByToken } from '#lib/server/bookclub/invitations';
-import { cleanupBookclubDataAfterLogin } from '#lib/server/bookclub/maintenance';
+import { createSession, setBookclubSessionCookie } from '#lib/server/bookclub/auth.ts';
+import { getBookclubDatabase } from '#lib/server/bookclub/db.ts';
+import { consumeInvitation, getInvitationByToken } from '#lib/server/bookclub/invitations.ts';
+import { cleanupBookclubDataAfterLogin } from '#lib/server/bookclub/maintenance.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 function validateCode(value: FormDataEntryValue | null): value is string {
@@ -15,10 +15,7 @@ export const load: PageServerLoad = async (event) => {
 		'referrer-policy': 'origin'
 	});
 
-	const invitation = await getInvitationByToken(
-		getBookclubDatabase(event.platform),
-		event.params.token
-	);
+	const invitation = await getInvitationByToken(getBookclubDatabase(), event.params.token);
 
 	return {
 		invitation: invitation
@@ -51,7 +48,7 @@ export const actions: Actions = {
 		}
 
 		try {
-			const database = getBookclubDatabase(event.platform);
+			const database = getBookclubDatabase();
 			const member = await consumeInvitation(database, event.params.token, inviteCode);
 			const sessionToken = await createSession(database, member.id);
 			setBookclubSessionCookie(event, sessionToken);

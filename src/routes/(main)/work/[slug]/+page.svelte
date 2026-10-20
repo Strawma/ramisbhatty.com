@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { projectContent } from '#lib/content';
+	import { projectContent } from '#lib/content.ts';
 	import { resolve } from '$app/paths';
 	let { data } = $props();
 	let Content = $derived(projectContent[data.project.slug]);

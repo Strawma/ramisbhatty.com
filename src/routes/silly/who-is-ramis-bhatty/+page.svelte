@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { pageContent } from '#lib/content';
-	import { nav } from '#lib/data/config';
+	import { pageContent } from '#lib/content.ts';
+	import { nav } from '#lib/data/config.ts';
 
 	let { data } = $props();
 	const Content = pageContent['who-is-ramis-bhatty'];
