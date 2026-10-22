@@ -28,6 +28,7 @@ export const GET: RequestHandler = () => {
 		'/',
 		'/about',
 		'/work',
+		'/work/go2-lidar-perception/poster',
 		'/education',
 		'/silly',
 		'/silly/who-is-ramis-bhatty',

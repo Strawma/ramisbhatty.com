@@ -13,4 +13,4 @@ academicYears:
 ---
 
 I study Computer Science with Artificial Intelligence on the integrated MEng programme at the
-University of Southampton. I am currently preparing to enter my 4th year and expect to graduate with a first class honours (currently averaging ~80%).
+University of Southampton. I am in my fourth year and expect to graduate with a first class honours (currently averaging ~80%).

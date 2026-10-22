@@ -169,6 +169,18 @@ The main site's editable copy lives in `src/content`. Markdown bodies hold the p
 frontmatter blocks provide titles, summaries, dates, and draft status used automatically by the
 site's layouts and indexes.
 
+The Soorati Lab internship overview lives in `src/content/experience/research-internship.md`.
+Its companion case study is `src/content/projects/go2-lidar-perception.md`, published at
+`/work/go2-lidar-perception` and featured automatically on the homepage. Keep experiment dates and
+the distinction between hardware tests, recorded replay, simulation, and future work when updating
+these entries.
+
+The final A1 research poster is served from `static/documents/go2-lidar-poster.pdf`. Its readable
+web equivalent at `/work/go2-lidar-perception/poster` uses `src/content/pages/go2-poster.md`.
+Keep the PDF and text equivalent in sync when replacing the poster. The PDF contains selectable
+text but is not structurally tagged, so the web version provides a linear reading order and
+descriptions of the visual material.
+
 The deliberately retro `/silly` section also contains a fictional biography at
 `/silly/who-is-ramis-bhatty`. It is a regular public page, linked from the silly homepage and served
 with the same visible HTML to visitors and crawlers. Its copy and metadata live in
