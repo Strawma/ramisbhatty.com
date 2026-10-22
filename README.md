@@ -181,6 +181,28 @@ Keep the PDF and text equivalent in sync when replacing the poster. The PDF cont
 text but is not structurally tagged, so the web version provides a linear reading order and
 descriptions of the visual material.
 
+The cell-migration case study lives in `src/content/projects/cell-migration-segmentation.md` and is
+associated with COMP3200 through `moduleCode`. It is currently a local draft, visible during
+development and excluded from production indexes and detail routes by its `status: draft` field.
+
+### Media and downloadable documents
+
+Keep small, approved final PDFs and web-sized images in `static`, using descriptive filenames and
+links from the relevant content entry. Files in `static` are publicly served even when the entry
+that references them is a draft. Store source recordings, unapproved material, large originals,
+and intermediate report builds outside the public asset tree.
+
+Optimise assets before committing them. Binary revisions remain in Git history, so keep final
+exports rather than every rendering of a report or animation. A short MP4 or WebM clip is usually
+more suitable than a large animated GIF; provide a poster image, playback controls, and a text
+description, with captions for spoken content. Avoid automatically playing motion for visitors
+who request reduced motion.
+
+The current poster is small enough for regular Git. Use separate media storage for large videos
+or growing collections; Git LFS is another option when versioning large binaries is necessary,
+but requires checking build support and storage/bandwidth quotas. Cloudflare Pages limits each
+deployed asset to [25 MiB](https://developers.cloudflare.com/pages/platform/limits/).
+
 The deliberately retro `/silly` section also contains a fictional biography at
 `/silly/who-is-ramis-bhatty`. It is a regular public page, linked from the silly homepage and served
 with the same visible HTML to visitors and crawlers. Its copy and metadata live in

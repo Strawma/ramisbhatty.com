@@ -26,7 +26,12 @@ const mainRoutes: RouteExpectation[] = [
 	{ path: '/interests', heading: 'Interests', title: /^Interests \| Ramis Bhatty$/ }
 ];
 
-const draftRoutes = ['/work/module-project-placeholder', '/blog/first-post', '/interests/games'];
+const draftRoutes = [
+	'/work/module-project-placeholder',
+	'/work/cell-migration-segmentation',
+	'/blog/first-post',
+	'/interests/games'
+];
 
 function collectRuntimeErrors(page: Page): string[] {
 	const errors: string[] = [];
@@ -125,12 +130,19 @@ test('published module and experience records are available without draft labels
 });
 
 test('authored draft records are reachable locally and visibly labelled', async ({ page }) => {
+	await page.setViewportSize({ width: 360, height: 740 });
+
 	for (const path of draftRoutes) {
 		const response = await page.goto(path);
 		expect(response?.ok(), path).toBe(true);
 		await expect(page).toHaveTitle(/\| (Interests \| )?Ramis Bhatty$/);
 		await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 		await expect(page.getByText('LOCAL DRAFT', { exact: true }).first()).toBeVisible();
+		const dimensions = await page.evaluate(() => ({
+			scrollWidth: document.documentElement.scrollWidth,
+			clientWidth: document.documentElement.clientWidth
+		}));
+		expect(dimensions.scrollWidth, path).toBeLessThanOrEqual(dimensions.clientWidth);
 	}
 });
 
@@ -264,6 +276,7 @@ test('crawler discovery files advertise only indexable public routes', async ({ 
 	);
 	expect(sitemapBody).not.toContain('<loc>https://ramisbhatty.com/blog</loc>');
 	expect(sitemapBody).not.toContain('module-project-placeholder');
+	expect(sitemapBody).not.toContain('cell-migration-segmentation');
 	expect(sitemapBody).not.toContain('/bookclub');
 	expect(sitemapBody).not.toContain('/streaming');
 });
