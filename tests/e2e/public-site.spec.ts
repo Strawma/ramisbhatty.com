@@ -11,6 +11,16 @@ const mainRoutes: RouteExpectation[] = [
 	{ path: '/', heading: 'Ramis Bhatty', title: /^Ramis Bhatty$/ },
 	{ path: '/about', heading: 'About', title: /^About \| Ramis Bhatty$/ },
 	{ path: '/work', heading: 'Work', title: /^Work \| Ramis Bhatty$/ },
+	{
+		path: '/work/go2-lidar-perception',
+		heading: 'LiDAR perception for assistive robot dogs',
+		title: /^LiDAR perception for assistive robot dogs \| Ramis Bhatty$/
+	},
+	{
+		path: '/work/go2-lidar-perception/poster',
+		heading: 'Can LiDAR help a robot dog spot what moves?',
+		title: /^Can LiDAR help a robot dog spot what moves\? \| Ramis Bhatty$/
+	},
 	{ path: '/education', heading: 'Education', title: /^Education \| Ramis Bhatty$/ },
 	{ path: '/blog', heading: 'Writing', title: /^Writing \| Ramis Bhatty$/ },
 	{ path: '/interests', heading: 'Interests', title: /^Interests \| Ramis Bhatty$/ }
@@ -124,6 +134,22 @@ test('authored draft records are reachable locally and visibly labelled', async 
 	}
 });
 
+test('the internship and case study link to the poster PDF and its text equivalent', async ({
+	page,
+	request
+}) => {
+	for (const path of ['/work/experience/research-internship', '/work/go2-lidar-perception']) {
+		await page.goto(path);
+		await expect(page.locator('a[href="/documents/go2-lidar-poster.pdf"]')).toBeVisible();
+		await expect(page.locator('a[href="/work/go2-lidar-perception/poster"]')).toBeVisible();
+	}
+
+	const pdf = await request.get('/documents/go2-lidar-poster.pdf');
+	expect(pdf.ok()).toBe(true);
+	expect(pdf.headers()['content-type']).toContain('application/pdf');
+	expect((await pdf.body()).subarray(0, 5).toString()).toBe('%PDF-');
+});
+
 test('main routes fit a narrow mobile viewport and retain keyboard navigation', async ({
 	page
 }) => {
@@ -232,6 +258,9 @@ test('crawler discovery files advertise only indexable public routes', async ({ 
 	expect(sitemapBody).toContain('<loc>https://ramisbhatty.com/education/comp1201</loc>');
 	expect(sitemapBody).toContain(
 		'<loc>https://ramisbhatty.com/work/experience/research-internship</loc>'
+	);
+	expect(sitemapBody).toContain(
+		'<loc>https://ramisbhatty.com/work/go2-lidar-perception/poster</loc>'
 	);
 	expect(sitemapBody).not.toContain('<loc>https://ramisbhatty.com/blog</loc>');
 	expect(sitemapBody).not.toContain('module-project-placeholder');
