@@ -2,9 +2,20 @@
 	import { resolve } from '$app/paths';
 	import EntryList from '#lib/components/main/EntryList.svelte';
 	import ModuleMark from '#lib/components/main/ModuleMark.svelte';
-	import { pageContent, type AcademicModule, type AcademicYearDetails } from '#lib/content.ts';
+	import {
+		pageContent,
+		pageIntroductions,
+		type AcademicModule,
+		type AcademicYearDetails
+	} from '#lib/content.ts';
 	let { data } = $props();
 	const Content = pageContent.education;
+	const SchoolContent = pageContent['education-school'];
+	const schoolQualifications = ['education-a-levels', 'education-gcses'].map((slug) => ({
+		slug,
+		title: pageIntroductions[slug].title,
+		Content: pageContent[slug]
+	}));
 
 	interface SemesterGroup {
 		semester?: string;
@@ -16,6 +27,7 @@
 		semesters: SemesterGroup[];
 		showSemesterHeadings: boolean;
 		average?: number;
+		ongoing: boolean;
 		awards: string[];
 	}
 
@@ -47,7 +59,10 @@
 		modules: AcademicModule[],
 		academicYears: AcademicYearDetails[] = []
 	): YearGroup[] {
-		const years: { year: string; modules: AcademicModule[] }[] = [];
+		const years: { year: string; modules: AcademicModule[] }[] = academicYears.map(({ year }) => ({
+			year,
+			modules: []
+		}));
 
 		for (const module of modules) {
 			const year = years.find((group) => group.year === module.year);
@@ -58,6 +73,7 @@
 		years.sort((left, right) => yearStart(left.year) - yearStart(right.year));
 
 		return years.map(({ year, modules: yearModules }) => {
+			const details = academicYears.find((details) => details.year === year);
 			const semesterGroups: SemesterGroup[] = [];
 
 			for (const module of yearModules) {
@@ -76,8 +92,9 @@
 				year,
 				semesters: semesterGroups,
 				showSemesterHeadings: semesterGroups.some((group) => group.semester),
-				average: weightedAverage(yearModules),
-				awards: academicYears.find((details) => details.year === year)?.awards ?? []
+				average: details?.ongoing ? undefined : weightedAverage(yearModules),
+				ongoing: details?.ongoing ?? false,
+				awards: details?.awards ?? []
 			};
 		});
 	}
@@ -92,56 +109,104 @@
 
 <p class="font-mono text-sm text-neutral-500">{data.page.path}</p>
 <h1>{data.page.title}</h1>
-<Content />
 
-{#if data.modules.length}
-	<div class="not-prose mt-10 space-y-4">
-		{#each moduleGroups as yearGroup, index (yearGroup.year)}
-			<details
-				open={index === moduleGroups.length - 1}
-				class="group border-y border-neutral-300 bg-neutral-50"
-			>
-				<summary
-					class="cursor-pointer py-5 marker:text-neutral-500 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
-				>
-					<span class="ml-2 inline-flex flex-wrap items-center gap-x-3 gap-y-2">
-						<span role="heading" aria-level="2" class="text-lg font-semibold">
-							{yearGroup.year}
-						</span>
-						{#if yearGroup.average !== undefined}
-							<ModuleMark mark={yearGroup.average} label="Year average" />
-						{/if}
-					</span>
-					{#if yearGroup.awards.length}
-						<span class="mt-2 ml-7 block space-y-1 text-sm text-neutral-600">
-							{#each yearGroup.awards as award (award)}
-								<span class="block"><span class="font-semibold">Award:</span> {award}</span>
-							{/each}
-						</span>
-					{/if}
-				</summary>
-				<div class="pb-6">
-					{#each yearGroup.semesters as semesterGroup (semesterGroup.semester ?? 'unspecified')}
-						{#if yearGroup.showSemesterHeadings}
-							<h3 class="mt-6 text-base font-semibold">
-								{semesterGroup.semester ?? 'Semester not specified'}
-							</h3>
-						{/if}
-						<EntryList
-							entries={semesterGroup.modules.map((module) => ({
-								href: resolve('/(main)/education/[code]', { code: module.code.toLowerCase() }),
-								title: `${module.code}: ${module.title}`,
-								mark: module.mark,
-								summary: module.summary,
-								tags: [...module.skills, ...module.technologies],
-								draft: module.status === 'draft'
-							}))}
-						/>
+<section aria-labelledby="secondary-education" class="mt-6">
+	<details class="border-y border-neutral-300">
+		<summary
+			class="cursor-pointer py-5 marker:text-neutral-500 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
+		>
+			<h2 id="secondary-education" class="m-0 ml-2 inline text-2xl">Secondary education</h2>
+		</summary>
+		<div class="pb-6">
+			<SchoolContent />
+			<div class="mt-6 space-y-4">
+				{#each schoolQualifications as qualification (qualification.slug)}
+					<details class="border border-neutral-300 bg-neutral-50 px-5">
+						<summary
+							class="cursor-pointer py-5 marker:text-neutral-500 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
+						>
+							<span role="heading" aria-level="3" class="ml-2 text-lg font-semibold">
+								{qualification.title}
+							</span>
+						</summary>
+						<div class="pb-5">
+							<qualification.Content />
+						</div>
+					</details>
+				{/each}
+			</div>
+		</div>
+	</details>
+</section>
+
+<section aria-labelledby="university" class="mt-6">
+	<details open class="border-y border-neutral-300">
+		<summary
+			class="cursor-pointer py-5 marker:text-neutral-500 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
+		>
+			<h2 id="university" class="m-0 ml-2 inline text-2xl">University</h2>
+		</summary>
+		<div class="pb-6">
+			<Content />
+
+			{#if moduleGroups.length}
+				<div class="not-prose mt-10 space-y-4">
+					{#each moduleGroups as yearGroup, index (yearGroup.year)}
+						<details
+							open={index === moduleGroups.length - 1}
+							class="group border-y border-neutral-300 bg-neutral-50"
+						>
+							<summary
+								class="cursor-pointer py-5 marker:text-neutral-500 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
+							>
+								<span class="ml-2 inline-flex flex-wrap items-center gap-x-3 gap-y-2">
+									<span role="heading" aria-level="3" class="text-lg font-semibold">
+										{yearGroup.year}
+									</span>
+									{#if yearGroup.ongoing}
+										<span class="font-mono text-sm text-neutral-600">Ongoing</span>
+									{:else if yearGroup.average !== undefined}
+										<ModuleMark mark={yearGroup.average} label="Year average" />
+									{/if}
+								</span>
+								{#if yearGroup.awards.length}
+									<span class="mt-2 ml-7 block space-y-1 text-sm text-neutral-600">
+										{#each yearGroup.awards as award (award)}
+											<span class="block"><span class="font-semibold">Award:</span> {award}</span>
+										{/each}
+									</span>
+								{/if}
+							</summary>
+							{#if yearGroup.semesters.length}
+								<div class="pb-6">
+									{#each yearGroup.semesters as semesterGroup (semesterGroup.semester ?? 'unspecified')}
+										{#if yearGroup.showSemesterHeadings}
+											<h4 class="mt-6 text-base font-semibold">
+												{semesterGroup.semester ?? 'Semester not specified'}
+											</h4>
+										{/if}
+										<EntryList
+											headingLevel={yearGroup.showSemesterHeadings ? 5 : 4}
+											entries={semesterGroup.modules.map((module) => ({
+												href: resolve('/(main)/education/[code]', {
+													code: module.code.toLowerCase()
+												}),
+												title: `${module.code}: ${module.title}`,
+												mark: module.mark,
+												summary: module.summary,
+												tags: [...module.skills, ...module.technologies],
+												draft: module.status === 'draft'
+											}))}
+										/>
+									{/each}
+								</div>
+							{/if}
+						</details>
 					{/each}
 				</div>
-			</details>
-		{/each}
-	</div>
-{:else}
-	<p class="border-y border-neutral-300 py-6">Module entries are being assembled.</p>
-{/if}
+			{:else}
+				<p class="border-y border-neutral-300 py-6">Module entries are being assembled.</p>
+			{/if}
+		</div>
+	</details>
+</section>

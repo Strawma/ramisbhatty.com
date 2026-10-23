@@ -1,7 +1,8 @@
 // Keep public contact details and navigation destinations in one place so routes do not drift.
 
 export const site = {
-	origin: 'https://ramisbhatty.com'
+	origin: 'https://ramisbhatty.com',
+	pagesHostname: 'ramisbhatty-com-ect.pages.dev'
 } as const;
 
 export const contact = {

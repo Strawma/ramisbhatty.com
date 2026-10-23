@@ -1,13 +1,12 @@
 import type { Handle } from '@sveltejs/kit/hooks';
-
-const PROD_HOST = 'ramisbhatty.com';
+import { site } from '#lib/data/config.ts';
 
 export const handle: Handle = async ({ event, resolve }) => {
-	const host = event.url.hostname;
-	if (host !== PROD_HOST && host.endsWith('.pages.dev')) {
-		const target = new URL(event.url);
-		target.protocol = 'https:';
-		target.hostname = PROD_HOST;
+	// Only the production Pages alias redirects; branch and deployment previews stay accessible.
+	if (event.url.hostname === site.pagesHostname) {
+		const target = new URL(site.origin);
+		target.pathname = event.url.pathname;
+		target.search = event.url.search;
 		return new Response(null, {
 			status: 308,
 			headers: { location: target.toString() }
