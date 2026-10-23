@@ -9,6 +9,5 @@ introduction: >-
 ## Current focus
 
 - Studying Computer Science with Artificial Intelligence (MEng) in my fourth year at Southampton. [Read about my education](/education) →
-- Writing up my summer research on LiDAR perception for robot dogs. [Read about the internship](/work/experience/research-internship) →
 - Turning coursework and personal projects into useful, connected notes for this site. [Browse my work](/work) →
 - Finishing this site!
