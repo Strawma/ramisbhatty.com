@@ -98,7 +98,7 @@ test('education groups modules chronologically with averages, awards, and the la
 	await page.goto('/education', { waitUntil: 'networkidle' });
 
 	const university = page.getByRole('region', { name: 'University', exact: true });
-	const yearGroups = university.locator('details');
+	const yearGroups = university.locator(':scope > details').locator('details');
 	await expect(yearGroups).toHaveCount(4);
 
 	const firstYear = yearGroups.filter({ hasText: 'First Year, 2023/24' });
@@ -132,18 +132,31 @@ test('school results start collapsed and expose all qualifications with the keyb
 }) => {
 	await page.goto('/education', { waitUntil: 'networkidle' });
 	const school = page.getByRole('region', { name: 'Secondary education', exact: true });
+	const university = page.getByRole('region', { name: 'University', exact: true });
+	const schoolDisclosure = school.locator(':scope > details');
+	const universityDisclosure = university.locator(':scope > details');
+	await expect(schoolDisclosure).not.toHaveAttribute('open');
+	await expect(universityDisclosure).toHaveAttribute('open', '');
 	await expect(page.getByRole('heading', { level: 2 })).toHaveText([
 		'Secondary education',
 		'University'
 	]);
+	await expect(school.getByText(/I studied at Bournemouth School/)).not.toBeVisible();
+	await expect(university.getByText(/I study Computer Science/)).toBeVisible();
+	await schoolDisclosure.locator(':scope > summary').focus();
+	await page.keyboard.press('Enter');
+	await expect(schoolDisclosure).toHaveAttribute('open', '');
 	await expect(school.getByText(/I studied at Bournemouth School/)).toBeVisible();
-	await expect(
-		page
-			.getByRole('region', { name: 'University', exact: true })
-			.getByText(/I study Computer Science/)
-	).toBeVisible();
-	const aLevels = school.locator('details').filter({ hasText: 'A levels' });
-	const gcses = school.locator('details').filter({ hasText: 'GCSEs' });
+	await expect(universityDisclosure).toHaveAttribute('open', '');
+	await universityDisclosure.locator(':scope > summary').focus();
+	await page.keyboard.press('Enter');
+	await expect(universityDisclosure).not.toHaveAttribute('open');
+	await expect(university.getByText(/I study Computer Science/)).not.toBeVisible();
+	await expect(schoolDisclosure).toHaveAttribute('open', '');
+	await page.keyboard.press('Enter');
+	await expect(universityDisclosure).toHaveAttribute('open', '');
+	const aLevels = schoolDisclosure.locator('details').filter({ hasText: 'A levels' });
+	const gcses = schoolDisclosure.locator('details').filter({ hasText: 'GCSEs' });
 	await expect(aLevels).not.toHaveAttribute('open');
 	await expect(gcses).not.toHaveAttribute('open');
 	await expect(school.getByRole('table')).toHaveCount(0);
