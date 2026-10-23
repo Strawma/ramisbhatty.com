@@ -97,16 +97,23 @@ test('education groups modules chronologically with averages, awards, and the la
 	// Let hydration finish before testing a native toggle that startup can otherwise reset.
 	await page.goto('/education', { waitUntil: 'networkidle' });
 
-	const yearGroups = page.locator('details');
-	await expect(yearGroups).toHaveCount(3);
+	const yearGroups = page.locator('details').filter({
+		has: page.locator('summary', { hasText: /Year, 20/ })
+	});
+	await expect(yearGroups).toHaveCount(4);
 
 	const firstYear = yearGroups.filter({ hasText: 'First Year, 2023/24' });
 	const secondYear = yearGroups.filter({ hasText: 'Second Year, 2024/25' });
 	const thirdYear = yearGroups.filter({ hasText: 'Third Year, 2025/26' });
+	const fourthYear = yearGroups.filter({ hasText: 'Fourth Year, 2026/27' });
 
 	await expect(firstYear).not.toHaveAttribute('open');
 	await expect(secondYear).not.toHaveAttribute('open');
-	await expect(thirdYear).toHaveAttribute('open', '');
+	await expect(thirdYear).not.toHaveAttribute('open');
+	await expect(fourthYear).toHaveAttribute('open', '');
+	await expect(fourthYear.getByText('Ongoing', { exact: true })).toBeVisible();
+	await expect(fourthYear.getByLabel(/Year average/)).toHaveCount(0);
+	await expect(fourthYear.getByRole('link')).toHaveCount(0);
 	await expect(firstYear.getByLabel('Year average: 84.4%')).toBeVisible();
 	await expect(secondYear.getByLabel('Year average: 79.6%')).toBeVisible();
 	await expect(thirdYear.getByLabel('Year average: 81.3%')).toBeVisible();
@@ -118,6 +125,38 @@ test('education groups modules chronologically with averages, awards, and the la
 		.locator('article')
 		.filter({ has: page.locator('a[href="/education/comp1201"]') });
 	await expect(comp1201.getByLabel('Overall mark: 76%')).toBeVisible();
+});
+
+test('school results start collapsed and expose all qualifications with the keyboard', async ({
+	page
+}) => {
+	await page.goto('/education', { waitUntil: 'networkidle' });
+	const school = page.locator('details').filter({ hasText: 'Bournemouth School' });
+	await expect(school).not.toHaveAttribute('open');
+	await expect(school.getByRole('table')).not.toBeVisible();
+	await school.locator('summary').focus();
+	await page.keyboard.press('Enter');
+	await expect(school).toHaveAttribute('open', '');
+	const tables = school.getByRole('table');
+	await expect(tables).toHaveCount(2);
+	await expect(tables.nth(0).getByRole('row')).toHaveCount(5);
+	await expect(tables.nth(0).getByRole('row', { name: 'Maths A*', exact: true })).toBeVisible();
+	await expect(
+		tables.nth(0).getByRole('row', { name: 'Computer Science A*', exact: true })
+	).toBeVisible();
+	await expect(
+		tables.nth(0).getByRole('row', { name: 'Further Maths A', exact: true })
+	).toBeVisible();
+	await expect(tables.nth(0).getByRole('row', { name: 'Physics A', exact: true })).toBeVisible();
+	await expect(tables.nth(1).getByRole('row')).toHaveCount(12);
+	await expect(tables.nth(1).getByRole('cell', { name: '9', exact: true })).toHaveCount(10);
+	await expect(
+		tables.nth(1).getByRole('row', { name: 'Religious Studies 8', exact: true })
+	).toBeVisible();
+	await page.setViewportSize({ width: 360, height: 740 });
+	expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
+	const accessibility = await new AxeBuilder({ page }).analyze();
+	expect(accessibility.violations).toEqual([]);
 });
 
 test('published module and experience records are available without draft labels', async ({

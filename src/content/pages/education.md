@@ -10,6 +10,8 @@ academicYears:
   - year: 'Second Year, 2024/25'
     awards:
       - Netcraft Prize — top 10 Computer Science students
+  - year: 'Fourth Year, 2026/27'
+    ongoing: true
 ---
 
 I study Computer Science with Artificial Intelligence on the integrated MEng programme at the

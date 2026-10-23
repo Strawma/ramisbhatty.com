@@ -5,6 +5,7 @@
 	import { pageContent, type AcademicModule, type AcademicYearDetails } from '#lib/content.ts';
 	let { data } = $props();
 	const Content = pageContent.education;
+	const SchoolContent = pageContent['education-school'];
 
 	interface SemesterGroup {
 		semester?: string;
@@ -16,6 +17,7 @@
 		semesters: SemesterGroup[];
 		showSemesterHeadings: boolean;
 		average?: number;
+		ongoing: boolean;
 		awards: string[];
 	}
 
@@ -47,7 +49,10 @@
 		modules: AcademicModule[],
 		academicYears: AcademicYearDetails[] = []
 	): YearGroup[] {
-		const years: { year: string; modules: AcademicModule[] }[] = [];
+		const years: { year: string; modules: AcademicModule[] }[] = academicYears.map(({ year }) => ({
+			year,
+			modules: []
+		}));
 
 		for (const module of modules) {
 			const year = years.find((group) => group.year === module.year);
@@ -58,6 +63,7 @@
 		years.sort((left, right) => yearStart(left.year) - yearStart(right.year));
 
 		return years.map(({ year, modules: yearModules }) => {
+			const details = academicYears.find((details) => details.year === year);
 			const semesterGroups: SemesterGroup[] = [];
 
 			for (const module of yearModules) {
@@ -76,8 +82,9 @@
 				year,
 				semesters: semesterGroups,
 				showSemesterHeadings: semesterGroups.some((group) => group.semester),
-				average: weightedAverage(yearModules),
-				awards: academicYears.find((details) => details.year === year)?.awards ?? []
+				average: details?.ongoing ? undefined : weightedAverage(yearModules),
+				ongoing: details?.ongoing ?? false,
+				awards: details?.awards ?? []
 			};
 		});
 	}
@@ -94,7 +101,7 @@
 <h1>{data.page.title}</h1>
 <Content />
 
-{#if data.modules.length}
+{#if moduleGroups.length}
 	<div class="not-prose mt-10 space-y-4">
 		{#each moduleGroups as yearGroup, index (yearGroup.year)}
 			<details
@@ -108,7 +115,9 @@
 						<span role="heading" aria-level="2" class="text-lg font-semibold">
 							{yearGroup.year}
 						</span>
-						{#if yearGroup.average !== undefined}
+						{#if yearGroup.ongoing}
+							<span class="font-mono text-sm text-neutral-600">Ongoing</span>
+						{:else if yearGroup.average !== undefined}
 							<ModuleMark mark={yearGroup.average} label="Year average" />
 						{/if}
 					</span>
@@ -120,28 +129,44 @@
 						</span>
 					{/if}
 				</summary>
-				<div class="pb-6">
-					{#each yearGroup.semesters as semesterGroup (semesterGroup.semester ?? 'unspecified')}
-						{#if yearGroup.showSemesterHeadings}
-							<h3 class="mt-6 text-base font-semibold">
-								{semesterGroup.semester ?? 'Semester not specified'}
-							</h3>
-						{/if}
-						<EntryList
-							entries={semesterGroup.modules.map((module) => ({
-								href: resolve('/(main)/education/[code]', { code: module.code.toLowerCase() }),
-								title: `${module.code}: ${module.title}`,
-								mark: module.mark,
-								summary: module.summary,
-								tags: [...module.skills, ...module.technologies],
-								draft: module.status === 'draft'
-							}))}
-						/>
-					{/each}
-				</div>
+				{#if yearGroup.semesters.length}
+					<div class="pb-6">
+						{#each yearGroup.semesters as semesterGroup (semesterGroup.semester ?? 'unspecified')}
+							{#if yearGroup.showSemesterHeadings}
+								<h3 class="mt-6 text-base font-semibold">
+									{semesterGroup.semester ?? 'Semester not specified'}
+								</h3>
+							{/if}
+							<EntryList
+								entries={semesterGroup.modules.map((module) => ({
+									href: resolve('/(main)/education/[code]', { code: module.code.toLowerCase() }),
+									title: `${module.code}: ${module.title}`,
+									mark: module.mark,
+									summary: module.summary,
+									tags: [...module.skills, ...module.technologies],
+									draft: module.status === 'draft'
+								}))}
+							/>
+						{/each}
+					</div>
+				{/if}
 			</details>
 		{/each}
 	</div>
 {:else}
 	<p class="border-y border-neutral-300 py-6">Module entries are being assembled.</p>
 {/if}
+
+<details class="mt-10 border-y border-neutral-300">
+	<summary
+		class="cursor-pointer py-5 marker:text-neutral-500 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
+	>
+		<span class="ml-2 inline-flex flex-wrap items-center gap-x-3 gap-y-2">
+			<span role="heading" aria-level="2" class="text-lg font-semibold">Bournemouth School</span>
+			<span class="text-sm text-neutral-600">A levels &amp; GCSEs</span>
+		</span>
+	</summary>
+	<div class="pb-6">
+		<SchoolContent />
+	</div>
+</details>

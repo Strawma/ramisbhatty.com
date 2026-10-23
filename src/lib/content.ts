@@ -39,6 +39,7 @@ export interface AcademicModule extends CollectionMetadata {
 export interface AcademicYearDetails {
 	year: string;
 	awards: string[];
+	ongoing: boolean;
 }
 
 export interface Project extends CollectionMetadata {
@@ -167,9 +168,13 @@ function academicYears(
 			throw new Error(`Invalid "academicYears[${index}]" in ${source}`);
 		}
 		const year = item as MetadataRecord;
+		if (year.ongoing !== undefined && typeof year.ongoing !== 'boolean') {
+			throw new Error(`Invalid "academicYears[${index}].ongoing" in ${source}`);
+		}
 		return {
 			year: requireString(year, 'year', source),
-			awards: stringList(year, 'awards', source)
+			awards: stringList(year, 'awards', source),
+			ongoing: year.ongoing ?? false
 		};
 	});
 }
