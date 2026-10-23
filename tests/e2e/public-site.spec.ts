@@ -12,6 +12,11 @@ const mainRoutes: RouteExpectation[] = [
 	{ path: '/about', heading: 'About', title: /^About \| Ramis Bhatty$/ },
 	{ path: '/work', heading: 'Work', title: /^Work \| Ramis Bhatty$/ },
 	{
+		path: '/work/cell-migration-segmentation',
+		heading: 'Comparing segmentation methods for cell migration',
+		title: /^Comparing segmentation methods for cell migration \| Ramis Bhatty$/
+	},
+	{
 		path: '/work/go2-lidar-perception',
 		heading: 'LiDAR perception for assistive robot dogs',
 		title: /^LiDAR perception for assistive robot dogs \| Ramis Bhatty$/
@@ -89,7 +94,8 @@ test('primary navigation marks the current route and nested sections active', as
 test('education groups modules chronologically with averages, awards, and the latest year open', async ({
 	page
 }) => {
-	await page.goto('/education');
+	// Let hydration finish before testing a native toggle that startup can otherwise reset.
+	await page.goto('/education', { waitUntil: 'networkidle' });
 
 	const yearGroups = page.locator('details');
 	await expect(yearGroups).toHaveCount(3);
@@ -125,13 +131,56 @@ test('published module and experience records are available without draft labels
 });
 
 test('authored draft records are reachable locally and visibly labelled', async ({ page }) => {
+	await page.setViewportSize({ width: 360, height: 740 });
+
 	for (const path of draftRoutes) {
 		const response = await page.goto(path);
 		expect(response?.ok(), path).toBe(true);
 		await expect(page).toHaveTitle(/\| (Interests \| )?Ramis Bhatty$/);
 		await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 		await expect(page.getByText('LOCAL DRAFT', { exact: true }).first()).toBeVisible();
+		const dimensions = await page.evaluate(() => ({
+			scrollWidth: document.documentElement.scrollWidth,
+			clientWidth: document.documentElement.clientWidth
+		}));
+		expect(dimensions.scrollWidth, path).toBeLessThanOrEqual(dimensions.clientWidth);
 	}
+});
+
+test('selected work connects both projects and the cell study to its module and results figure', async ({
+	page,
+	request
+}) => {
+	await page.goto('/');
+	const selectedWork = page.locator('section').filter({
+		has: page.getByRole('heading', { name: 'Selected work', exact: true })
+	});
+	await expect(selectedWork.locator('a[href="/work/go2-lidar-perception"]')).toBeVisible();
+	await selectedWork.locator('a[href="/work/cell-migration-segmentation"]').click();
+	await expect(page.getByText('LOCAL DRAFT', { exact: true })).toHaveCount(0);
+	await expect(page.locator('article header a[href="/education/comp3200"]')).toBeVisible();
+	const figure = page.getByRole('img', { name: /Paired bars show higher mean Dice/ });
+	await figure.scrollIntoViewIfNeeded();
+	await expect(figure).toBeVisible();
+	await expect
+		.poll(() => figure.evaluate((element) => (element as HTMLImageElement).naturalWidth))
+		.toBeGreaterThan(0);
+	await expect(page.getByRole('cell', { name: '0.876', exact: true })).toBeVisible();
+	await expect(
+		page.getByRole('link', { name: 'Cell Migration Framework on GitHub' })
+	).toHaveAttribute('href', 'https://github.com/Strawma/cell-migration-framework');
+
+	const chart = await request.get('/images/projects/cell-migration/dice-by-clip.svg');
+	expect(chart.ok()).toBe(true);
+	expect(chart.headers()['content-type']).toContain('image/svg+xml');
+
+	await page.goto('/education/comp3200');
+	await expect(
+		page.getByRole('link', {
+			name: 'Comparing segmentation methods for cell migration',
+			exact: true
+		})
+	).toBeVisible();
 });
 
 test('the internship and case study link to the poster PDF and its text equivalent', async ({
@@ -264,6 +313,9 @@ test('crawler discovery files advertise only indexable public routes', async ({ 
 	);
 	expect(sitemapBody).not.toContain('<loc>https://ramisbhatty.com/blog</loc>');
 	expect(sitemapBody).not.toContain('module-project-placeholder');
+	expect(sitemapBody).toContain(
+		'<loc>https://ramisbhatty.com/work/cell-migration-segmentation</loc>'
+	);
 	expect(sitemapBody).not.toContain('/bookclub');
 	expect(sitemapBody).not.toContain('/streaming');
 });
