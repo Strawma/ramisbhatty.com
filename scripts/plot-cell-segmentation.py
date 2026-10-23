@@ -5,6 +5,7 @@ Requires Matplotlib. Run from the repository root with:
 """
 
 from pathlib import Path
+import re
 
 import matplotlib
 
@@ -59,6 +60,9 @@ def main() -> None:
         "Title": "Segmentation overlap by held-out clip",
         "Description": "Mean Dice from dissertation Table 5.1. Clip 05 used a different microscope.",
     })
+    # Matplotlib wraps path data with trailing spaces; keep the same geometry on one line.
+    svg = re.sub(r'\bd="([^"]*)"', lambda match: f'd="{" ".join(match[1].split())}"', output.read_text())
+    output.write_text(svg)
     plt.close(fig)
     print(output)
 
