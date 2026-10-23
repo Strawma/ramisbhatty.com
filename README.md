@@ -182,8 +182,19 @@ text but is not structurally tagged, so the web version provides a linear readin
 descriptions of the visual material.
 
 The cell-migration case study lives in `src/content/projects/cell-migration-segmentation.md` and is
-associated with COMP3200 through `moduleCode`. It is currently a local draft, visible during
-development and excluded from production indexes and detail routes by its `status: draft` field.
+associated with COMP3200 through `moduleCode`. It appears in selected work and the module's related
+projects. Its results figure uses the aggregate means from dissertation Table 5.1, with an HTML
+table alongside it; no microscopy frames are embedded in the page.
+
+To regenerate that SVG, use Python with Matplotlib installed, then format the result:
+
+```bash
+python scripts/plot-cell-segmentation.py
+pnpm exec prettier --parser html --write static/images/projects/cell-migration/dice-by-clip.svg
+```
+
+Keep the plotted values and the case study's table aligned when correcting an experiment result.
+The chart is committed as a static asset, so normal site builds do not require Python or Matplotlib.
 
 ### Media and downloadable documents
 

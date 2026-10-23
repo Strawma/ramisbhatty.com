@@ -1,6 +1,6 @@
 ---
 title: Comparing segmentation methods for cell migration
-summary: 'A modular microscopy framework and desktop demonstrator comparing Otsu thresholding with U-Net, evaluated on complete held-out video clips.'
+summary: 'A Python framework and desktop app comparing classical and deep learning segmentation, evaluated across five complete microscopy clips.'
 moduleCode: COMP3200
 period: '2025/26'
 technologies:
@@ -10,22 +10,32 @@ technologies:
   - NumPy
   - SciPy
   - PyQt5
-status: draft
+status: published
 featured: true
 order: 20
 ---
 
-## The question
+## What I built
 
-Does a constrained image-analysis problem need a neural network? My third-year individual project
-investigated this through microscopy footage of single breast cancer cells squeezing through
-microfluidic channels. The background stays mostly fixed, which should help classical methods,
+I built a Python framework and desktop application to compare two ways of finding cell outlines
+in microscopy footage. U-Net achieved higher overall overlap with the reference masks, but a
+classical thresholding pipeline performed better on the clip recorded with a different
+microscope. Looking at that reversal was more useful than reporting a single winner.
+
+The work brought together image processing, neural-network training, dataset annotation,
+experimental evaluation, and a PyQt5 demonstrator. It was my third-year individual project for
+[COMP3200](/education/comp3200) at the University of Southampton.
+
+## The research question
+
+I investigated whether a constrained image-analysis problem needs a neural network, using
+microscopy footage of single breast cancer cells squeezing through microfluidic channels.
+The background stays mostly fixed, which should help classical methods,
 but the cell can deform into thin, irregular shapes that are difficult to separate from the walls.
 
-I compared an Otsu thresholding pipeline with a U-Net, built the framework used to run the
-comparison, and developed a desktop application for inspecting masks and exporting cell
-measurements. The work was supervised by Prof. Dimitra Georgiadou. Dr. Rosalia Moreddu, the
-project's original supervisor, supplied the microscopy footage from existing experiments.
+The comparison used an Otsu thresholding pipeline and a U-Net. The work was supervised by
+Prof. Dimitra Georgiadou. Dr. Rosalia Moreddu, the project's original supervisor, supplied the
+microscopy footage from existing experiments.
 
 ## Building the comparison
 
@@ -83,23 +93,49 @@ For each U-Net fold, three other clips provide training data and one provides va
 checkpoint selection. The held-out test clip is used for evaluation.
 
 I measured both Dice overlap and 95th-percentile Hausdorff distance (HD95), a boundary-distance
-measure. Overlap alone can hide errors in thin cell extensions. The following are the mean
-results reported in the final dissertation's Table 5.1:
+measure. Overlap alone can hide errors in thin cell extensions.
+
+## Results: the ranking changed with the microscope
+
+<figure>
+  <img
+    src="/images/projects/cell-migration/dice-by-clip.svg"
+    alt="Paired bars show higher mean Dice for U-Net on clips 01 to 04 and higher mean Dice for thresholding on clip 05. Exact values follow in the table."
+    width="720"
+    height="470"
+    loading="lazy"
+    decoding="async"
+  />
+  <figcaption>
+    Mean overlap on each complete held-out clip, redrawn from the final dissertation's Table 5.1.
+    Clip 05, marked with an asterisk, came from a different microscope. These are clip-level
+    means, not scores from selected example frames.
+  </figcaption>
+</figure>
+
+The five clips contained 300, 375, 500, 497, and 602 frames respectively. These are the reported
+mean results; higher Dice and lower HD95 are better:
 
 | Test data and metric   | Threshold | U-Net |
 | ---------------------- | --------: | ----: |
 | All clips: Dice ↑      |     0.806 | 0.876 |
 | All clips: HD95 (px) ↓ |      93.9 |  61.3 |
+| Clip 01: Dice ↑        |     0.877 | 0.917 |
 | Clip 02: Dice ↑        |     0.519 | 0.866 |
-| Clip 02: HD95 (px) ↓   |     372.4 |  39.8 |
+| Clip 03: Dice ↑        |     0.842 | 0.901 |
+| Clip 04: Dice ↑        |     0.811 | 0.945 |
 | Clip 05: Dice ↑        |     0.914 | 0.784 |
-| Clip 05: HD95 (px) ↓   |      16.9 |  22.2 |
 
 U-Net performed better overall, but the ordering changed on clip 05, which came from different
 microscope conditions. Thresholding benefited from its cleaner background, while the held-out
 clip exposed a change in imaging appearance that the network had not learned from its training
 clips. This is evidence for keeping a classical baseline in this setting, rather than a general
 claim that thresholding handles every microscope change better.
+
+The comparison includes the whole processing pipeline. Thresholding estimates a background from
+the unlabelled input clip, while U-Net learns from the training clips and does not use that
+background-subtraction step. The result compares those practical workflows, rather than
+isolating the segmentation algorithm from its preprocessing.
 
 ## Looking at failures
 
