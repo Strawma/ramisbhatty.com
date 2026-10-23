@@ -63,11 +63,11 @@ Each method implements a common segmentation interface. A `SegmentationPipeline`
 the method's preprocessing, background estimation, and model loading, so callers do not need to
 rebuild that wiring. The same framework supports the experiment scripts and the GUI.
 
-This abbreviated usage example shows how a loaded clip becomes masks and measurements. `frames`
-and `frame_rate` come from the input clip:
+The released core exposes the same workflow. This abbreviated example shows how a loaded clip
+becomes masks and measurements; `frames` and `frame_rate` come from the input clip:
 
 ```python
-from src.segmentation import SegmentationPipeline
+from cell_segmentation import SegmentationPipeline
 
 pipeline = SegmentationPipeline.create("threshold")
 masks = pipeline.segment_clip(frames)
@@ -165,3 +165,8 @@ I prioritised segmentation, evaluation, and per-frame kinematics over adding a s
 tracker. More varied footage, independent annotation checks, and additional segmentation
 baselines would be the next steps. The application is a research demonstrator; the project did
 not establish clinical usefulness or validate its measurements for medical decisions.
+
+## Source code
+
+[Cell Migration Framework on GitHub](https://github.com/Strawma/cell-migration-framework) contains
+the reusable backend and a synthetic example under the MIT licence.

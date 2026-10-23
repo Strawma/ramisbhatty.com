@@ -166,6 +166,9 @@ test('selected work connects both projects and the cell study to its module and 
 		.poll(() => figure.evaluate((element) => (element as HTMLImageElement).naturalWidth))
 		.toBeGreaterThan(0);
 	await expect(page.getByRole('cell', { name: '0.876', exact: true })).toBeVisible();
+	await expect(
+		page.getByRole('link', { name: 'Cell Migration Framework on GitHub' })
+	).toHaveAttribute('href', 'https://github.com/Strawma/cell-migration-framework');
 
 	const chart = await request.get('/images/projects/cell-migration/dice-by-clip.svg');
 	expect(chart.ok()).toBe(true);

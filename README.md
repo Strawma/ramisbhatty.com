@@ -185,6 +185,9 @@ The cell-migration case study lives in `src/content/projects/cell-migration-segm
 associated with COMP3200 through `moduleCode`. It appears in selected work and the module's related
 projects. Its results figure uses the aggregate means from dissertation Table 5.1, with an HTML
 table alongside it; no microscopy frames are embedded in the page.
+The page links to the MIT-licensed backend at
+[Cell Migration Framework](https://github.com/Strawma/cell-migration-framework); the API example
+uses that package's `cell_segmentation` import.
 
 To regenerate that SVG, use Python with Matplotlib installed, then format the result:
 
