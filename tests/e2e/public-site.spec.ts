@@ -97,9 +97,8 @@ test('education groups modules chronologically with averages, awards, and the la
 	// Let hydration finish before testing a native toggle that startup can otherwise reset.
 	await page.goto('/education', { waitUntil: 'networkidle' });
 
-	const yearGroups = page.locator('details').filter({
-		has: page.locator('summary', { hasText: /Year, 20/ })
-	});
+	const university = page.getByRole('region', { name: 'University', exact: true });
+	const yearGroups = university.locator('details');
 	await expect(yearGroups).toHaveCount(4);
 
 	const firstYear = yearGroups.filter({ hasText: 'First Year, 2023/24' });
@@ -125,18 +124,36 @@ test('education groups modules chronologically with averages, awards, and the la
 		.locator('article')
 		.filter({ has: page.locator('a[href="/education/comp1201"]') });
 	await expect(comp1201.getByLabel('Overall mark: 76%')).toBeVisible();
+	await expect(comp1201.getByRole('heading', { level: 5 })).toContainText('COMP1201');
 });
 
 test('school results start collapsed and expose all qualifications with the keyboard', async ({
 	page
 }) => {
 	await page.goto('/education', { waitUntil: 'networkidle' });
-	const school = page.locator('details').filter({ hasText: 'Bournemouth School' });
-	await expect(school).not.toHaveAttribute('open');
-	await expect(school.getByRole('table')).not.toBeVisible();
-	await school.locator('summary').focus();
+	const school = page.getByRole('region', { name: 'Secondary education', exact: true });
+	await expect(page.getByRole('heading', { level: 2 })).toHaveText([
+		'Secondary education',
+		'University'
+	]);
+	await expect(school.getByText(/I studied at Bournemouth School/)).toBeVisible();
+	await expect(
+		page
+			.getByRole('region', { name: 'University', exact: true })
+			.getByText(/I study Computer Science/)
+	).toBeVisible();
+	const aLevels = school.locator('details').filter({ hasText: 'A levels' });
+	const gcses = school.locator('details').filter({ hasText: 'GCSEs' });
+	await expect(aLevels).not.toHaveAttribute('open');
+	await expect(gcses).not.toHaveAttribute('open');
+	await expect(school.getByRole('table')).toHaveCount(0);
+	await aLevels.locator('summary').focus();
 	await page.keyboard.press('Enter');
-	await expect(school).toHaveAttribute('open', '');
+	await expect(aLevels).toHaveAttribute('open', '');
+	await expect(gcses).not.toHaveAttribute('open');
+	await gcses.locator('summary').focus();
+	await page.keyboard.press('Enter');
+	await expect(gcses).toHaveAttribute('open', '');
 	const tables = school.getByRole('table');
 	await expect(tables).toHaveCount(2);
 	await expect(tables.nth(0).getByRole('row')).toHaveCount(5);
