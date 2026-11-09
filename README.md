@@ -37,13 +37,15 @@ pnpm update
 To request newer major versions as well, use `pnpm update --latest` and run the validation
 commands before committing the resulting lockfile.
 
-The security override in `pnpm-workspace.yaml` raises Tailwind Typography's
-`postcss-selector-parser` dependency to 7.1.6 or newer. Recheck it with
-`pnpm why postcss-selector-parser` and `pnpm audit` when upgrading Typography; remove it once
-upstream no longer needs it. Wrangler 4.154.0 and `@cloudflare/vitest-plugin` 1.4.9 share
-Miniflare's patched `undici` 7.30.1; the test plugin also resolves to patched `zod` 4.6.6.
-Miniflare pins patched `sharp` itself, so these packages need no security overrides. Run
-`pnpm why undici` and `pnpm audit` after updates to check the resolved dependency tree.
+The security overrides in `pnpm-workspace.yaml` raise Tailwind Typography's
+`postcss-selector-parser` dependency to 7.1.6 or newer and ESLint and `typescript-eslint`'s
+`minimatch` dependency to 11.0.1 or newer. Recheck them with
+`pnpm why postcss-selector-parser minimatch` and `pnpm audit` when upgrading those packages;
+remove each override once upstream no longer needs it. Wrangler 4.158.0 and
+`@cloudflare/vitest-plugin` 1.6.0 share Miniflare's patched `undici` 7.30.1; the test plugin also
+resolves to patched `zod` 4.6.6. Miniflare pins patched `sharp` itself, so these packages need no
+security overrides. Run `pnpm why undici` and `pnpm audit` after updates to check the resolved
+dependency tree.
 
 The audit still reports [GHSA-gcqx-w48m-w2h4](https://github.com/advisories/GHSA-gcqx-w48m-w2h4),
 a low-severity `deepmerge` advisory with no published patch. The Svelte Vite plugin uses it to
@@ -62,7 +64,7 @@ isolated D1 database. Adapter emulation would shadow those test bindings.
 ### TypeScript compatibility
 
 Keep `typescript` on 6.0.3 while the toolchain requires the JavaScript compiler API. SvelteKit 3.1
-declares TypeScript `^6.0.0`, `svelte-check` 4.7.7 supports TypeScript 5 and 6, and
+declares TypeScript `^6.0.0`, `svelte-check` 4.7.8 supports TypeScript 5 and 6, and
 `typescript-eslint` 8.72.1 requires TypeScript `<6.1.0`.
 
 TypeScript 7.0 uses the native compiler and does not expose the API these tools need. Microsoft
