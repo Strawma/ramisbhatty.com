@@ -17,12 +17,6 @@ export interface Experience extends CollectionMetadata {
 	summary: string;
 }
 
-export interface InterestCategory extends CollectionMetadata {
-	slug: string;
-	title: string;
-	summary: string;
-}
-
 export interface AcademicModule extends CollectionMetadata {
 	slug: string;
 	code: string;
@@ -49,14 +43,6 @@ export interface Project extends CollectionMetadata {
 	moduleCode?: string;
 	period?: string;
 	technologies: string[];
-}
-
-export interface Post extends CollectionMetadata {
-	slug: string;
-	title: string;
-	summary: string;
-	publishedAt?: string;
-	topics: string[];
 }
 
 export interface PageIntroduction {
@@ -307,36 +293,6 @@ const moduleDocuments = loadContent(
 export const modules = moduleDocuments.records;
 export const moduleContent = moduleDocuments.components;
 
-const postDocuments = loadContent(
-	import.meta.glob<MarkdownModule<MetadataRecord>>('../content/posts/*.md', { eager: true }),
-	(slug, metadata, source): Post => ({
-		slug,
-		title: requireString(metadata, 'title', source),
-		summary: requireString(metadata, 'summary', source),
-		publishedAt: optionalString(metadata, 'publishedAt', source),
-		topics: stringList(metadata, 'topics', source),
-		...collectionMetadata(metadata, source)
-	}),
-	(left, right) =>
-		(right.publishedAt ?? '').localeCompare(left.publishedAt ?? '', 'en-GB') ||
-		byOrderThen<Post>((post) => post.title)(left, right)
-);
-export const posts = postDocuments.records;
-export const postContent = postDocuments.components;
-
-const interestDocuments = loadContent(
-	import.meta.glob<MarkdownModule<MetadataRecord>>('../content/interests/*.md', { eager: true }),
-	(slug, metadata, source): InterestCategory => ({
-		slug,
-		title: requireString(metadata, 'title', source),
-		summary: requireString(metadata, 'summary', source),
-		...collectionMetadata(metadata, source)
-	}),
-	byOrderThen((category) => category.title)
-);
-export const interests = interestDocuments.records;
-export const interestContent = interestDocuments.components;
-
 function assertUnique(label: string, values: string[]): void {
 	const seen = new Set<string>();
 	for (const value of values) {
@@ -373,11 +329,8 @@ function visible<T extends CollectionRecord>(records: T[], includeDrafts: boolea
 
 export const visibleExperience = (includeDrafts = false): Experience[] =>
 	visible(experience, includeDrafts);
-export const visibleInterests = (includeDrafts = false): InterestCategory[] =>
-	visible(interests, includeDrafts);
 export const visibleModules = (includeDrafts = false): AcademicModule[] =>
 	visible(modules, includeDrafts);
-export const visiblePosts = (includeDrafts = false): Post[] => visible(posts, includeDrafts);
 export const visibleProjects = (includeDrafts = false): Project[] =>
 	visible(projects, includeDrafts);
 
@@ -394,12 +347,8 @@ export function findModule(code: string, includeDrafts = false): AcademicModule 
 
 export const findProject = (slug: string, includeDrafts = false): Project | undefined =>
 	visibleProjects(includeDrafts).find((project) => project.slug === slug);
-export const findPost = (slug: string, includeDrafts = false): Post | undefined =>
-	visiblePosts(includeDrafts).find((post) => post.slug === slug);
 export const findExperience = (slug: string, includeDrafts = false): Experience | undefined =>
 	visibleExperience(includeDrafts).find((entry) => entry.slug === slug);
-export const findInterest = (slug: string, includeDrafts = false): InterestCategory | undefined =>
-	visibleInterests(includeDrafts).find((category) => category.slug === slug);
 
 const exploreSlugs = ['work', 'education'];
 export const exploreDestinations: ExploreDestination[] = exploreSlugs.map((slug) => {
