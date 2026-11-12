@@ -8,14 +8,9 @@ I am a 4th year student studying Computer Science with Artificial Intelligence (
 
 ## This site
 
-The main routes are a concise record of my work, education, and writing. Interests is a quieter
-personal index for books, games, and less formal notes; there's also some more unusual stuff quarantined off in different corners.
+The main routes are a concise record of my work and education. There's also some more unusual stuff
+quarantined off in different corners.
 
 - [Work and projects](/work)
 - [Education and modules](/education)
-- [Writing](/blog)
-
-## Personal index
-
-Books, games, reviews, and less formal notes live under [Interests](/interests). The main navigation
-stays focused on the professional parts of the site.
+- [CV](/cv) — education, experience, projects, and skills in one place

@@ -26,3 +26,53 @@
 	opacity: 0.5;
 	cursor: not-allowed;
 }
+
+.cv-page > div > h2:first-child {
+	margin-top: 0;
+}
+
+@media print {
+	@page {
+		size: A4;
+		margin: 12mm;
+	}
+
+	a {
+		color: inherit;
+		text-decoration: none;
+	}
+
+	h1,
+	h2,
+	h3 {
+		break-after: avoid;
+	}
+
+	li,
+	p {
+		break-inside: avoid;
+	}
+
+	.cv-page {
+		font-size: 9.5pt;
+		line-height: 1.35;
+	}
+
+	.cv-page h2 {
+		margin-top: 12pt;
+		margin-bottom: 4pt;
+		font-size: 12pt;
+	}
+
+	.cv-page p,
+	.cv-page ul,
+	.cv-page ol {
+		margin-top: 2pt;
+		margin-bottom: 4pt;
+	}
+
+	.cv-page li {
+		margin-top: 1pt;
+		margin-bottom: 1pt;
+	}
+}

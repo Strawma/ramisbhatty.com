@@ -1,10 +1,4 @@
-import {
-	visibleExperience,
-	visibleInterests,
-	visibleModules,
-	visiblePosts,
-	visibleProjects
-} from '#lib/content.ts';
+import { visibleExperience, visibleModules, visibleProjects } from '#lib/content.ts';
 import { site } from '#lib/data/config.ts';
 import type { RequestHandler } from './$types';
 
@@ -30,6 +24,7 @@ export const GET: RequestHandler = () => {
 		'/work',
 		'/work/go2-lidar-perception/poster',
 		'/education',
+		'/cv',
 		'/silly',
 		'/silly/who-is-ramis-bhatty',
 		'/silly/legacy',
@@ -37,18 +32,6 @@ export const GET: RequestHandler = () => {
 		...visibleProjects().map((project) => `/work/${project.slug}`),
 		...visibleModules().map((module) => `/education/${module.slug}`)
 	]);
-
-	const posts = visiblePosts();
-	if (posts.length) {
-		paths.add('/blog');
-		for (const post of posts) paths.add(`/blog/${post.slug}`);
-	}
-
-	const interests = visibleInterests();
-	if (interests.length) {
-		paths.add('/interests');
-		for (const interest of interests) paths.add(`/interests/${interest.slug}`);
-	}
 
 	const urls = [...paths]
 		.map(absoluteUrl)

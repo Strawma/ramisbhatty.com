@@ -11,7 +11,7 @@
 	<title>Ramis Bhatty</title>
 	<meta
 		name="description"
-		content="The personal website of Ramis Bhatty: work, education, projects, writing, and interests."
+		content="The personal website of Ramis Bhatty: work, education, and projects."
 	/>
 </svelte:head>
 
@@ -21,6 +21,7 @@
 	<p class="mt-6 max-w-2xl text-lg leading-8 text-neutral-700">{data.page.introduction}</p>
 	<p class="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-sm">
 		<a class="underline underline-offset-4" href={resolve(nav.about)}>About</a>
+		<a class="underline underline-offset-4" href={resolve(nav.cv)}>CV</a>
 		<a class="underline underline-offset-4" href={contact.github} rel="external">GitHub ↗</a>
 		<a class="underline underline-offset-4" href={contact.linkedin} rel="external">LinkedIn ↗</a>
 		<a class="underline underline-offset-4" href="mailto:{contact.email}">Email</a>

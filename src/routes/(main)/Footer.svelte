@@ -4,7 +4,7 @@
 	import { resolve } from '$app/paths';
 </script>
 
-<footer class="mx-auto w-full max-w-3xl px-6 py-8 text-sm text-neutral-500">
+<footer class="mx-auto w-full max-w-3xl px-6 py-8 text-sm text-neutral-500 print:hidden">
 	<div class="flex items-center justify-between border-t border-neutral-200 pt-6">
 		<p>© {new Date().getFullYear()} {contact.name}</p>
 		<div class="flex gap-4">
@@ -18,11 +18,6 @@
 				rel="external"
 				class="underline underline-offset-4 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
 				>GitHub</a
-			>
-			<a
-				href={resolve(nav.interests)}
-				class="underline underline-offset-4 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
-				>Interests</a
 			>
 			<a
 				href={resolve(nav.silly)}

@@ -7,7 +7,6 @@
 	const links = [
 		{ label: 'Work', href: nav.work },
 		{ label: 'Education', href: nav.education },
-		{ label: 'Writing', href: nav.blog },
 		{ label: 'About', href: nav.about },
 		{ label: 'CV', href: nav.cv }
 	];
@@ -24,7 +23,7 @@
 </script>
 
 <nav
-	class="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-4 px-6 py-6"
+	class="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-4 px-6 py-6 print:hidden"
 	aria-label="Main navigation"
 >
 	<a

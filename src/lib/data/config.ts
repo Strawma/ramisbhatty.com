@@ -18,13 +18,7 @@ export const nav = {
 	about: 'about',
 	work: 'work',
 	education: 'education',
-	blog: 'blog',
-	interests: 'interests',
 	cv: 'cv',
 	silly: 'silly',
 	legacy: 'silly/legacy'
-} as const;
-
-export const documents = {
-	cv: '/documents/ramis-bhatty-cv.pdf'
 } as const;

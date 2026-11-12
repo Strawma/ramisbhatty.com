@@ -27,11 +27,10 @@ const mainRoutes: RouteExpectation[] = [
 		title: /^Can LiDAR help a robot dog spot what moves\? \| Ramis Bhatty$/
 	},
 	{ path: '/education', heading: 'Education', title: /^Education \| Ramis Bhatty$/ },
-	{ path: '/blog', heading: 'Writing', title: /^Writing \| Ramis Bhatty$/ },
-	{ path: '/interests', heading: 'Interests', title: /^Interests \| Ramis Bhatty$/ }
+	{ path: '/cv', heading: 'Curriculum Vitae', title: /^Curriculum Vitae \| Ramis Bhatty$/ }
 ];
 
-const draftRoutes = ['/work/module-project-placeholder', '/blog/first-post', '/interests/games'];
+const draftRoutes = ['/work/module-project-placeholder'];
 
 function collectRuntimeErrors(page: Page): string[] {
 	const errors: string[] = [];
@@ -61,23 +60,31 @@ for (const route of mainRoutes) {
 	});
 }
 
-test('primary navigation keeps personal and silly destinations secondary', async ({ page }) => {
+test('primary navigation advertises only current destinations', async ({ page }) => {
 	await page.goto('/');
 
 	const navigation = page.getByRole('navigation', { name: 'Main navigation' });
-	await expect(navigation.getByRole('link', { name: 'Writing' })).toHaveAttribute('href', '/blog');
 	await expect(navigation.getByRole('link', { name: 'CV' })).toHaveAttribute('href', '/cv');
+	await expect(navigation.getByRole('link', { name: 'Writing' })).toHaveCount(0);
 	await expect(navigation.getByRole('link', { name: 'Interests' })).toHaveCount(0);
 	await expect(navigation.getByRole('link', { name: /silly/i })).toHaveCount(0);
 
 	const footer = page.getByRole('contentinfo');
-	await expect(footer.getByRole('link', { name: 'Interests' })).toHaveAttribute(
-		'href',
-		'/interests'
-	);
+	await expect(footer.getByRole('link', { name: 'Interests' })).toHaveCount(0);
 	await expect(
 		footer.getByRole('link', { name: 'Visit the silly version of this site' })
 	).toHaveAttribute('href', '/silly');
+
+	const explore = page.locator('section').filter({
+		has: page.getByRole('heading', { name: 'Explore', exact: true })
+	});
+	await expect(explore.getByRole('link', { name: 'Work' })).toHaveAttribute('href', '/work');
+	await expect(explore.getByRole('link', { name: 'Education' })).toHaveAttribute(
+		'href',
+		'/education'
+	);
+	await expect(explore.getByRole('link', { name: 'Writing' })).toHaveCount(0);
+	await expect(explore.getByRole('link', { name: 'Interests' })).toHaveCount(0);
 });
 
 test('primary navigation marks the current route and nested sections active', async ({ page }) => {
@@ -205,7 +212,7 @@ test('authored draft records are reachable locally and visibly labelled', async 
 	for (const path of draftRoutes) {
 		const response = await page.goto(path);
 		expect(response?.ok(), path).toBe(true);
-		await expect(page).toHaveTitle(/\| (Interests \| )?Ramis Bhatty$/);
+		await expect(page).toHaveTitle(/\| Ramis Bhatty$/);
 		await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 		await expect(page.getByText('LOCAL DRAFT', { exact: true }).first()).toBeVisible();
 		const dimensions = await page.evaluate(() => ({
@@ -374,6 +381,7 @@ test('crawler discovery files advertise only indexable public routes', async ({ 
 	const sitemapBody = await sitemap.text();
 	expect(sitemapBody).toContain('<loc>https://ramisbhatty.com/silly/who-is-ramis-bhatty</loc>');
 	expect(sitemapBody).toContain('<loc>https://ramisbhatty.com/education/comp1201</loc>');
+	expect(sitemapBody).toContain('<loc>https://ramisbhatty.com/cv</loc>');
 	expect(sitemapBody).toContain(
 		'<loc>https://ramisbhatty.com/work/experience/research-internship</loc>'
 	);
@@ -381,6 +389,7 @@ test('crawler discovery files advertise only indexable public routes', async ({ 
 		'<loc>https://ramisbhatty.com/work/go2-lidar-perception/poster</loc>'
 	);
 	expect(sitemapBody).not.toContain('<loc>https://ramisbhatty.com/blog</loc>');
+	expect(sitemapBody).not.toContain('<loc>https://ramisbhatty.com/interests</loc>');
 	expect(sitemapBody).not.toContain('module-project-placeholder');
 	expect(sitemapBody).toContain(
 		'<loc>https://ramisbhatty.com/work/cell-migration-segmentation</loc>'
@@ -413,34 +422,36 @@ test('the streaming scene respects utility indexing and reduced-motion preferenc
 	expect(accessibility.violations).toEqual([]);
 });
 
-test('unfinished public indexes stay out of search results', async ({ page }) => {
-	for (const path of ['/blog', '/interests']) {
-		await page.goto(path);
-		await expect(page.locator('meta[name="robots"]'), path).toHaveAttribute(
-			'content',
-			'noindex, follow'
-		);
+test('removed writing and interests sections are not served', async ({ request }) => {
+	for (const path of ['/blog', '/interests', '/blog/first-post', '/interests/games']) {
+		const response = await request.get(path);
+		expect(response.status(), path).toBe(404);
 	}
 });
 
-test('/cv redirects directly to the technical CV PDF', async ({ request }) => {
-	const response = await request.get('/cv', { maxRedirects: 0 });
+test('/cv is a printable HTML CV with linked evidence', async ({ page }) => {
+	const response = await page.goto('/cv');
+	expect(response?.ok()).toBe(true);
+	await expect(page).toHaveTitle(/^Curriculum Vitae \| Ramis Bhatty$/);
+	await expect(page.getByRole('heading', { level: 1, name: 'Curriculum Vitae' })).toBeVisible();
+	await expect(page.getByRole('heading', { level: 2, name: 'Education' })).toBeVisible();
+	await expect(page.getByRole('heading', { level: 2, name: 'Experience' })).toBeVisible();
+	await expect(page.getByRole('link', { name: /Full education record/i })).toHaveAttribute(
+		'href',
+		'/education'
+	);
 
-	expect(response.status()).toBe(307);
-	expect(response.headers().location).toBe('/documents/ramis-bhatty-cv.pdf');
+	const printButton = page.getByRole('button', { name: /Print \/ save as PDF/i });
+	await expect(printButton).toBeVisible();
 
-	const pdf = await request.get('/documents/ramis-bhatty-cv.pdf');
-	expect(pdf.ok()).toBe(true);
-	expect(pdf.headers()['content-type']).toContain('application/pdf');
+	await page.emulateMedia({ media: 'print' });
+	await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeHidden();
+	await expect(page.getByRole('contentinfo')).toBeHidden();
+	await expect(printButton).toBeHidden();
 });
 
 test('unknown authored records return not found', async ({ request }) => {
-	for (const path of [
-		'/work/not-a-project',
-		'/education/not-a-module',
-		'/blog/not-a-post',
-		'/interests/not-an-interest'
-	]) {
+	for (const path of ['/work/not-a-project', '/education/not-a-module']) {
 		const response = await request.get(path);
 		expect(response.status(), path).toBe(404);
 	}

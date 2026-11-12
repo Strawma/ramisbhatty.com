@@ -71,7 +71,7 @@ export interface PageIntroduction {
 
 export interface ExploreDestination {
 	title: string;
-	href: 'work' | 'education' | 'blog' | 'interests';
+	href: 'work' | 'education';
 	description: string;
 }
 
@@ -401,7 +401,7 @@ export const findExperience = (slug: string, includeDrafts = false): Experience 
 export const findInterest = (slug: string, includeDrafts = false): InterestCategory | undefined =>
 	visibleInterests(includeDrafts).find((category) => category.slug === slug);
 
-const exploreSlugs = ['work', 'education', 'blog', 'interests'];
+const exploreSlugs = ['work', 'education'];
 export const exploreDestinations: ExploreDestination[] = exploreSlugs.map((slug) => {
 	const page = pageIntroductions[slug];
 	if (!page?.indexDescription) {
