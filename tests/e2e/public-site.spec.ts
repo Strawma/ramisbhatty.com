@@ -440,6 +440,10 @@ test('/cv is a printable HTML CV with linked evidence', async ({ page }) => {
 		'href',
 		'/education'
 	);
+	await expect(page.getByRole('link', { name: 'Download PDF' })).toHaveAttribute(
+		'href',
+		'/documents/ramis-bhatty-cv.pdf'
+	);
 
 	const printButton = page.getByRole('button', { name: /Print \/ save as PDF/i });
 	await expect(printButton).toBeVisible();
@@ -448,6 +452,14 @@ test('/cv is a printable HTML CV with linked evidence', async ({ page }) => {
 	await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeHidden();
 	await expect(page.getByRole('contentinfo')).toBeHidden();
 	await expect(printButton).toBeHidden();
+});
+
+test('the generated CV PDF is available as a download', async ({ request }) => {
+	const response = await request.get('/documents/ramis-bhatty-cv.pdf');
+
+	expect(response.ok()).toBe(true);
+	expect(response.headers()['content-type']).toContain('application/pdf');
+	expect((await response.body()).subarray(0, 5).toString()).toBe('%PDF-');
 });
 
 test('unknown authored records return not found', async ({ request }) => {

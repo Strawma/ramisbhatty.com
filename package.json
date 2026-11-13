@@ -21,6 +21,8 @@
 		"bookclub:provision-admin": "node scripts/bookclub-provision-admin.mjs",
 		"bookclub:reset-invite": "node scripts/bookclub-reset-invite.mjs",
 		"bookclub:check-invite": "node scripts/bookclub-check-invite.mjs",
+		"cv:pdf": "node scripts/build-cv-pdf.mjs",
+		"hooks:install": "git config core.hooksPath .githooks",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint ."
 	},

@@ -95,6 +95,18 @@ CI runs lint, type checks, unit tests, and a production build for pushes and pul
 both `dev` and `main`. Browser suites remain separate commands for checking navigation and the
 book-club workflows before a release.
 
+### CV PDF
+
+The downloadable CV PDF is generated from the `/cv` page with Playwright:
+
+```bash
+pnpm cv:pdf
+```
+
+Run `pnpm hooks:install` once per clone to enable the pre-commit hook that regenerates and stages the
+PDF when CV source files change. The generated file is committed and deployed with the site. If
+Chromium is missing, install it with `pnpm exec playwright install chromium`.
+
 ### Updating
 
 Update using:

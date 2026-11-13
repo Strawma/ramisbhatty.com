@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { contact } from '#lib/data/config.ts';
+	import { asset } from '$app/paths';
+	import { contact, documents } from '#lib/data/config.ts';
 	import { pageContent } from '#lib/content.ts';
 
 	let { data } = $props();
@@ -25,6 +26,9 @@
 		<a class="underline underline-offset-4" href="mailto:{contact.email}">{contact.email}</a>
 		<a class="underline underline-offset-4" href={contact.github} rel="external">GitHub ↗</a>
 		<a class="underline underline-offset-4" href={contact.linkedin} rel="external">LinkedIn ↗</a>
+		<a class="underline underline-offset-4 print:hidden" href={asset(documents.cv)} download
+			>Download PDF</a
+		>
 		<button
 			type="button"
 			class="cursor-pointer underline underline-offset-4 print:hidden"

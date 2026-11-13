@@ -22,3 +22,7 @@ export const nav = {
 	silly: 'silly',
 	legacy: 'silly/legacy'
 } as const;
+
+export const documents = {
+	cv: 'documents/ramis-bhatty-cv.pdf'
+} as const;

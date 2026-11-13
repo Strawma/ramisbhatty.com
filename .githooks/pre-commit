@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+
+if ! printf '%s\n' "$staged" | grep -Eq '^(src/content/pages/cv\.md|src/routes/\(main\)/cv/.*|src/app\.css|src/routes/\(main\)/\+layout\.svelte|src/routes/\(main\)/(Nav|Footer)\.svelte|src/lib/data/config\.ts|scripts/build-cv-pdf\.mjs)$'; then
+	exit 0
+fi
+
+echo "CV source changed; regenerating static/documents/ramis-bhatty-cv.pdf"
+pnpm cv:pdf
+git add static/documents/ramis-bhatty-cv.pdf
