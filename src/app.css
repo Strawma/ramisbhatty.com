@@ -27,8 +27,28 @@
 	cursor: not-allowed;
 }
 
-.cv-page > div > h2:first-child {
-	margin-top: 0;
+.cv-page h2 {
+	margin-top: 1.5rem;
+	margin-bottom: 0.75rem;
+	padding-bottom: 0.25rem;
+	border-bottom: 1px solid #d4d4d4;
+	font-size: 0.875rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	line-height: 1.25;
+	text-transform: uppercase;
+}
+
+.cv-entry {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: 0.25rem 1.5rem;
+	align-items: baseline;
+	margin-bottom: 0.75rem;
+}
+
+.cv-entry-date {
+	white-space: nowrap;
 }
 
 @media print {
@@ -63,9 +83,19 @@
 	}
 
 	.cv-page h2 {
-		margin-top: 12pt;
+		margin-top: 10pt;
 		margin-bottom: 4pt;
-		font-size: 12pt;
+		padding-bottom: 1.5pt;
+		font-size: 9pt;
+	}
+
+	.cv-entry {
+		gap: 0 12pt;
+		margin-bottom: 4pt;
+	}
+
+	.cv-entry-date {
+		font-size: 8pt;
 	}
 
 	.cv-page p,

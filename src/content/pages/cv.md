@@ -10,22 +10,37 @@ introduction: >-
 
 ## Education
 
-**University of Southampton** · Sep 2023 – Jun 2027<br />
-**MEng Computer Science with Artificial Intelligence** · Predicted First<br />
-Netcraft Prize: Top 10 in Part I and Part II across Computer Science and Software Engineering
-degree programmes.
+<div class="cv-entry">
+  <div>
+    <strong>University of Southampton</strong><br />
+    <strong>MEng Computer Science with Artificial Intelligence</strong> · Predicted First<br />
+    Netcraft Prize: Top 10 in Part I and Part II across Computer Science and Software Engineering
+    degree programmes.
+  </div>
+  <div class="cv-entry-date font-mono text-xs text-neutral-500">Sep 2023 – Jun 2027</div>
+</div>
 
-**Bournemouth School** · Sep 2016 – Jun 2023<br />
-A-levels: Maths A\*, Computer Science A\*, Further Maths A, Physics A.<br />
-Ten GCSEs at grade 9 and one at grade 8, including Maths, Computer Science and English.
+<div class="cv-entry">
+  <div>
+    <strong>Bournemouth School</strong><br />
+    A-levels: Maths A*, Computer Science A*, Further Maths A, Physics A.<br />
+    Ten GCSEs at grade 9 and one at grade 8, including Maths, Computer Science and English.
+  </div>
+  <div class="cv-entry-date font-mono text-xs text-neutral-500">Sep 2016 – Jun 2023</div>
+</div>
 
 [Full education record →](/education)
 
 ## Experience
 
-**Summer Research Intern — University of Southampton, Soorati Lab** · Jul – Sep 2026<br />
-_Python, ROS 2, NumPy, SciPy, MuJoCo, Docker_ ·
-[github.com/SooratiLab/go2](https://github.com/SooratiLab/go2)
+<div class="cv-entry">
+  <div>
+    <strong>Summer Research Intern — University of Southampton, Soorati Lab</strong><br />
+    <em>Python, ROS 2, NumPy, SciPy, MuJoCo, Docker</em> ·
+    <a href="https://github.com/SooratiLab/go2">github.com/SooratiLab/go2</a>
+  </div>
+  <div class="cv-entry-date font-mono text-xs text-neutral-500">Jul – Sep 2026</div>
+</div>
 
 - Developed a LiDAR perception and object-tracking pipeline for assistive robotics, extending
   existing software to run on an onboard Jetson computer.
@@ -36,18 +51,30 @@ _Python, ROS 2, NumPy, SciPy, MuJoCo, Docker_ ·
 
 ## Projects and open-source contributions
 
-**aeon-neuro: EEG Data Input** · Sep 2026 – present<br />
-_Python, MNE, MNE-BIDS, pytest_ ·
-[github.com/aeon-toolkit/aeon-neuro](https://github.com/aeon-toolkit/aeon-neuro)
+<div class="cv-entry">
+  <div>
+    <strong>aeon-neuro: EEG Data Input</strong><br />
+    <em>Python, MNE, MNE-BIDS, pytest</em> ·
+    <a href="https://github.com/aeon-toolkit/aeon-neuro">github.com/aeon-toolkit/aeon-neuro</a>
+  </div>
+  <div class="cv-entry-date font-mono text-xs text-neutral-500">Sep 2026 – present</div>
+</div>
 
 - Developed EEG data-loading and conversion tools for an open-source Python toolkit, focusing on
   reliable handling of scientific recordings and metadata.
 - Contributed merged changes through code review, automated testing and API documentation,
   collaborating with maintainers to integrate new functionality into an existing codebase.
 
-**Cell Segmentation for Microfluidic Migration Analysis** · Sep 2025 – May 2026<br />
-_Python, PyTorch, OpenCV, NumPy, SciPy, PyQt5_ ·
-[github.com/Strawma/cell-migration-framework](https://github.com/Strawma/cell-migration-framework)
+<div class="cv-entry">
+  <div>
+    <strong>Cell Segmentation for Microfluidic Migration Analysis</strong><br />
+    <em>Python, PyTorch, OpenCV, NumPy, SciPy, PyQt5</em> ·
+    <a href="https://github.com/Strawma/cell-migration-framework"
+      >github.com/Strawma/cell-migration-framework</a
+    >
+  </div>
+  <div class="cv-entry-date font-mono text-xs text-neutral-500">Sep 2025 – May 2026</div>
+</div>
 
 - Built a modular Python framework comparing classical computer vision and deep learning for cell
   segmentation, combining image processing, model training and experimental evaluation.
@@ -56,8 +83,13 @@ _Python, PyTorch, OpenCV, NumPy, SciPy, PyQt5_ ·
 
 [Project write-up →](/work/cell-migration-segmentation)
 
-**CQL Programming Language** · Mar – May 2025<br />
-_Haskell, Alex, Happy_
+<div class="cv-entry">
+  <div>
+    <strong>CQL Programming Language</strong><br />
+    <em>Haskell, Alex, Happy</em>
+  </div>
+  <div class="cv-entry-date font-mono text-xs text-neutral-500">Mar – May 2025</div>
+</div>
 
 - Collaborated on a SQL-inspired language for CSV data, implementing an interpreter and input checks
   alongside a language manual and VS Code syntax-highlighting extension.

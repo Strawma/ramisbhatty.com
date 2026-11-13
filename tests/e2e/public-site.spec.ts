@@ -27,7 +27,7 @@ const mainRoutes: RouteExpectation[] = [
 		title: /^Can LiDAR help a robot dog spot what moves\? \| Ramis Bhatty$/
 	},
 	{ path: '/education', heading: 'Education', title: /^Education \| Ramis Bhatty$/ },
-	{ path: '/cv', heading: 'Curriculum Vitae', title: /^Curriculum Vitae \| Ramis Bhatty$/ }
+	{ path: '/cv', heading: 'Ramis Bhatty', title: /^Curriculum Vitae \| Ramis Bhatty$/ }
 ];
 
 const draftRoutes = ['/work/module-project-placeholder'];
@@ -433,7 +433,7 @@ test('/cv is a printable HTML CV with linked evidence', async ({ page }) => {
 	const response = await page.goto('/cv');
 	expect(response?.ok()).toBe(true);
 	await expect(page).toHaveTitle(/^Curriculum Vitae \| Ramis Bhatty$/);
-	await expect(page.getByRole('heading', { level: 1, name: 'Curriculum Vitae' })).toBeVisible();
+	await expect(page.getByRole('heading', { level: 1, name: 'Ramis Bhatty' })).toBeVisible();
 	await expect(page.getByRole('heading', { level: 2, name: 'Education' })).toBeVisible();
 	await expect(page.getByRole('heading', { level: 2, name: 'Experience' })).toBeVisible();
 	await expect(page.getByRole('link', { name: /Full education record/i })).toHaveAttribute(
