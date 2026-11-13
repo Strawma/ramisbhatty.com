@@ -24,8 +24,12 @@
 	</p>
 	<p class="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-sm print:mt-2 print:text-xs">
 		<a class="underline underline-offset-4" href="mailto:{contact.email}">{contact.email}</a>
-		<a class="underline underline-offset-4" href={contact.github} rel="external">GitHub ↗</a>
-		<a class="underline underline-offset-4" href={contact.linkedin} rel="external">LinkedIn ↗</a>
+		<a class="break-words underline underline-offset-4" href={contact.github} rel="external"
+			>github.com/Strawma</a
+		>
+		<a class="break-words underline underline-offset-4" href={contact.linkedin} rel="external"
+			>linkedin.com/in/ramis-bhatty-226305297</a
+		>
 		<a class="underline underline-offset-4 print:hidden" href={asset(documents.cv)} download
 			>Download PDF</a
 		>

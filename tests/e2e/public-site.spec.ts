@@ -446,7 +446,7 @@ test('/cv is a printable HTML CV with linked evidence', async ({ page }) => {
 	);
 
 	const internalLink = page.getByRole('link', { name: /Full education record/i });
-	const githubLink = page.getByRole('link', { name: 'GitHub ↗' });
+	const githubLink = page.getByRole('link', { name: 'github.com/Strawma', exact: true });
 	await expect(internalLink).toBeVisible();
 	await expect(githubLink).toBeVisible();
 

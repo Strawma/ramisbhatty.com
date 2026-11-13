@@ -24,7 +24,8 @@ Ten GCSEs at grade 9 and one at grade 8, including Maths, Computer Science and E
 ## Experience
 
 **Summer Research Intern — University of Southampton, Soorati Lab** · Jul – Sep 2026<br />
-_Python, ROS 2, NumPy, SciPy, MuJoCo, Docker_ · [GitHub](https://github.com/SooratiLab/go2)
+_Python, ROS 2, NumPy, SciPy, MuJoCo, Docker_ ·
+[github.com/SooratiLab/go2](https://github.com/SooratiLab/go2)
 
 - Developed a LiDAR perception and object-tracking pipeline for assistive robotics, extending
   existing software to run on an onboard Jetson computer.
@@ -36,7 +37,8 @@ _Python, ROS 2, NumPy, SciPy, MuJoCo, Docker_ · [GitHub](https://github.com/Soo
 ## Projects and open-source contributions
 
 **aeon-neuro: EEG Data Input** · Sep 2026 – present<br />
-_Python, MNE, MNE-BIDS, pytest_ · [GitHub](https://github.com/aeon-toolkit/aeon-neuro)
+_Python, MNE, MNE-BIDS, pytest_ ·
+[github.com/aeon-toolkit/aeon-neuro](https://github.com/aeon-toolkit/aeon-neuro)
 
 - Developed EEG data-loading and conversion tools for an open-source Python toolkit, focusing on
   reliable handling of scientific recordings and metadata.
@@ -45,7 +47,7 @@ _Python, MNE, MNE-BIDS, pytest_ · [GitHub](https://github.com/aeon-toolkit/aeon
 
 **Cell Segmentation for Microfluidic Migration Analysis** · Sep 2025 – May 2026<br />
 _Python, PyTorch, OpenCV, NumPy, SciPy, PyQt5_ ·
-[GitHub](https://github.com/Strawma/cell-migration-framework)
+[github.com/Strawma/cell-migration-framework](https://github.com/Strawma/cell-migration-framework)
 
 - Built a modular Python framework comparing classical computer vision and deep learning for cell
   segmentation, combining image processing, model training and experimental evaluation.
