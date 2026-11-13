@@ -20,7 +20,6 @@ export const GET: RequestHandler = () => {
 	// `noindex` metadata are deliberately omitted so the discovery signal stays unambiguous.
 	const paths = new Set([
 		'/',
-		'/work',
 		'/work/go2-lidar-perception/poster',
 		'/education',
 		'/cv',

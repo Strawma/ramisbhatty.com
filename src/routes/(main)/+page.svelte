@@ -9,10 +9,7 @@
 
 <svelte:head>
 	<title>Ramis Bhatty</title>
-	<meta
-		name="description"
-		content="The personal website of Ramis Bhatty: CV, projects, and selected work."
-	/>
+	<meta name="description" content="The personal website of Ramis Bhatty: CV and projects." />
 </svelte:head>
 
 <header class="not-prose border-b border-neutral-300 pb-10">
@@ -30,10 +27,7 @@
 <section class="mt-10"><Content /></section>
 
 <section class="mt-10 border-t border-neutral-300 pt-6">
-	<div class="not-prose flex items-baseline justify-between gap-4">
-		<h2 class="text-2xl font-semibold">Selected work</h2>
-		<a class="text-sm underline underline-offset-4" href={resolve(nav.work)}>All work →</a>
-	</div>
+	<h2 class="not-prose text-2xl font-semibold">Selected projects</h2>
 	{#if data.projects.length}
 		<ul class="mt-5">
 			{#each data.projects.slice(0, 3) as project (project.slug)}

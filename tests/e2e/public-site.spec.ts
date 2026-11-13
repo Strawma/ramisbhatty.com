@@ -9,7 +9,6 @@ interface RouteExpectation {
 
 const mainRoutes: RouteExpectation[] = [
 	{ path: '/', heading: 'Ramis Bhatty', title: /^Ramis Bhatty$/ },
-	{ path: '/work', heading: 'Work', title: /^Work \| Ramis Bhatty$/ },
 	{
 		path: '/work/cell-migration-segmentation',
 		heading: 'Comparing segmentation methods for cell migration',
@@ -63,8 +62,8 @@ test('primary navigation advertises only current destinations', async ({ page })
 	await page.goto('/');
 
 	const navigation = page.getByRole('navigation', { name: 'Main navigation' });
-	await expect(navigation.getByRole('link', { name: 'Work' })).toHaveAttribute('href', '/work');
 	await expect(navigation.getByRole('link', { name: 'CV' })).toHaveAttribute('href', '/cv');
+	await expect(navigation.getByRole('link', { name: 'Work' })).toHaveCount(0);
 	await expect(navigation.getByRole('link', { name: 'Education' })).toHaveCount(0);
 	await expect(navigation.getByRole('link', { name: 'About' })).toHaveCount(0);
 	await expect(navigation.getByRole('link', { name: 'Writing' })).toHaveCount(0);
@@ -78,14 +77,14 @@ test('primary navigation advertises only current destinations', async ({ page })
 	).toHaveAttribute('href', '/silly');
 });
 
-test('primary navigation marks the current route and nested sections active', async ({ page }) => {
+test('primary navigation marks the current route active', async ({ page }) => {
 	const navigation = page.getByRole('navigation', { name: 'Main navigation' });
 
 	await page.goto('/');
 	await expect(navigation.getByRole('link', { name: 'Home' })).toHaveClass(/font-semibold/);
 
-	await page.goto('/work/module-project-placeholder');
-	await expect(navigation.getByRole('link', { name: 'Work' })).toHaveClass(/font-semibold/);
+	await page.goto('/cv');
+	await expect(navigation.getByRole('link', { name: 'CV' })).toHaveClass(/font-semibold/);
 	await expect(navigation.getByRole('link', { name: 'Home' })).not.toHaveClass(/font-semibold/);
 });
 
@@ -220,7 +219,7 @@ test('selected work connects both projects and the cell study to its module and 
 }) => {
 	await page.goto('/');
 	const selectedWork = page.locator('section').filter({
-		has: page.getByRole('heading', { name: 'Selected work', exact: true })
+		has: page.getByRole('heading', { name: 'Selected projects', exact: true })
 	});
 	await expect(selectedWork.locator('a[href="/work/go2-lidar-perception"]')).toBeVisible();
 	await selectedWork.locator('a[href="/work/cell-migration-segmentation"]').click();
@@ -380,6 +379,7 @@ test('crawler discovery files advertise only indexable public routes', async ({ 
 		'<loc>https://ramisbhatty.com/work/go2-lidar-perception/poster</loc>'
 	);
 	expect(sitemapBody).not.toContain('<loc>https://ramisbhatty.com/about</loc>');
+	expect(sitemapBody).not.toContain('<loc>https://ramisbhatty.com/work</loc>');
 	expect(sitemapBody).not.toContain('<loc>https://ramisbhatty.com/blog</loc>');
 	expect(sitemapBody).not.toContain('<loc>https://ramisbhatty.com/interests</loc>');
 	expect(sitemapBody).not.toContain('module-project-placeholder');
@@ -415,7 +415,14 @@ test('the streaming scene respects utility indexing and reduced-motion preferenc
 });
 
 test('removed sections are not served', async ({ request }) => {
-	for (const path of ['/about', '/blog', '/interests', '/blog/first-post', '/interests/games']) {
+	for (const path of [
+		'/about',
+		'/work',
+		'/blog',
+		'/interests',
+		'/blog/first-post',
+		'/interests/games'
+	]) {
 		const response = await request.get(path);
 		expect(response.status(), path).toBe(404);
 	}

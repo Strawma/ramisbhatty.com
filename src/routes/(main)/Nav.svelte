@@ -4,10 +4,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 
-	const links = [
-		{ label: 'Work', href: nav.work },
-		{ label: 'CV', href: nav.cv }
-	];
+	const links = [{ label: 'CV', href: nav.cv }];
 
 	// Navigation data stays slashless because SvelteKit's resolve() accepts route paths in that form.
 	// URL.pathname is absolute, so normalize before comparing it for active-link styling.
