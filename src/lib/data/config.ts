@@ -15,9 +15,7 @@ export const contact = {
 
 export const nav = {
 	home: '',
-	about: 'about',
 	work: 'work',
-	education: 'education',
 	cv: 'cv',
 	silly: 'silly',
 	legacy: 'silly/legacy'

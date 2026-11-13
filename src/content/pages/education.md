@@ -2,7 +2,6 @@
 path: /EDUCATION
 title: Education
 description: Education, university modules, and related projects by Ramis Bhatty.
-indexDescription: My degree, modules, coursework, and the ideas that came out of studying them.
 academicYears:
   - year: 'First Year, 2023/24'
     awards:

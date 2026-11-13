@@ -50,15 +50,8 @@ export interface PageIntroduction {
 	path: string;
 	title: string;
 	description: string;
-	indexDescription?: string;
 	introduction?: string;
 	academicYears?: AcademicYearDetails[];
-}
-
-export interface ExploreDestination {
-	title: string;
-	href: 'work' | 'education';
-	description: string;
 }
 
 interface MarkdownModule<T> {
@@ -228,7 +221,6 @@ const pageDocuments = loadContent(
 		path: requireString(metadata, 'path', source),
 		title: requireString(metadata, 'title', source),
 		description: requireString(metadata, 'description', source),
-		indexDescription: optionalString(metadata, 'indexDescription', source),
 		introduction: optionalString(metadata, 'introduction', source),
 		academicYears: academicYears(metadata, source)
 	}),
@@ -336,8 +328,6 @@ export const visibleProjects = (includeDrafts = false): Project[] =>
 
 export const featuredProjects = (includeDrafts = false): Project[] =>
 	visibleProjects(includeDrafts).filter((project) => project.featured);
-export const featuredModules = (includeDrafts = false): AcademicModule[] =>
-	visibleModules(includeDrafts).filter((module) => module.featured);
 
 export function findModule(code: string, includeDrafts = false): AcademicModule | undefined {
 	return visibleModules(includeDrafts).find(
@@ -349,16 +339,3 @@ export const findProject = (slug: string, includeDrafts = false): Project | unde
 	visibleProjects(includeDrafts).find((project) => project.slug === slug);
 export const findExperience = (slug: string, includeDrafts = false): Experience | undefined =>
 	visibleExperience(includeDrafts).find((entry) => entry.slug === slug);
-
-const exploreSlugs = ['work', 'education'];
-export const exploreDestinations: ExploreDestination[] = exploreSlugs.map((slug) => {
-	const page = pageIntroductions[slug];
-	if (!page?.indexDescription) {
-		throw new Error(`Missing "indexDescription" for page "${slug}"`);
-	}
-	return {
-		title: page.title,
-		href: slug as ExploreDestination['href'],
-		description: page.indexDescription
-	};
-});

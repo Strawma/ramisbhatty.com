@@ -9,7 +9,6 @@ interface RouteExpectation {
 
 const mainRoutes: RouteExpectation[] = [
 	{ path: '/', heading: 'Ramis Bhatty', title: /^Ramis Bhatty$/ },
-	{ path: '/about', heading: 'About', title: /^About \| Ramis Bhatty$/ },
 	{ path: '/work', heading: 'Work', title: /^Work \| Ramis Bhatty$/ },
 	{
 		path: '/work/cell-migration-segmentation',
@@ -64,7 +63,10 @@ test('primary navigation advertises only current destinations', async ({ page })
 	await page.goto('/');
 
 	const navigation = page.getByRole('navigation', { name: 'Main navigation' });
+	await expect(navigation.getByRole('link', { name: 'Work' })).toHaveAttribute('href', '/work');
 	await expect(navigation.getByRole('link', { name: 'CV' })).toHaveAttribute('href', '/cv');
+	await expect(navigation.getByRole('link', { name: 'Education' })).toHaveCount(0);
+	await expect(navigation.getByRole('link', { name: 'About' })).toHaveCount(0);
 	await expect(navigation.getByRole('link', { name: 'Writing' })).toHaveCount(0);
 	await expect(navigation.getByRole('link', { name: 'Interests' })).toHaveCount(0);
 	await expect(navigation.getByRole('link', { name: /silly/i })).toHaveCount(0);
@@ -74,17 +76,6 @@ test('primary navigation advertises only current destinations', async ({ page })
 	await expect(
 		footer.getByRole('link', { name: 'Visit the silly version of this site' })
 	).toHaveAttribute('href', '/silly');
-
-	const explore = page.locator('section').filter({
-		has: page.getByRole('heading', { name: 'Explore', exact: true })
-	});
-	await expect(explore.getByRole('link', { name: 'Work' })).toHaveAttribute('href', '/work');
-	await expect(explore.getByRole('link', { name: 'Education' })).toHaveAttribute(
-		'href',
-		'/education'
-	);
-	await expect(explore.getByRole('link', { name: 'Writing' })).toHaveCount(0);
-	await expect(explore.getByRole('link', { name: 'Interests' })).toHaveCount(0);
 });
 
 test('primary navigation marks the current route and nested sections active', async ({ page }) => {
@@ -388,6 +379,7 @@ test('crawler discovery files advertise only indexable public routes', async ({ 
 	expect(sitemapBody).toContain(
 		'<loc>https://ramisbhatty.com/work/go2-lidar-perception/poster</loc>'
 	);
+	expect(sitemapBody).not.toContain('<loc>https://ramisbhatty.com/about</loc>');
 	expect(sitemapBody).not.toContain('<loc>https://ramisbhatty.com/blog</loc>');
 	expect(sitemapBody).not.toContain('<loc>https://ramisbhatty.com/interests</loc>');
 	expect(sitemapBody).not.toContain('module-project-placeholder');
@@ -422,8 +414,8 @@ test('the streaming scene respects utility indexing and reduced-motion preferenc
 	expect(accessibility.violations).toEqual([]);
 });
 
-test('removed writing and interests sections are not served', async ({ request }) => {
-	for (const path of ['/blog', '/interests', '/blog/first-post', '/interests/games']) {
+test('removed sections are not served', async ({ request }) => {
+	for (const path of ['/about', '/blog', '/interests', '/blog/first-post', '/interests/games']) {
 		const response = await request.get(path);
 		expect(response.status(), path).toBe(404);
 	}

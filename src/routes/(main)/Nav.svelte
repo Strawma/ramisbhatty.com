@@ -6,8 +6,6 @@
 
 	const links = [
 		{ label: 'Work', href: nav.work },
-		{ label: 'Education', href: nav.education },
-		{ label: 'About', href: nav.about },
 		{ label: 'CV', href: nav.cv }
 	];
 

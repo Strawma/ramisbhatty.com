@@ -1,9 +1,8 @@
 import { dev } from '$app/env';
-import { pageIntroductions, visibleExperience, visibleProjects } from '#lib/content.ts';
+import { pageIntroductions, visibleProjects } from '#lib/content.ts';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = () => ({
 	page: pageIntroductions.work,
-	experience: visibleExperience(dev),
 	projects: visibleProjects(dev)
 });

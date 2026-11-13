@@ -15,19 +15,6 @@
 <h1>{data.page.title}</h1>
 <Content />
 
-{#if data.experience.length}
-	<h2>Experience</h2>
-	<EntryList
-		entries={data.experience.map((entry) => ({
-			href: resolve('/(main)/work/experience/[slug]', { slug: entry.slug }),
-			title: `${entry.role} — ${entry.organisation}`,
-			meta: entry.period,
-			summary: entry.summary,
-			draft: entry.status === 'draft'
-		}))}
-	/>
-{/if}
-
 <h2>Projects</h2>
 {#if data.projects.length}
 	<EntryList
