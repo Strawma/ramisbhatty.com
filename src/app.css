@@ -58,6 +58,10 @@
 		line-height: 1.35;
 	}
 
+	.cv-page p:has(> a[href^='/']:only-child) {
+		display: none;
+	}
+
 	.cv-page h2 {
 		margin-top: 12pt;
 		margin-bottom: 4pt;

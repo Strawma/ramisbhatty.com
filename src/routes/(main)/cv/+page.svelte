@@ -29,13 +29,6 @@
 		<a class="underline underline-offset-4 print:hidden" href={asset(documents.cv)} download
 			>Download PDF</a
 		>
-		<button
-			type="button"
-			class="cursor-pointer underline underline-offset-4 print:hidden"
-			onclick={() => window.print()}
-		>
-			Print / save as PDF
-		</button>
 	</p>
 </header>
 

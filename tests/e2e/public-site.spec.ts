@@ -445,13 +445,16 @@ test('/cv is a printable HTML CV with linked evidence', async ({ page }) => {
 		'/documents/ramis-bhatty-cv.pdf'
 	);
 
-	const printButton = page.getByRole('button', { name: /Print \/ save as PDF/i });
-	await expect(printButton).toBeVisible();
+	const internalLink = page.getByRole('link', { name: /Full education record/i });
+	const githubLink = page.getByRole('link', { name: 'GitHub ↗' });
+	await expect(internalLink).toBeVisible();
+	await expect(githubLink).toBeVisible();
 
 	await page.emulateMedia({ media: 'print' });
 	await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeHidden();
 	await expect(page.getByRole('contentinfo')).toBeHidden();
-	await expect(printButton).toBeHidden();
+	await expect(internalLink).toBeHidden();
+	await expect(githubLink).toBeVisible();
 });
 
 test('the generated CV PDF is available as a download', async ({ request }) => {
