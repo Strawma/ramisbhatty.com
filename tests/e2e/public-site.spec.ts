@@ -77,6 +77,43 @@ test('primary navigation advertises only current destinations', async ({ page })
 	).toHaveAttribute('href', '/silly');
 });
 
+test('theme follows the system preference, toggles, and persists', async ({ page }) => {
+	await page.emulateMedia({ colorScheme: 'dark' });
+	await page.goto('/', { waitUntil: 'networkidle' });
+
+	const html = page.locator('html');
+	const toggle = page.getByRole('button', { name: 'Toggle light or dark theme' });
+
+	await expect(html).toHaveClass(/dark/);
+	await expect(toggle.getByText('Light', { exact: true })).toBeVisible();
+
+	await toggle.click();
+	await expect(html).not.toHaveClass(/dark/);
+	await expect(toggle.getByText('Dark', { exact: true })).toBeVisible();
+	expect(await page.evaluate(() => localStorage.getItem('theme'))).toBe('light');
+
+	await page.reload();
+	await expect(html).not.toHaveClass(/dark/);
+
+	await toggle.click();
+	await expect(html).toHaveClass(/dark/);
+	expect(await page.evaluate(() => localStorage.getItem('theme'))).toBe('dark');
+
+	await page.emulateMedia({ colorScheme: 'light' });
+	await page.reload();
+	await expect(html).toHaveClass(/dark/);
+});
+
+test('dark mode has no serious accessibility violations', async ({ page }) => {
+	await page.emulateMedia({ colorScheme: 'dark' });
+
+	for (const path of ['/', '/cv', '/education', '/work/go2-lidar-perception']) {
+		await page.goto(path);
+		const accessibility = await new AxeBuilder({ page }).analyze();
+		expect(accessibility.violations, path).toEqual([]);
+	}
+});
+
 test('primary navigation marks the current route active', async ({ page }) => {
 	const navigation = page.getByRole('navigation', { name: 'Main navigation' });
 

@@ -1,5 +1,6 @@
 <!-- src/lib/components/prose/Nav.svelte -->
 <script lang="ts">
+	import ThemeToggle from '#lib/components/main/ThemeToggle.svelte';
 	import { contact, nav } from '#lib/data/config.ts';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -23,14 +24,14 @@
 >
 	<a
 		href={resolve(nav.home)}
-		class="text-lg font-bold transition-colors hover:text-neutral-600 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
+		class="text-lg font-bold transition-colors hover:text-neutral-600 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 dark:hover:text-neutral-300"
 	>
 		{contact.name}
 	</a>
 	<div class="flex flex-wrap gap-x-5 gap-y-2 text-sm">
 		<a
 			href={resolve(nav.home)}
-			class="transition-colors hover:text-neutral-600 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
+			class="transition-colors hover:text-neutral-600 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 dark:hover:text-neutral-300"
 			class:font-semibold={isActive(nav.home)}
 		>
 			Home
@@ -38,11 +39,12 @@
 		{#each links as link (link.href)}
 			<a
 				href={resolve(link.href)}
-				class="transition-colors hover:text-neutral-600 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
+				class="transition-colors hover:text-neutral-600 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 dark:hover:text-neutral-300"
 				class:font-semibold={isActive(link.href)}
 			>
 				{link.label}
 			</a>
 		{/each}
+		<ThemeToggle />
 	</div>
 </nav>

@@ -107,13 +107,13 @@
 	<meta name="description" content={data.page.description} />
 </svelte:head>
 
-<p class="font-mono text-sm text-neutral-500">{data.page.path}</p>
+<p class="font-mono text-sm text-neutral-500 dark:text-neutral-400">{data.page.path}</p>
 <h1>{data.page.title}</h1>
 
 <section aria-labelledby="secondary-education" class="mt-6">
-	<details class="border-y border-neutral-300">
+	<details class="border-y border-neutral-300 dark:border-neutral-800">
 		<summary
-			class="cursor-pointer py-5 marker:text-neutral-500 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
+			class="cursor-pointer py-5 marker:text-neutral-500 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 dark:text-neutral-400"
 		>
 			<h2 id="secondary-education" class="m-0 ml-2 inline text-2xl">Secondary education</h2>
 		</summary>
@@ -121,9 +121,11 @@
 			<SchoolContent />
 			<div class="mt-6 space-y-4">
 				{#each schoolQualifications as qualification (qualification.slug)}
-					<details class="border border-neutral-300 bg-neutral-50 px-5">
+					<details
+						class="border border-neutral-300 bg-neutral-50 px-5 dark:border-neutral-800 dark:bg-neutral-900"
+					>
 						<summary
-							class="cursor-pointer py-5 marker:text-neutral-500 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
+							class="cursor-pointer py-5 marker:text-neutral-500 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 dark:text-neutral-400"
 						>
 							<span role="heading" aria-level="3" class="ml-2 text-lg font-semibold">
 								{qualification.title}
@@ -140,9 +142,9 @@
 </section>
 
 <section aria-labelledby="university" class="mt-6">
-	<details open class="border-y border-neutral-300">
+	<details open class="border-y border-neutral-300 dark:border-neutral-800">
 		<summary
-			class="cursor-pointer py-5 marker:text-neutral-500 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
+			class="cursor-pointer py-5 marker:text-neutral-500 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 dark:text-neutral-400"
 		>
 			<h2 id="university" class="m-0 ml-2 inline text-2xl">University</h2>
 		</summary>
@@ -154,23 +156,27 @@
 					{#each moduleGroups as yearGroup, index (yearGroup.year)}
 						<details
 							open={index === moduleGroups.length - 1}
-							class="group border-y border-neutral-300 bg-neutral-50"
+							class="group border-y border-neutral-300 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900"
 						>
 							<summary
-								class="cursor-pointer py-5 marker:text-neutral-500 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
+								class="cursor-pointer py-5 marker:text-neutral-500 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 dark:text-neutral-400"
 							>
 								<span class="ml-2 inline-flex flex-wrap items-center gap-x-3 gap-y-2">
 									<span role="heading" aria-level="3" class="text-lg font-semibold">
 										{yearGroup.year}
 									</span>
 									{#if yearGroup.ongoing}
-										<span class="font-mono text-sm text-neutral-600">Ongoing</span>
+										<span class="font-mono text-sm text-neutral-600 dark:text-neutral-400"
+											>Ongoing</span
+										>
 									{:else if yearGroup.average !== undefined}
 										<ModuleMark mark={yearGroup.average} label="Year average" />
 									{/if}
 								</span>
 								{#if yearGroup.awards.length}
-									<span class="mt-2 ml-7 block space-y-1 text-sm text-neutral-600">
+									<span
+										class="mt-2 ml-7 block space-y-1 text-sm text-neutral-600 dark:text-neutral-400"
+									>
 										{#each yearGroup.awards as award (award)}
 											<span class="block"><span class="font-semibold">Award:</span> {award}</span>
 										{/each}
@@ -205,7 +211,9 @@
 					{/each}
 				</div>
 			{:else}
-				<p class="border-y border-neutral-300 py-6">Module entries are being assembled.</p>
+				<p class="border-y border-neutral-300 py-6 dark:border-neutral-800">
+					Module entries are being assembled.
+				</p>
 			{/if}
 		</div>
 	</details>

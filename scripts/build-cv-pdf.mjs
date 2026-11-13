@@ -83,7 +83,18 @@ try {
 	const browser = await chromium.launch();
 	try {
 		const page = await browser.newPage();
+		await page.addInitScript(() => {
+			try {
+				localStorage.setItem('theme', 'light');
+			} catch {
+				// The print styles still force a light CV if storage is unavailable.
+			}
+		});
 		await page.goto(`${origin}/cv`, { waitUntil: 'networkidle' });
+		await page.evaluate(() => {
+			document.documentElement.classList.remove('dark');
+			document.documentElement.style.colorScheme = 'light';
+		});
 		await page.evaluate(() => document.fonts.ready);
 		await page.emulateMedia({ media: 'print' });
 		await page.pdf({

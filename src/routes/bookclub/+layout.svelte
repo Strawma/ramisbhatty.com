@@ -14,7 +14,10 @@
 	<meta name="referrer" content="origin" />
 </svelte:head>
 
-<div class="bookclub-theme relative isolate min-h-screen overflow-hidden bg-[#008080]">
+<div
+	class="bookclub-theme relative isolate min-h-screen overflow-hidden bg-[#008080]"
+	style="color-scheme: light"
+>
 	<ClubhouseBackdrop />
 	<div class="relative z-10 min-h-screen">
 		{@render children()}

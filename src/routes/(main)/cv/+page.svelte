@@ -12,7 +12,9 @@
 	<meta name="description" content={data.page.description} />
 </svelte:head>
 
-<header class="not-prose border-b border-neutral-300 pb-8 text-center print:pb-3">
+<header
+	class="not-prose border-b border-neutral-300 pb-8 text-center dark:border-neutral-800 print:pb-3"
+>
 	<h1 class="text-4xl font-semibold tracking-tight sm:text-5xl print:text-2xl">Ramis Bhatty</h1>
 	<p class="mt-5 flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm print:mt-2 print:text-xs">
 		<a class="underline underline-offset-4" href="mailto:{contact.email}">{contact.email}</a>
@@ -30,7 +32,9 @@
 
 <section class="not-prose">
 	<h2>Profile</h2>
-	<p class="text-base leading-7 text-neutral-700 print:text-sm print:leading-5">
+	<p
+		class="text-base leading-7 text-neutral-700 dark:text-neutral-300 print:text-sm print:leading-5"
+	>
 		{data.page.introduction}
 	</p>
 </section>

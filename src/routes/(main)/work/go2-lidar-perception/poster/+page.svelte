@@ -11,7 +11,9 @@
 </svelte:head>
 
 <article>
-	<p class="font-mono text-sm text-neutral-500">RESEARCH POSTER · AUGUST 2026</p>
+	<p class="font-mono text-sm text-neutral-500 dark:text-neutral-400">
+		RESEARCH POSTER · AUGUST 2026
+	</p>
 	<h1>{poster.title}</h1>
 	<Content />
 </article>

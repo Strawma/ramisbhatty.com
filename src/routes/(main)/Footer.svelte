@@ -4,8 +4,12 @@
 	import { resolve } from '$app/paths';
 </script>
 
-<footer class="mx-auto w-full max-w-3xl px-6 py-8 text-sm text-neutral-500 print:hidden">
-	<div class="flex items-center justify-between border-t border-neutral-200 pt-6">
+<footer
+	class="mx-auto w-full max-w-3xl px-6 py-8 text-sm text-neutral-500 dark:text-neutral-400 print:hidden"
+>
+	<div
+		class="flex items-center justify-between border-t border-neutral-200 pt-6 dark:border-neutral-800"
+	>
 		<p>© {new Date().getFullYear()} {contact.name}</p>
 		<div class="flex gap-4">
 			<a
@@ -21,7 +25,7 @@
 			>
 			<a
 				href={resolve(nav.silly)}
-				class="transition-colors hover:text-neutral-700 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
+				class="transition-colors hover:text-neutral-700 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 dark:hover:text-neutral-200"
 				aria-label="Visit the silly version of this site">:)</a
 			>
 		</div>

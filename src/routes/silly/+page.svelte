@@ -41,7 +41,7 @@
 
 	<main
 		class="min-h-screen font-['pixel-sans',cursive]"
-		style="background: linear-gradient(45deg, #ff00ff 0%, #00ff00 25%, #ff0000 50%, #00ffff 75%, #ffff00 100%);"
+		style="color-scheme: light; background: linear-gradient(45deg, #ff00ff 0%, #00ff00 25%, #ff0000 50%, #00ffff 75%, #ffff00 100%);"
 	>
 		<div class="relative z-20 mx-auto flex min-h-screen max-w-3xl flex-col bg-[#c0c0c0] px-8">
 			<Header />

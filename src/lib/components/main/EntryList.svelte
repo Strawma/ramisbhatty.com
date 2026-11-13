@@ -16,14 +16,16 @@
 	let { entries, headingLevel = 2 }: { entries: Entry[]; headingLevel?: 2 | 3 | 4 | 5 } = $props();
 </script>
 
-<div class="not-prose divide-y divide-neutral-300 border-y border-neutral-300">
+<div
+	class="not-prose divide-y divide-neutral-300 border-y border-neutral-300 dark:divide-neutral-800 dark:border-neutral-800"
+>
 	{#each entries as entry (entry.href ?? entry.title)}
 		<article class="py-5">
 			<div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
 				<svelte:element this={`h${headingLevel}`} class="text-lg font-semibold">
 					{#if entry.href}
 						<a
-							class="underline decoration-neutral-400 underline-offset-4 hover:decoration-neutral-900"
+							class="underline decoration-neutral-400 underline-offset-4 hover:decoration-neutral-900 dark:decoration-neutral-600 dark:hover:decoration-neutral-100"
 							href={entry.href}
 						>
 							{entry.title}
@@ -34,19 +36,22 @@
 				</svelte:element>
 				{#if entry.meta || entry.mark !== undefined}
 					<div class="flex flex-wrap items-center gap-2">
-						{#if entry.meta}<p class="font-mono text-xs text-neutral-500">{entry.meta}</p>{/if}
+						{#if entry.meta}<p class="font-mono text-xs text-neutral-500 dark:text-neutral-400">
+								{entry.meta}
+							</p>{/if}
 						{#if entry.mark !== undefined}<ModuleMark mark={entry.mark} compact />{/if}
 					</div>
 				{/if}
 			</div>
-			<p class="mt-2 leading-6 text-neutral-700">{entry.summary}</p>
+			<p class="mt-2 leading-6 text-neutral-700 dark:text-neutral-300">{entry.summary}</p>
 			{#if entry.tags?.length || entry.draft}
-				<p class="mt-3 flex flex-wrap gap-2 text-xs text-neutral-600">
-					{#if entry.draft}<span class="border border-amber-600 px-2 py-1 text-amber-800"
+				<p class="mt-3 flex flex-wrap gap-2 text-xs text-neutral-600 dark:text-neutral-400">
+					{#if entry.draft}<span
+							class="border border-amber-600 px-2 py-1 text-amber-800 dark:border-amber-500 dark:text-amber-300"
 							>LOCAL DRAFT</span
 						>{/if}
-					{#each entry.tags ?? [] as tag (tag)}<span class="border border-neutral-300 px-2 py-1"
-							>{tag}</span
+					{#each entry.tags ?? [] as tag (tag)}<span
+							class="border border-neutral-300 px-2 py-1 dark:border-neutral-700">{tag}</span
 						>{/each}
 				</p>
 			{/if}

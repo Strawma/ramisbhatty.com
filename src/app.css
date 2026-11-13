@@ -2,6 +2,16 @@
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+	color-scheme: light;
+}
+
+:root.dark {
+	color-scheme: dark;
+}
+
 /* The retro raised panel that's used everywhere */
 .retro-panel {
 	border: 4px solid black;
@@ -51,6 +61,14 @@
 	white-space: nowrap;
 }
 
+html.dark .cv-entry-date {
+	color: #a3a3a3;
+}
+
+html.dark .cv-page h2 {
+	border-color: #404040;
+}
+
 @media print {
 	@page {
 		size: A4;
@@ -96,6 +114,18 @@
 
 	.cv-entry-date {
 		font-size: 8pt;
+	}
+
+	html,
+	body {
+		background: white !important;
+	}
+
+	.cv-page,
+	.cv-page * {
+		background: transparent !important;
+		border-color: #d4d4d4 !important;
+		color: black !important;
 	}
 
 	.cv-page p,

@@ -11,15 +11,19 @@
 </svelte:head>
 
 <article>
-	<header class="not-prose border-b border-neutral-300 pb-8">
-		<p class="font-mono text-sm text-neutral-500">/WORK/{data.project.slug.toUpperCase()}</p>
+	<header class="not-prose border-b border-neutral-300 pb-8 dark:border-neutral-800">
+		<p class="font-mono text-sm text-neutral-500 dark:text-neutral-400">
+			/WORK/{data.project.slug.toUpperCase()}
+		</p>
 		{#if data.project.status === 'draft'}<p
-				class="mt-4 inline-block border border-amber-600 px-2 py-1 text-xs text-amber-800"
+				class="mt-4 inline-block border border-amber-600 px-2 py-1 text-xs text-amber-800 dark:border-amber-500 dark:text-amber-300"
 			>
 				LOCAL DRAFT
 			</p>{/if}
 		<h1 class="mt-4 text-4xl font-semibold tracking-tight">{data.project.title}</h1>
-		<p class="mt-4 text-lg leading-8 text-neutral-700">{data.project.summary}</p>
+		<p class="mt-4 text-lg leading-8 text-neutral-700 dark:text-neutral-300">
+			{data.project.summary}
+		</p>
 		<dl class="mt-6 grid gap-2 text-sm sm:grid-cols-2">
 			{#if data.project.period}<div>
 					<dt class="font-semibold">Period</dt>
@@ -36,7 +40,9 @@
 					</dd>
 				</div>{/if}
 		</dl>
-		{#if data.project.technologies.length}<p class="mt-5 text-sm text-neutral-600">
+		{#if data.project.technologies.length}<p
+				class="mt-5 text-sm text-neutral-600 dark:text-neutral-400"
+			>
 				{data.project.technologies.join(' · ')}
 			</p>{/if}
 	</header>

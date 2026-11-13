@@ -107,6 +107,11 @@ Run `pnpm hooks:install` once per clone to enable the pre-commit hook that regen
 PDF when CV source files change. The generated file is committed and deployed with the site. If
 Chromium is missing, install it with `pnpm exec playwright install chromium`.
 
+### Theme
+
+The main site follows the operating system theme on a first visit. The navigation toggle stores an
+explicit `light` or `dark` choice in `localStorage`; the CV PDF is always generated in light mode.
+
 ### Updating
 
 Update using:
