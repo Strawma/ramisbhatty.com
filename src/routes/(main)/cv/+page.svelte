@@ -28,7 +28,7 @@
 			>github.com/Strawma</a
 		>
 		<a class="break-words underline underline-offset-4" href={contact.linkedin} rel="external"
-			>linkedin.com/in/ramis-bhatty-226305297</a
+			>linkedin.com/in/ramis-bhatty</a
 		>
 		<a class="underline underline-offset-4 print:hidden" href={asset(documents.cv)} download
 			>Download PDF</a

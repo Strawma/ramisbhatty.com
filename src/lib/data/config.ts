@@ -10,7 +10,7 @@ export const contact = {
 	email: 'contact@ramisbhatty.com',
 	ad_email: 'advertising@ramisbhatty.com',
 	github: 'https://github.com/strawma',
-	linkedin: 'https://linkedin.com/in/ramis-bhatty-226305297'
+	linkedin: 'https://www.linkedin.com/in/ramis-bhatty/'
 } as const;
 
 export const nav = {

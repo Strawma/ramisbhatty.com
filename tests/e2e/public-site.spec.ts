@@ -447,8 +447,10 @@ test('/cv is a printable HTML CV with linked evidence', async ({ page }) => {
 
 	const internalLink = page.getByRole('link', { name: /Full education record/i });
 	const githubLink = page.getByRole('link', { name: 'github.com/Strawma', exact: true });
+	const linkedinLink = page.getByRole('link', { name: 'linkedin.com/in/ramis-bhatty' });
 	await expect(internalLink).toBeVisible();
 	await expect(githubLink).toBeVisible();
+	await expect(linkedinLink).toHaveAttribute('href', 'https://www.linkedin.com/in/ramis-bhatty/');
 
 	await page.emulateMedia({ media: 'print' });
 	await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeHidden();
