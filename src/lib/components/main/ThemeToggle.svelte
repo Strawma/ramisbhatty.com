@@ -38,7 +38,7 @@
 		aria-hidden="true"
 	>
 		<span
-			class="absolute top-0.5 left-0.5 block size-4 bg-white shadow-sm transition-transform dark:translate-x-5 dark:bg-neutral-300"
+			class="absolute top-px left-px block size-4 bg-white shadow-sm transition-transform dark:translate-x-5 dark:bg-neutral-300"
 		></span>
 	</span>
 </button>
