@@ -31,13 +31,13 @@
 	},
 	"devDependencies": {
 		"@axe-core/playwright": "^4.14.0",
-		"@cloudflare/vitest-plugin": "^1.6.0",
-		"@cloudflare/workers-types": "^5.20261108.1",
+		"@cloudflare/vitest-plugin": "^1.8.1",
+		"@cloudflare/workers-types": "^5.20261113.1",
 		"@eslint/compat": "^2.1.1",
 		"@eslint/js": "^10.0.1",
 		"@playwright/test": "^1.65.0",
 		"@sveltejs/adapter-cloudflare": "8.0.2",
-		"@sveltejs/kit": "3.1.1",
+		"@sveltejs/kit": "3.2.0",
 		"@sveltejs/vite-plugin-svelte": "^7.3.1",
 		"@tailwindcss/forms": "^0.5.11",
 		"@tailwindcss/typography": "^0.5.20",
@@ -48,17 +48,17 @@
 		"eslint-plugin-svelte": "^3.24.1",
 		"globals": "^17.14.0",
 		"mdsvex": "^0.12.8",
-		"prettier": "^3.9.10",
+		"prettier": "^3.10.1",
 		"prettier-plugin-svelte": "^4.1.1",
 		"prettier-plugin-tailwindcss": "^0.8.1",
 		"svelte": "^5.57.3",
 		"svelte-check": "^4.7.8",
 		"tailwindcss": "^4.3.5",
 		"typescript": "^6.0.3",
-		"typescript-eslint": "^8.72.1",
-		"vite": "^8.3.6",
+		"typescript-eslint": "^8.72.2",
+		"vite": "^8.3.8",
 		"vitest": "^5.1.0",
-		"wrangler": "^4.158.0"
+		"wrangler": "^4.161.0"
 	},
 	"dependencies": {
 		"webaudio-tinysynth": "^1.1.3"

@@ -82,26 +82,29 @@ test('theme follows the system preference, toggles, and persists', async ({ page
 	await page.goto('/', { waitUntil: 'networkidle' });
 
 	const html = page.locator('html');
-	const toggle = page.getByRole('button', { name: 'Toggle light or dark theme' });
+	const toggle = page.getByRole('switch', { name: 'Dark mode' });
 
 	await expect(html).toHaveClass(/dark/);
-	await expect(toggle.getByText('Light', { exact: true })).toBeVisible();
+	await expect(toggle).toHaveAttribute('aria-checked', 'true');
 
 	await toggle.click();
 	await expect(html).not.toHaveClass(/dark/);
-	await expect(toggle.getByText('Dark', { exact: true })).toBeVisible();
+	await expect(toggle).toHaveAttribute('aria-checked', 'false');
 	expect(await page.evaluate(() => localStorage.getItem('theme'))).toBe('light');
 
 	await page.reload();
 	await expect(html).not.toHaveClass(/dark/);
+	await expect(toggle).toHaveAttribute('aria-checked', 'false');
 
 	await toggle.click();
 	await expect(html).toHaveClass(/dark/);
+	await expect(toggle).toHaveAttribute('aria-checked', 'true');
 	expect(await page.evaluate(() => localStorage.getItem('theme'))).toBe('dark');
 
 	await page.emulateMedia({ colorScheme: 'light' });
 	await page.reload();
 	await expect(html).toHaveClass(/dark/);
+	await expect(toggle).toHaveAttribute('aria-checked', 'true');
 });
 
 test('dark mode has no serious accessibility violations', async ({ page }) => {

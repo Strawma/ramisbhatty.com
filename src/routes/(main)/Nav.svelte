@@ -45,6 +45,8 @@
 				{link.label}
 			</a>
 		{/each}
+		<span aria-hidden="true" class="hidden h-4 w-px bg-neutral-300 sm:block dark:bg-neutral-700"
+		></span>
 		<ThemeToggle />
 	</div>
 </nav>

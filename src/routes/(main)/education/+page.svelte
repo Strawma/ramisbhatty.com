@@ -121,9 +121,7 @@
 			<SchoolContent />
 			<div class="mt-6 space-y-4">
 				{#each schoolQualifications as qualification (qualification.slug)}
-					<details
-						class="border border-neutral-300 bg-neutral-50 px-5 dark:border-neutral-800 dark:bg-neutral-900"
-					>
+					<details class="border border-neutral-300 px-5 dark:border-neutral-700">
 						<summary
 							class="cursor-pointer py-5 marker:text-neutral-500 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 dark:text-neutral-400"
 						>
@@ -156,7 +154,7 @@
 					{#each moduleGroups as yearGroup, index (yearGroup.year)}
 						<details
 							open={index === moduleGroups.length - 1}
-							class="group border-y border-neutral-300 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900"
+							class="group border-y border-neutral-300 dark:border-neutral-700"
 						>
 							<summary
 								class="cursor-pointer py-5 marker:text-neutral-500 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 dark:text-neutral-400"

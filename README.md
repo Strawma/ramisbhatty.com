@@ -13,7 +13,7 @@ Installed addons:
 Uses pnpm package manager.
 
 The `.node-version` file selects Node.js 24.22.0 for Cloudflare Pages and CI. Node.js 22.17 or newer
-is required by SvelteKit 3.1. Use Unix-native tools in the development environment. The repository
+is required by SvelteKit 3.2. Use Unix-native tools in the development environment. The repository
 does not pin a local pnpm version.
 
 ### Local development
@@ -41,8 +41,8 @@ The security overrides in `pnpm-workspace.yaml` raise Tailwind Typography's
 `postcss-selector-parser` dependency to 7.1.6 or newer and ESLint and `typescript-eslint`'s
 `minimatch` dependency to 11.0.1 or newer. Recheck them with
 `pnpm why postcss-selector-parser minimatch` and `pnpm audit` when upgrading those packages;
-remove each override once upstream no longer needs it. Wrangler 4.158.0 and
-`@cloudflare/vitest-plugin` 1.6.0 share Miniflare's patched `undici` 7.30.1; the test plugin also
+remove each override once upstream no longer needs it. Wrangler 4.161.0 and
+`@cloudflare/vitest-plugin` 1.8.1 share Miniflare's patched `undici` 7.30.1; the test plugin also
 resolves to patched `zod` 4.6.6. Miniflare pins patched `sharp` itself, so these packages need no
 security overrides. Run `pnpm why undici` and `pnpm audit` after updates to check the resolved
 dependency tree.
@@ -63,9 +63,9 @@ isolated D1 database. Adapter emulation would shadow those test bindings.
 
 ### TypeScript compatibility
 
-Keep `typescript` on 6.0.3 while the toolchain requires the JavaScript compiler API. SvelteKit 3.1
+Keep `typescript` on 6.0.3 while the toolchain requires the JavaScript compiler API. SvelteKit 3.2
 declares TypeScript `^6.0.0`, `svelte-check` 4.7.8 supports TypeScript 5 and 6, and
-`typescript-eslint` 8.72.1 requires TypeScript `<6.1.0`.
+`typescript-eslint` 8.72.2 requires TypeScript `<6.1.0`.
 
 TypeScript 7.0 uses the native compiler and does not expose the API these tools need. Microsoft
 expects a new API in TypeScript 7.1; the tooling must then adopt it and publish compatible releases.
@@ -109,8 +109,8 @@ Chromium is missing, install it with `pnpm exec playwright install chromium`.
 
 ### Theme
 
-The main site follows the operating system theme on a first visit. The navigation toggle stores an
-explicit `light` or `dark` choice in `localStorage`; the CV PDF is always generated in light mode.
+The main site follows the operating system theme on a first visit. The navigation theme switch stores
+an explicit `light` or `dark` choice in `localStorage`; the CV PDF is always generated in light mode.
 
 ### Updating
 
@@ -309,7 +309,7 @@ release. CI reads the same file. The exact version also meets Corepack 0.36's No
 a major-only value can select an older patch release in the Pages build image.
 
 - Leave the Pages `NODE_VERSION` override unset to use `.node-version`, or set it to `24.22.0` for both
-  production and preview builds. Node.js 22.16 cannot install SvelteKit 3.1 with engine checks enabled.
+  production and preview builds. Node.js 22.16 cannot install SvelteKit 3.2 with engine checks enabled.
 - Use `PNPM_VERSION` in Pages settings when a specific pnpm release is needed.
 - Use `pnpm run build` as the build command.
 - Keep `pnpm-lock.yaml` committed so the deployment installs the tested dependency tree.
