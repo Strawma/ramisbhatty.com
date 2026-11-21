@@ -78,21 +78,21 @@ test('primary navigation advertises only current destinations', async ({ page })
 });
 
 test('theme follows the system preference, toggles, and persists', async ({ page }) => {
-	await page.emulateMedia({ colorScheme: 'dark' });
+	await page.emulateMedia({ colorScheme: 'light' });
 	await page.goto('/', { waitUntil: 'networkidle' });
 
 	const html = page.locator('html');
 	const toggle = page.getByRole('switch', { name: 'Dark mode' });
 
-	await expect(html).toHaveClass(/dark/);
-	await expect(toggle).toHaveAttribute('aria-checked', 'true');
-
-	await toggle.click();
 	await expect(html).not.toHaveClass(/dark/);
 	await expect(toggle).toHaveAttribute('aria-checked', 'false');
-	expect(await page.evaluate(() => localStorage.getItem('theme'))).toBe('light');
 
-	await page.reload();
+	await page.emulateMedia({ colorScheme: 'dark' });
+	await expect(html).toHaveClass(/dark/);
+	await expect(toggle).toHaveAttribute('aria-checked', 'true');
+	expect(await page.evaluate(() => localStorage.getItem('theme'))).toBeNull();
+
+	await page.emulateMedia({ colorScheme: 'light' });
 	await expect(html).not.toHaveClass(/dark/);
 	await expect(toggle).toHaveAttribute('aria-checked', 'false');
 
@@ -105,13 +105,166 @@ test('theme follows the system preference, toggles, and persists', async ({ page
 	await page.reload();
 	await expect(html).toHaveClass(/dark/);
 	await expect(toggle).toHaveAttribute('aria-checked', 'true');
+
+	await toggle.click();
+	await expect(html).not.toHaveClass(/dark/);
+	await expect(toggle).toHaveAttribute('aria-checked', 'false');
+	expect(await page.evaluate(() => localStorage.getItem('theme'))).toBe('light');
+
+	await page.emulateMedia({ colorScheme: 'dark' });
+	await page.reload();
+	await expect(html).not.toHaveClass(/dark/);
+	await expect(toggle).toHaveAttribute('aria-checked', 'false');
+});
+
+test('dark mode prints with light ink on a white background', async ({ page }) => {
+	await page.emulateMedia({ colorScheme: 'dark' });
+
+	for (const path of ['/cv', '/work/go2-lidar-perception']) {
+		await page.goto(path, { waitUntil: 'networkidle' });
+		await page.emulateMedia({ media: 'print', colorScheme: 'dark' });
+
+		const colors = await page.evaluate(() => {
+			const toRgb = (cssColor: string) => {
+				const canvas = document.createElement('canvas');
+				canvas.width = 1;
+				canvas.height = 1;
+				const context = canvas.getContext('2d');
+				if (!context) throw new Error('2d context unavailable');
+				context.fillStyle = '#ffffff';
+				context.fillRect(0, 0, 1, 1);
+				context.fillStyle = cssColor;
+				context.fillRect(0, 0, 1, 1);
+				return Array.from(context.getImageData(0, 0, 1, 1).data.slice(0, 3));
+			};
+
+			const wrapper = document.querySelector('body > div > div');
+			const heading = document.querySelector('main h1');
+			const paragraph = document.querySelector('main article > div p, main section p');
+			if (!wrapper || !heading || !paragraph) throw new Error('Expected main layout elements');
+
+			return {
+				background: toRgb(getComputedStyle(wrapper).backgroundColor),
+				heading: toRgb(getComputedStyle(heading).color),
+				paragraph: toRgb(getComputedStyle(paragraph).color)
+			};
+		});
+
+		expect(
+			colors.background.every((channel) => channel >= 240),
+			path
+		).toBe(true);
+		expect(
+			colors.heading.every((channel) => channel <= 80),
+			path
+		).toBe(true);
+		expect(
+			colors.paragraph.every((channel) => channel <= 80),
+			path
+		).toBe(true);
+	}
+});
+
+test('dark mode does not leak onto fixed-palette routes and restores on return', async ({
+	page
+}) => {
+	await page.route('https://uselessfacts.jsph.pl/**', (route) =>
+		route.fulfill({
+			status: 200,
+			contentType: 'application/json',
+			body: JSON.stringify({ text: 'A deterministic fact for testing.' })
+		})
+	);
+
+	await page.emulateMedia({ colorScheme: 'dark' });
+	await page.goto('/', { waitUntil: 'networkidle' });
+
+	const html = page.locator('html');
+	const toggle = page.getByRole('switch', { name: 'Dark mode' });
+	await expect(html).toHaveClass(/dark/);
+	await expect
+		.poll(() => page.evaluate(() => getComputedStyle(document.documentElement).colorScheme))
+		.toBe('dark');
+
+	// Persist explicit dark mode before leaving the main site.
+	await page.evaluate(() => localStorage.setItem('theme', 'dark'));
+
+	await page.getByRole('link', { name: 'Visit the silly version of this site' }).click();
+	await page.waitForURL('**/silly');
+
+	await expect(html).not.toHaveClass(/dark/);
+	await expect
+		.poll(() => page.evaluate(() => getComputedStyle(document.documentElement).colorScheme))
+		.toBe('light');
+
+	for (const locator of [
+		page.getByRole('heading', { level: 1, name: 'WELCOME TO MY WEBSITE!!!' }),
+		page.locator('main p').filter({ hasText: 'Netscape Navigator' }),
+		page.getByRole('heading', { level: 2, name: ': : MENU : :' }),
+		page.getByRole('heading', { level: 2, name: '< RANDOM FACT GENERATOR >' }),
+		page.getByText('!!! SITE UNDER CONSTRUCTION !!!')
+	]) {
+		await expect(locator).toHaveCSS('color', 'rgb(0, 0, 0)');
+	}
+
+	await page.getByRole('link', { name: '> About Me' }).click();
+	await page.waitForURL('**/silly/who-is-ramis-bhatty');
+	await expect(html).not.toHaveClass(/dark/);
+	await expect
+		.poll(() => page.evaluate(() => getComputedStyle(document.documentElement).colorScheme))
+		.toBe('light');
+
+	await page.getByRole('link', { name: 'Suspiciously normal website' }).click();
+	await page.waitForURL(`${new URL(page.url()).origin}/`);
+	await expect(html).toHaveClass(/dark/);
+	await expect
+		.poll(() => page.evaluate(() => getComputedStyle(document.documentElement).colorScheme))
+		.toBe('dark');
+	await expect(toggle).toHaveAttribute('aria-checked', 'true');
+
+	for (const path of [
+		'/silly',
+		'/silly/who-is-ramis-bhatty',
+		'/silly/legacy',
+		'/bookclub/login',
+		'/streaming/brb'
+	]) {
+		await page.goto(path, { waitUntil: 'domcontentloaded' });
+		await expect(html, path).not.toHaveClass(/dark/);
+		await expect
+			.poll(() => page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), {
+				message: path
+			})
+			.toBe('light');
+		if (path === '/silly') {
+			await expect(
+				page.getByRole('heading', { level: 1, name: 'WELCOME TO MY WEBSITE!!!' })
+			).toHaveCSS('color', 'rgb(0, 0, 0)');
+		}
+	}
 });
 
 test('dark mode has no serious accessibility violations', async ({ page }) => {
 	await page.emulateMedia({ colorScheme: 'dark' });
 
-	for (const path of ['/', '/cv', '/education', '/work/go2-lidar-perception']) {
-		await page.goto(path);
+	for (const path of [
+		'/',
+		'/cv',
+		'/education',
+		'/education/comp1201',
+		'/work/go2-lidar-perception',
+		'/work/go2-lidar-perception/poster',
+		'/work/cell-migration-segmentation',
+		'/work/experience/research-internship'
+	]) {
+		await page.goto(path, { waitUntil: 'networkidle' });
+		if (path === '/education') {
+			await page.evaluate(() => {
+				for (const details of document.querySelectorAll('details')) {
+					details.open = true;
+				}
+			});
+		}
 		const accessibility = await new AxeBuilder({ page }).analyze();
 		expect(accessibility.violations, path).toEqual([]);
 	}

@@ -3,8 +3,44 @@
 	import Nav from './Nav.svelte';
 	import Footer from './Footer.svelte';
 	import { page } from '$app/state';
+	import {
+		applyDocumentTheme,
+		getStoredTheme,
+		mainTheme,
+		THEME_STORAGE_KEY
+	} from '#lib/theme.svelte.ts';
 	let { children } = $props();
+
+	$effect.pre(() => {
+		// Scope dark theme state to the main layout so fixed-palette routes stay light across client navigation.
+		mainTheme.syncFromPreference();
+
+		const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+		const handleMediaChange = () => {
+			if (!getStoredTheme()) {
+				mainTheme.syncFromPreference();
+			}
+		};
+		const handleStorage = (event: StorageEvent) => {
+			if (event.key === THEME_STORAGE_KEY || event.key === null) {
+				mainTheme.syncFromPreference();
+			}
+		};
+
+		mediaQuery.addEventListener('change', handleMediaChange);
+		window.addEventListener('storage', handleStorage);
+
+		return () => {
+			mediaQuery.removeEventListener('change', handleMediaChange);
+			window.removeEventListener('storage', handleStorage);
+			applyDocumentTheme('light');
+		};
+	});
 </script>
+
+<svelte:head>
+	<meta name="color-scheme" content="light dark" />
+</svelte:head>
 
 <div
 	class="flex min-h-screen flex-col bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100 print:bg-white print:text-black"

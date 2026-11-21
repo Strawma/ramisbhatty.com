@@ -113,7 +113,7 @@
 <section aria-labelledby="secondary-education" class="mt-6">
 	<details class="border-y border-neutral-300 dark:border-neutral-800">
 		<summary
-			class="cursor-pointer py-5 marker:text-neutral-500 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 dark:text-neutral-400"
+			class="cursor-pointer py-5 marker:text-neutral-500 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 dark:marker:text-neutral-400"
 		>
 			<h2 id="secondary-education" class="m-0 ml-2 inline text-2xl">Secondary education</h2>
 		</summary>
@@ -123,9 +123,13 @@
 				{#each schoolQualifications as qualification (qualification.slug)}
 					<details class="border border-neutral-300 px-5 dark:border-neutral-700">
 						<summary
-							class="cursor-pointer py-5 marker:text-neutral-500 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 dark:text-neutral-400"
+							class="cursor-pointer py-5 marker:text-neutral-500 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 dark:marker:text-neutral-400"
 						>
-							<span role="heading" aria-level="3" class="ml-2 text-lg font-semibold">
+							<span
+								role="heading"
+								aria-level="3"
+								class="ml-2 text-lg font-semibold text-neutral-900 dark:text-neutral-100"
+							>
 								{qualification.title}
 							</span>
 						</summary>
@@ -142,7 +146,7 @@
 <section aria-labelledby="university" class="mt-6">
 	<details open class="border-y border-neutral-300 dark:border-neutral-800">
 		<summary
-			class="cursor-pointer py-5 marker:text-neutral-500 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 dark:text-neutral-400"
+			class="cursor-pointer py-5 marker:text-neutral-500 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 dark:marker:text-neutral-400"
 		>
 			<h2 id="university" class="m-0 ml-2 inline text-2xl">University</h2>
 		</summary>
@@ -150,17 +154,21 @@
 			<Content />
 
 			{#if moduleGroups.length}
-				<div class="not-prose mt-10 space-y-4">
+				<div class="not-prose mt-10 space-y-4 text-neutral-900 dark:text-neutral-100">
 					{#each moduleGroups as yearGroup, index (yearGroup.year)}
 						<details
 							open={index === moduleGroups.length - 1}
 							class="group border-y border-neutral-300 dark:border-neutral-700"
 						>
 							<summary
-								class="cursor-pointer py-5 marker:text-neutral-500 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 dark:text-neutral-400"
+								class="cursor-pointer py-5 marker:text-neutral-500 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 dark:marker:text-neutral-400"
 							>
 								<span class="ml-2 inline-flex flex-wrap items-center gap-x-3 gap-y-2">
-									<span role="heading" aria-level="3" class="text-lg font-semibold">
+									<span
+										role="heading"
+										aria-level="3"
+										class="text-lg font-semibold text-neutral-900 dark:text-neutral-100"
+									>
 										{yearGroup.year}
 									</span>
 									{#if yearGroup.ongoing}

@@ -101,6 +101,7 @@ measure. Overlap alone can hide errors in thin cell extensions.
   <img
     src="/images/projects/cell-migration/dice-by-clip.svg"
     alt="Paired bars show higher mean Dice for U-Net on clips 01 to 04 and higher mean Dice for thresholding on clip 05. Exact values follow in the table."
+    class="chart-figure"
     width="720"
     height="470"
     loading="lazy"

@@ -15,7 +15,7 @@
 
 <main
 	class="min-h-screen bg-[#000080] px-3 py-6 font-['pixel-sans',cursive] text-black sm:px-6"
-	style="background-image: repeating-linear-gradient(45deg, #000080 0, #000080 18px, #400080 18px, #400080 36px);"
+	style="color-scheme: light; background-image: repeating-linear-gradient(45deg, #000080 0, #000080 18px, #400080 18px, #400080 36px);"
 >
 	<article
 		class="mx-auto max-w-4xl border-4 border-black bg-[#c0c0c0] p-3 shadow-[8px_8px_0_#000] sm:p-6"

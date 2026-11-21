@@ -15,7 +15,7 @@
 </svelte:head>
 
 <div
-	class="bookclub-theme relative isolate min-h-screen overflow-hidden bg-[#008080]"
+	class="bookclub-theme relative isolate min-h-screen overflow-hidden bg-[#008080] text-black"
 	style="color-scheme: light"
 >
 	<ClubhouseBackdrop />

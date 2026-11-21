@@ -28,7 +28,7 @@
 	>
 		{contact.name}
 	</a>
-	<div class="flex flex-wrap gap-x-5 gap-y-2 text-sm">
+	<div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
 		<a
 			href={resolve(nav.home)}
 			class="transition-colors hover:text-neutral-600 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 dark:hover:text-neutral-300"

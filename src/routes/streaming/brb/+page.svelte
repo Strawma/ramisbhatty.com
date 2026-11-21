@@ -62,7 +62,7 @@
 	<meta name="description" content="A full-screen intermission scene for Ramis Bhatty's streams." />
 </svelte:head>
 
-<main class="relative h-screen w-full overflow-hidden">
+<main class="relative h-screen w-full overflow-hidden" style="color-scheme: light;">
 	<!-- BRB Text -->
 	<h1
 		class="brb-text-container absolute top-60/100 left-4/100 z-30 -translate-y-1/2 font-bold text-white"

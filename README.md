@@ -109,8 +109,11 @@ Chromium is missing, install it with `pnpm exec playwright install chromium`.
 
 ### Theme
 
-The main site follows the operating system theme on a first visit. The navigation theme switch stores
-an explicit `light` or `dark` choice in `localStorage`; the CV PDF is always generated in light mode.
+The main site follows the operating system theme on a first visit and updates when the system
+theme changes until an explicit preference is chosen. The navigation theme switch stores an
+explicit `light` or `dark` choice in `localStorage`. Fixed-palette routes (`/silly`, `/bookclub`,
+and `/streaming`) stay in light mode across both full page loads and client-side navigation.
+Printed pages fall back to light styling, and the CV PDF is always generated in light mode.
 
 ### Updating
 

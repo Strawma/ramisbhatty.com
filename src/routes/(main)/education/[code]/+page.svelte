@@ -12,7 +12,9 @@
 </svelte:head>
 
 <article>
-	<header class="not-prose border-b border-neutral-300 pb-8 dark:border-neutral-800">
+	<header
+		class="not-prose border-b border-neutral-300 pb-8 text-neutral-900 dark:border-neutral-800 dark:text-neutral-100"
+	>
 		<p class="font-mono text-sm text-neutral-500 dark:text-neutral-400">
 			/EDUCATION/{data.module.code}
 		</p>

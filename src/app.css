@@ -2,7 +2,14 @@
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
 
-@custom-variant dark (&:where(.dark, .dark *));
+/* Exclude print so pages printed from dark mode fall back to light styling. */
+@custom-variant dark {
+	@media not print {
+		&:where(.dark, .dark *) {
+			@slot;
+		}
+	}
+}
 
 :root {
 	color-scheme: light;
@@ -10,6 +17,7 @@
 
 :root.dark {
 	color-scheme: dark;
+	background-color: #0a0a0a;
 }
 
 /* The retro raised panel that's used everywhere */
@@ -69,6 +77,11 @@ html.dark .cv-page h2 {
 	border-color: #404040;
 }
 
+/* Adapt light-background vector charts to the dark surface without maintaining duplicate assets. */
+html.dark .chart-figure {
+	filter: invert(0.96) hue-rotate(180deg);
+}
+
 @media print {
 	@page {
 		size: A4;
@@ -119,6 +132,11 @@ html.dark .cv-page h2 {
 	html,
 	body {
 		background: white !important;
+		color-scheme: light;
+	}
+
+	.chart-figure {
+		filter: none !important;
 	}
 
 	.cv-page,

@@ -13,7 +13,7 @@
 </svelte:head>
 
 <header
-	class="not-prose border-b border-neutral-300 pb-8 text-center dark:border-neutral-800 print:pb-3"
+	class="not-prose border-b border-neutral-300 pb-8 text-center text-neutral-900 dark:border-neutral-800 dark:text-neutral-100 print:pb-3"
 >
 	<h1 class="text-4xl font-semibold tracking-tight sm:text-5xl print:text-2xl">Ramis Bhatty</h1>
 	<p class="mt-5 flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm print:mt-2 print:text-xs">
@@ -30,7 +30,7 @@
 	</p>
 </header>
 
-<section class="not-prose">
+<section class="not-prose text-neutral-900 dark:text-neutral-100">
 	<h2>Profile</h2>
 	<p
 		class="text-base leading-7 text-neutral-700 dark:text-neutral-300 print:text-sm print:leading-5"

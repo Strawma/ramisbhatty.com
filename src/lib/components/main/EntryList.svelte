@@ -17,7 +17,7 @@
 </script>
 
 <div
-	class="not-prose divide-y divide-neutral-300 border-y border-neutral-300 dark:divide-neutral-800 dark:border-neutral-800"
+	class="not-prose divide-y divide-neutral-300 border-y border-neutral-300 text-neutral-900 dark:divide-neutral-800 dark:border-neutral-800 dark:text-neutral-100"
 >
 	{#each entries as entry (entry.href ?? entry.title)}
 		<article class="py-5">
