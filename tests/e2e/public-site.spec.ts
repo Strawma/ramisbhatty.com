@@ -100,6 +100,7 @@ test('theme follows the system preference, toggles, and persists', async ({ page
 	await expect(html).toHaveClass(/dark/);
 	await expect(toggle).toHaveAttribute('aria-checked', 'true');
 	expect(await page.evaluate(() => localStorage.getItem('theme'))).toBe('dark');
+	expect(await page.evaluate(() => document.cookie)).toContain('theme=dark');
 
 	await page.emulateMedia({ colorScheme: 'light' });
 	await page.reload();
@@ -110,11 +111,70 @@ test('theme follows the system preference, toggles, and persists', async ({ page
 	await expect(html).not.toHaveClass(/dark/);
 	await expect(toggle).toHaveAttribute('aria-checked', 'false');
 	expect(await page.evaluate(() => localStorage.getItem('theme'))).toBe('light');
+	expect(await page.evaluate(() => document.cookie)).toContain('theme=light');
 
 	await page.emulateMedia({ colorScheme: 'dark' });
 	await page.reload();
 	await expect(html).not.toHaveClass(/dark/);
 	await expect(toggle).toHaveAttribute('aria-checked', 'false');
+});
+
+test('SSR renders persisted dark theme before scripts run and keeps fixed-palette routes light', async ({
+	browser,
+	request,
+	baseURL
+}) => {
+	const darkHomeResponse = await request.get('/', { headers: { cookie: 'theme=dark' } });
+	expect(darkHomeResponse.ok()).toBe(true);
+	const darkHomeHtml = await darkHomeResponse.text();
+	expect(darkHomeHtml).toContain(
+		'<html lang="en" class="dark" style="color-scheme: dark; background-color: #0a0a0a;">'
+	);
+	expect(darkHomeHtml).toContain('<meta name="color-scheme" content="dark" />');
+	expect(darkHomeHtml.match(/<meta name="color-scheme"/g) ?? []).toHaveLength(1);
+
+	const sillyResponse = await request.get('/silly', { headers: { cookie: 'theme=dark' } });
+	expect(sillyResponse.ok()).toBe(true);
+	const sillyHtml = await sillyResponse.text();
+	expect(sillyHtml).toContain('<html lang="en">');
+	expect(sillyHtml).not.toContain('class="dark"');
+	expect(sillyHtml).not.toContain('background-color:#0a0a0a');
+	expect(sillyHtml).toContain('<meta name="color-scheme" content="light" />');
+	expect(sillyHtml.match(/<meta name="color-scheme"/g) ?? []).toHaveLength(1);
+
+	const noJsContext = await browser.newContext({
+		javaScriptEnabled: false,
+		colorScheme: 'light'
+	});
+	try {
+		await noJsContext.addCookies([{ name: 'theme', value: 'dark', url: baseURL! }]);
+		const noJsPage = await noJsContext.newPage();
+
+		await noJsPage.goto('/');
+		await expect(noJsPage.locator('html')).toHaveClass(/dark/);
+		await expect(noJsPage.locator('html')).toHaveCSS('background-color', 'rgb(10, 10, 10)');
+		await expect(noJsPage.locator('meta[name="color-scheme"]')).toHaveAttribute('content', 'dark');
+
+		await noJsPage.goto('/silly');
+		await expect(noJsPage.locator('html')).not.toHaveClass(/dark/);
+		await expect(
+			noJsPage.getByRole('heading', { level: 1, name: 'WELCOME TO MY WEBSITE!!!' })
+		).toHaveCSS('color', 'rgb(0, 0, 0)');
+	} finally {
+		await noJsContext.close();
+	}
+
+	const backfillContext = await browser.newContext({ colorScheme: 'light' });
+	try {
+		const backfillPage = await backfillContext.newPage();
+		await backfillPage.addInitScript(() => {
+			localStorage.setItem('theme', 'dark');
+		});
+		await backfillPage.goto('/', { waitUntil: 'networkidle' });
+		expect(await backfillPage.evaluate(() => document.cookie)).toContain('theme=dark');
+	} finally {
+		await backfillContext.close();
+	}
 });
 
 test('dark mode prints with light ink on a white background', async ({ page }) => {

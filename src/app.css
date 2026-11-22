@@ -132,7 +132,7 @@ html.dark .chart-figure {
 	html,
 	body {
 		background: white !important;
-		color-scheme: light;
+		color-scheme: light !important;
 	}
 
 	.chart-figure {

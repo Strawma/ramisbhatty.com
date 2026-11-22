@@ -4,9 +4,9 @@
 	import Footer from './Footer.svelte';
 	import { page } from '$app/state';
 	import {
-		applyDocumentTheme,
 		getStoredTheme,
 		mainTheme,
+		resetDocumentTheme,
 		THEME_STORAGE_KEY
 	} from '#lib/theme.svelte.ts';
 	let { children } = $props();
@@ -33,14 +33,10 @@
 		return () => {
 			mediaQuery.removeEventListener('change', handleMediaChange);
 			window.removeEventListener('storage', handleStorage);
-			applyDocumentTheme('light');
+			resetDocumentTheme();
 		};
 	});
 </script>
-
-<svelte:head>
-	<meta name="color-scheme" content="light dark" />
-</svelte:head>
 
 <div
 	class="flex min-h-screen flex-col bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100 print:bg-white print:text-black"

@@ -93,7 +93,9 @@ try {
 		await page.goto(`${origin}/cv`, { waitUntil: 'networkidle' });
 		await page.evaluate(() => {
 			document.documentElement.classList.remove('dark');
+			document.documentElement.classList.add('light');
 			document.documentElement.style.colorScheme = 'light';
+			document.documentElement.style.backgroundColor = '';
 		});
 		await page.evaluate(() => document.fonts.ready);
 		await page.emulateMedia({ media: 'print' });

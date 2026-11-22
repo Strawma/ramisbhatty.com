@@ -1,22 +1,39 @@
 <!doctype html>
-<script>
-	window.global = window;
-</script>
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="color-scheme" content="light dark" />
+		<script>
+			window.global = window;
+		</script>
 		<script>
 			(() => {
 				try {
 					const fixedPalette = /^\/(silly|bookclub|streaming)(\/|$)/.test(location.pathname);
+					if (fixedPalette) {
+						document.documentElement.classList.remove('dark', 'light');
+						document.documentElement.style.colorScheme = 'light';
+						document.documentElement.style.backgroundColor = '';
+						return;
+					}
 					const stored = localStorage.getItem('theme');
+					const explicit = stored === 'dark' || stored === 'light';
 					const dark =
-						!fixedPalette &&
-						(stored === 'dark' ||
-							(stored !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches));
+						stored === 'dark' ||
+						(stored !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 					document.documentElement.classList.toggle('dark', dark);
+					document.documentElement.classList.toggle('light', !dark);
 					document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+					document.documentElement.style.backgroundColor = dark ? '#0a0a0a' : '#fafafa';
+					const meta = document.querySelector('meta[name="color-scheme"]');
+					if (meta) {
+						meta.setAttribute('content', explicit ? (dark ? 'dark' : 'light') : 'light dark');
+					}
+					if (explicit) {
+						const secure = location.protocol === 'https:' ? '; secure' : '';
+						document.cookie = `theme=${stored}; path=/; max-age=31536000; samesite=lax${secure}`;
+					}
 				} catch {
 					// Fall back to the light theme if storage or matchMedia is unavailable.
 				}
