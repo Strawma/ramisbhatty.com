@@ -87,4 +87,4 @@ than treating every report as equally reliable.
   interrupted wireless links.
 - Design useful warnings and behaviour with people who have visual impairments.
 
-Explore the project at <https://github.com/SooratiLab/go2>.
+Explore the project at [https://github.com/SooratiLab/go2](https://github.com/SooratiLab/go2).

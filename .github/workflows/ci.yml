@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
         with:
-          version: 12.9.1
+          version: 12.18.0
       - uses: actions/setup-node@v7
         with:
           # Share the build runtime selected by Cloudflare Pages.

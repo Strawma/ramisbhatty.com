@@ -56,9 +56,9 @@
 						<p class="mt-1 text-xs">Minimum 12 characters.</p>
 					</div>
 					<div>
-						<label for="confirmation" class="block font-bold text-[#000080]"
-							>REPEAT LOGIN CODE</label
-						>
+						<label for="confirmation" class="block font-bold text-[#000080]">
+							REPEAT LOGIN CODE
+						</label>
 						<input
 							id="confirmation"
 							name="confirmation"

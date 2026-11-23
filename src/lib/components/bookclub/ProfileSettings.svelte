@@ -16,9 +16,9 @@
 		use:enhance
 		class="space-y-2 border-2 border-black bg-white p-3"
 	>
-		<label for="profile-display-name" class="block text-xs font-bold text-[#000080]"
-			>YOUR DISPLAY NAME</label
-		>
+		<label for="profile-display-name" class="block text-xs font-bold text-[#000080]">
+			YOUR DISPLAY NAME
+		</label>
 		<input
 			id="profile-display-name"
 			name="displayName"
@@ -42,9 +42,9 @@
 		use:enhance
 		class="space-y-2 border-2 border-black bg-white p-3"
 	>
-		<label for="profile-chat-color" class="block text-xs font-bold text-[#000080]"
-			>YOUR CHAT COLOR</label
-		>
+		<label for="profile-chat-color" class="block text-xs font-bold text-[#000080]">
+			YOUR CHAT COLOR
+		</label>
 		<input
 			id="profile-chat-color"
 			name="chatColor"

@@ -48,11 +48,14 @@
 				<p class="mt-3 flex flex-wrap gap-2 text-xs text-neutral-600 dark:text-neutral-400">
 					{#if entry.draft}<span
 							class="border border-amber-600 px-2 py-1 text-amber-800 dark:border-amber-500 dark:text-amber-300"
-							>LOCAL DRAFT</span
-						>{/if}
+						>
+							LOCAL DRAFT
+						</span>{/if}
 					{#each entry.tags ?? [] as tag (tag)}<span
-							class="border border-neutral-300 px-2 py-1 dark:border-neutral-700">{tag}</span
-						>{/each}
+							class="border border-neutral-300 px-2 py-1 dark:border-neutral-700"
+						>
+							{tag}
+						</span>{/each}
 				</p>
 			{/if}
 		</article>

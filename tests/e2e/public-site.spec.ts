@@ -542,6 +542,14 @@ test('main routes fit a narrow mobile viewport and retain keyboard navigation', 
 });
 
 test('the silly route remains separate, titled, and usable on mobile', async ({ page }) => {
+	await page.route('https://uselessfacts.jsph.pl/**', (route) =>
+		route.fulfill({
+			status: 200,
+			contentType: 'application/json',
+			body: JSON.stringify({ text: 'A deterministic fact for testing.' })
+		})
+	);
+
 	await page.emulateMedia({ reducedMotion: 'reduce' });
 	await page.setViewportSize({ width: 360, height: 740 });
 	const runtimeErrors = collectRuntimeErrors(page);

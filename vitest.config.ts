@@ -11,9 +11,10 @@ export default defineConfig(async () => {
 	return {
 		plugins: [
 			// cloudflareTest supplies real Workers bindings; adapter emulation would shadow them.
+			mdsvex({ extensions: ['.md'] }),
 			sveltekit({
 				extensions: ['.svelte', '.md'],
-				preprocess: [vitePreprocess(), mdsvex({ extensions: ['.md'] })],
+				preprocess: [vitePreprocess()],
 				csrf: {
 					trustedOrigins: ['https://ramisbhatty.com', 'https://www.ramisbhatty.com']
 				}

@@ -140,9 +140,9 @@
 							>
 								<option value="">Choose a member</option>
 								{#each data.members as member (member.id)}
-									<option value={member.id}
-										>{member.name} ({member.active ? 'active' : 'inactive'})</option
-									>
+									<option value={member.id}>
+										{member.name} ({member.active ? 'active' : 'inactive'})
+									</option>
 								{/each}
 							</select>
 							<p class="text-xs leading-5">
@@ -180,9 +180,9 @@
 										<td class="border border-black px-2 py-2">{member.username}</td>
 										<td class="border border-black px-2 py-2 font-bold">{member.name}</td>
 										<td class="border border-black px-2 py-2">{member.role.toUpperCase()}</td>
-										<td class="border border-black px-2 py-2"
-											>{member.active ? 'ACTIVE' : 'INACTIVE'}</td
-										>
+										<td class="border border-black px-2 py-2">
+											{member.active ? 'ACTIVE' : 'INACTIVE'}
+										</td>
 										<td class="border border-black px-2 py-2">
 											<div class="flex flex-wrap gap-2">
 												<form method="POST" action="?/setUsername" use:enhance class="flex gap-1">
@@ -332,15 +332,16 @@
 							<tbody>
 								{#each data.invitations as invitation (invitation.id)}
 									<tr>
-										<td class="border border-black px-2 py-2 font-bold"
-											>{invitation.purpose.toUpperCase()}</td
-										>
+										<td class="border border-black px-2 py-2 font-bold">
+											{invitation.purpose.toUpperCase()}
+										</td>
 										<td class="border border-black px-2 py-2">
 											{invitation.username}: {invitation.memberName ?? invitation.displayName}
 										</td>
 										<td class="border border-black px-2 py-2">{invitationLabel(invitation)}</td>
-										<td class="border border-black px-2 py-2">{formatDate(invitation.expiresAt)}</td
-										>
+										<td class="border border-black px-2 py-2">
+											{formatDate(invitation.expiresAt)}
+										</td>
 										<td class="border border-black px-2 py-2">
 											{#if invitationLabel(invitation) === 'ACTIVE'}
 												<form method="POST" action="?/revokeInvitation" use:enhance>

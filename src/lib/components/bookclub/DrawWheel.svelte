@@ -201,8 +201,10 @@
 								dominant-baseline="central"
 								font-size={wheel.ordered.length > 12 ? 5 : 7}
 								font-weight="900"
-								fill="black">{index + 1}</text
+								fill="black"
 							>
+								{index + 1}
+							</text>
 						{/each}
 						<circle cx="50" cy="50" r="8" fill="#d4d0c8" stroke="black" stroke-width="2" />
 						<circle cx="50" cy="50" r="2.5" fill="#800080" stroke="black" stroke-width="1" />

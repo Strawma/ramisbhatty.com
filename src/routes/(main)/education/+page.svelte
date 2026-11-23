@@ -172,9 +172,9 @@
 										{yearGroup.year}
 									</span>
 									{#if yearGroup.ongoing}
-										<span class="font-mono text-sm text-neutral-600 dark:text-neutral-400"
-											>Ongoing</span
-										>
+										<span class="font-mono text-sm text-neutral-600 dark:text-neutral-400">
+											Ongoing
+										</span>
 									{:else if yearGroup.average !== undefined}
 										<ModuleMark mark={yearGroup.average} label="Year average" />
 									{/if}

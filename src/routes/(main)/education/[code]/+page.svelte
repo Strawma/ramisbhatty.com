@@ -45,9 +45,9 @@
 				{/if}
 				{#if data.module.technologies.length}
 					<p>
-						<span class="font-mono text-xs text-neutral-500 dark:text-neutral-400"
-							>TECHNOLOGIES</span
-						>
+						<span class="font-mono text-xs text-neutral-500 dark:text-neutral-400">
+							TECHNOLOGIES
+						</span>
 						{data.module.technologies.join(' · ')}
 					</p>
 				{/if}

@@ -300,8 +300,10 @@
 								</p>
 								<a
 									href={resolve(`bookclub/draw/${data.dashboard.upcomingCycle.id}`)}
-									class="mt-3 inline-block font-bold underline">REPLAY UPCOMING DRAW &gt;</a
+									class="mt-3 inline-block font-bold underline"
 								>
+									REPLAY UPCOMING DRAW &gt;
+								</a>
 								{#if data.member.role === 'admin'}
 									<form method="POST" action="?/advanceBook" use:enhance class="mt-3">
 										<input type="hidden" name="cycleId" value={data.dashboard.upcomingCycle.id} />
@@ -318,8 +320,9 @@
 										<button
 											type="submit"
 											class="border-2 border-black bg-[#d4d0c8] px-3 py-2 font-bold shadow-[2px_2px_0_#000] hover:bg-white focus:ring-2 focus:ring-[#000080] focus:outline-none"
-											>START THIS BOOK</button
 										>
+											START THIS BOOK
+										</button>
 									</form>
 								{/if}
 							</section>
@@ -398,8 +401,10 @@
 													href="https://openlibrary.org"
 													target="_blank"
 													rel="noreferrer"
-													class="underline">Open Library</a
-												>.
+													class="underline"
+												>
+													Open Library
+												</a>.
 											</p>
 										</div>
 									{:else}
@@ -690,8 +695,9 @@
 												<button
 													type="submit"
 													class="border-2 border-black bg-[#d4d0c8] px-3 py-2 font-bold"
-													>REOPEN SUGGESTIONS</button
 												>
+													REOPEN SUGGESTIONS
+												</button>
 											</form>
 											<form method="POST" action="?/draw" use:enhance class="mt-3">
 												<button
@@ -731,9 +737,9 @@
 											use:enhance
 											class="mt-3 space-y-2"
 										>
-											<label class="block text-xs font-bold" for="scheduled-for"
-												>DATE AND TIME</label
-											>
+											<label class="block text-xs font-bold" for="scheduled-for">
+												DATE AND TIME
+											</label>
 											<input
 												id="scheduled-for"
 												name="scheduledFor"
@@ -743,9 +749,9 @@
 												class="w-full border-2 border-black px-2 py-2 text-xs focus:ring-2 focus:ring-[#000080] focus:outline-none"
 											/>
 											<input type="hidden" name="timezoneOffset" value={timezoneOffset} />
-											<label class="block text-xs font-bold" for="meeting-note"
-												>NOTE (OPTIONAL)</label
-											>
+											<label class="block text-xs font-bold" for="meeting-note">
+												NOTE (OPTIONAL)
+											</label>
 											<input
 												id="meeting-note"
 												name="note"

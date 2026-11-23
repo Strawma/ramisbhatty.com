@@ -85,8 +85,9 @@
 									<button
 										type="submit"
 										class="border-2 border-black bg-[#d4d0c8] px-3 py-2 font-bold shadow-[2px_2px_0_#000]"
-										>RESPIN BOOK</button
 									>
+										RESPIN BOOK
+									</button>
 								</form>
 							</details>
 						{/if}

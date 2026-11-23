@@ -316,26 +316,29 @@
 						class:my-1={message.isAnnouncement}
 						class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-2 gap-y-0.5 sm:grid-cols-[4.5rem_minmax(6rem,8rem)_minmax(0,1fr)_auto] sm:gap-2"
 					>
-						<time class="shrink-0 text-green-700" datetime={message.createdAt}
-							>[{formatMessageTime(message.createdAt)}]</time
-						>
+						<time class="shrink-0 text-green-700" datetime={message.createdAt}>
+							[{formatMessageTime(message.createdAt)}]
+						</time>
 						{#if message.isAnnouncement}
-							<span class="col-span-2 min-w-0 font-bold break-words text-yellow-300 sm:col-span-2"
-								>SYSTEM: {message.body}</span
-							>
+							<span class="col-span-2 min-w-0 font-bold break-words text-yellow-300 sm:col-span-2">
+								SYSTEM: {message.body}
+							</span>
 						{:else}
 							<span
 								style={`color: ${message.memberColor}; --member-color: ${message.memberColor};`}
 								class:chat-name-outline={message.memberColorNeedsOutline}
 								class="min-w-0 truncate font-bold"
-								title={message.memberName}>{message.memberName}:</span
+								title={message.memberName}
 							>
+								{message.memberName}:
+							</span>
 							<span
 								class:text-gray-500={message.isDeleted}
 								class:italic={message.isDeleted}
 								class="col-span-3 row-start-2 min-w-0 break-words sm:col-span-1 sm:row-auto"
-								>{message.body}</span
 							>
+								{message.body}
+							</span>
 						{/if}
 						{#if !message.isAnnouncement && !message.isDeleted && (isAdmin || message.isOwn)}
 							<form
@@ -394,12 +397,12 @@
 							class="h-2 w-2 shrink-0 rounded-full border border-black"
 							aria-hidden="true"
 						></span>
-						<span class="min-w-0 truncate font-bold" title={member.name}
-							>{member.name}{member.isOwn ? ' (YOU)' : ''}</span
-						>
-						<span class="ml-auto shrink-0 text-gray-600"
-							>{member.isOnline ? 'ONLINE' : 'OFFLINE'}</span
-						>
+						<span class="min-w-0 truncate font-bold" title={member.name}>
+							{member.name}{member.isOwn ? ' (YOU)' : ''}
+						</span>
+						<span class="ml-auto shrink-0 text-gray-600">
+							{member.isOnline ? 'ONLINE' : 'OFFLINE'}
+						</span>
 					</li>
 				{/each}
 			</ul>

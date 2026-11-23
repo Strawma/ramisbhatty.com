@@ -82,8 +82,10 @@
 										href="https://openlibrary.org"
 										target="_blank"
 										rel="noreferrer"
-										class="underline">Open Library</a
-									>.
+										class="underline"
+									>
+										Open Library
+									</a>.
 								</p>
 							</div>
 						{:else}
@@ -163,9 +165,9 @@
 												<details
 													class="mt-3 border-2 border-dashed border-[#800000] bg-[#fff0f0] p-2"
 												>
-													<summary class="cursor-pointer font-bold text-[#800000]"
-														>SHOW SPOILERS</summary
-													>
+													<summary class="cursor-pointer font-bold text-[#800000]">
+														SHOW SPOILERS
+													</summary>
 													{@render reviewContent()}
 												</details>
 											{:else}
@@ -215,9 +217,9 @@
 										class="mt-1 w-full border-2 border-black bg-white px-2 py-2"
 									/>
 
-									<label for="review-body" class="mt-3 block font-bold"
-										>REVIEW / NOTES (OPTIONAL)</label
-									>
+									<label for="review-body" class="mt-3 block font-bold">
+										REVIEW / NOTES (OPTIONAL)
+									</label>
 									<textarea
 										id="review-body"
 										name="body"
@@ -227,9 +229,9 @@
 										>{data.myReview?.body ?? ''}</textarea
 									>
 
-									<label for="favourite-quote" class="mt-3 block font-bold"
-										>FAVOURITE QUOTE (OPTIONAL)</label
-									>
+									<label for="favourite-quote" class="mt-3 block font-bold">
+										FAVOURITE QUOTE (OPTIONAL)
+									</label>
 									<textarea
 										id="favourite-quote"
 										name="favouriteQuote"

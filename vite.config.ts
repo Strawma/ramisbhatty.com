@@ -13,9 +13,10 @@ export default defineConfig({
 	},
 	plugins: [
 		tailwindcss(),
+		mdsvex({ extensions: ['.md'] }),
 		sveltekit({
 			extensions: ['.svelte', '.md'],
-			preprocess: [vitePreprocess(), mdsvex({ extensions: ['.md'] })],
+			preprocess: [vitePreprocess()],
 			csrf: {
 				trustedOrigins: ['https://ramisbhatty.com', 'https://www.ramisbhatty.com']
 			},

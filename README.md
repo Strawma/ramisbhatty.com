@@ -13,7 +13,7 @@ Installed addons:
 Uses pnpm package manager.
 
 The `.node-version` file selects Node.js 24.22.0 for Cloudflare Pages and CI. Node.js 22.17 or newer
-is required by SvelteKit 3.2. Use Unix-native tools in the development environment. The repository
+is required by SvelteKit 3.4. Use Unix-native tools in the development environment. The repository
 does not pin a local pnpm version.
 
 ### Local development
@@ -37,25 +37,22 @@ pnpm update
 To request newer major versions as well, use `pnpm update --latest` and run the validation
 commands before committing the resulting lockfile.
 
-The security overrides in `pnpm-workspace.yaml` raise Tailwind Typography's
-`postcss-selector-parser` dependency to 7.1.6 or newer and ESLint and `typescript-eslint`'s
-`minimatch` dependency to 11.0.1 or newer. Recheck them with
-`pnpm why postcss-selector-parser minimatch` and `pnpm audit` when upgrading those packages;
-remove each override once upstream no longer needs it. Wrangler 4.161.0 and
-`@cloudflare/vitest-plugin` 1.8.1 share Miniflare's patched `undici` 7.30.1; the test plugin also
+The security override in `pnpm-workspace.yaml` raises Tailwind Typography's
+`postcss-selector-parser` dependency to 7.1.6 or newer. ESLint 10.15 and `typescript-eslint`
+8.73 now depend on `minimatch` 11 directly, so no `minimatch` override is needed. Recheck
+`pnpm why postcss-selector-parser` and `pnpm audit` when upgrading `@tailwindcss/typography`;
+remove the override once upstream no longer needs it. Wrangler 4.166.0 and
+`@cloudflare/vitest-plugin` 1.9.0 share Miniflare's patched `undici` 7.30.2; the test plugin also
 resolves to patched `zod` 4.6.6. Miniflare pins patched `sharp` itself, so these packages need no
 security overrides. Run `pnpm why undici` and `pnpm audit` after updates to check the resolved
 dependency tree.
 
-The audit still reports [GHSA-gcqx-w48m-w2h4](https://github.com/advisories/GHSA-gcqx-w48m-w2h4),
-a low-severity `deepmerge` advisory with no published patch. The Svelte Vite plugin uses it to
-merge build configuration. Recheck upstream releases for a fix; the advisory remains visible
-in `pnpm audit`.
-
-The app uses stable SvelteKit 3 and Cloudflare adapter 8. Import Cloudflare bindings from
-`cloudflare:workers`; their shared types live in `Cloudflare.Env` in `src/app.d.ts`. Bindings are
-read when handling requests, and local development uses the adapter's platform proxy. The
-`#lib/*` import map uses explicit file extensions so Vite and TypeScript resolve the same files.
+The app uses stable SvelteKit 3 and Cloudflare adapter `8.0.2` (pinned below `8.0.3`, which breaks
+SvelteKit `error()`, `redirect()`, and `fail()` checks in `vite dev` via SSR module duplication,
+and below `9.0.0`, which removes Cloudflare Pages support in favour of Workers). Import Cloudflare
+bindings from `cloudflare:workers`; their shared types live in `Cloudflare.Env` in `src/app.d.ts`.
+Bindings are read when handling requests, and local development uses the adapter's platform proxy.
+The `#lib/*` import map uses explicit file extensions so Vite and TypeScript resolve the same files.
 
 The Workers unit tests use Vitest 5 with `@cloudflare/vitest-plugin`. Their SvelteKit configuration
 omits the deployment adapter because the test plugin supplies native Workers bindings and an
@@ -63,9 +60,9 @@ isolated D1 database. Adapter emulation would shadow those test bindings.
 
 ### TypeScript compatibility
 
-Keep `typescript` on 6.0.3 while the toolchain requires the JavaScript compiler API. SvelteKit 3.2
+Keep `typescript` on 6.0.3 while the toolchain requires the JavaScript compiler API. SvelteKit 3.4
 declares TypeScript `^6.0.0`, `svelte-check` 4.7.8 supports TypeScript 5 and 6, and
-`typescript-eslint` 8.72.2 requires TypeScript `<6.1.0`.
+`typescript-eslint` 8.73.0 requires TypeScript `<6.1.0`.
 
 TypeScript 7.0 uses the native compiler and does not expose the API these tools need. Microsoft
 expects a new API in TypeScript 7.1; the tooling must then adopt it and publish compatible releases.
@@ -89,7 +86,7 @@ SvelteKit and the Cloudflare adapter are grouped separately and require manual r
 their APIs and Cloudflare binding access must stay compatible.
 
 CI uses `actions/checkout@v7`, `pnpm/action-setup@v6`, and `actions/setup-node@v7` on GitHub-hosted
-Ubuntu runners, with Node.js 24.22.0 and pnpm 12.9.1 for the project commands.
+Ubuntu runners, with Node.js 24.22.0 and pnpm 12.18.0 for the project commands.
 
 CI runs lint, type checks, unit tests, and a production build for pushes and pull requests targeting
 both `dev` and `main`. Browser suites remain separate commands for checking navigation and the
@@ -314,12 +311,13 @@ release. CI reads the same file. The exact version also meets Corepack 0.36's No
 a major-only value can select an older patch release in the Pages build image.
 
 - Leave the Pages `NODE_VERSION` override unset to use `.node-version`, or set it to `24.22.0` for both
-  production and preview builds. Node.js 22.16 cannot install SvelteKit 3.2 with engine checks enabled.
+  production and preview builds. Node.js 22.16 cannot install SvelteKit 3.4 with engine checks enabled.
 - Use `PNPM_VERSION` in Pages settings when a specific pnpm release is needed.
 - Use `pnpm run build` as the build command.
 - Keep `pnpm-lock.yaml` committed so the deployment installs the tested dependency tree.
 
 The Node.js major version is shared across development, CI, and Pages; other Cloudflare project
 settings remain separate from the Unix developer toolchain.
-The repository is already configured with `@sveltejs/adapter-cloudflare`; no additional deployment
-adapter is required.
+The repository is already configured with `@sveltejs/adapter-cloudflare` `8.0.2` for Cloudflare
+Pages; `8.0.3` introduces a `vite dev` SSR module-duplication regression, and upgrading to `9.x`
+requires migrating the deployment to Cloudflare Workers.

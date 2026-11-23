@@ -37,8 +37,9 @@
 						<a
 							class="underline underline-offset-4"
 							href={resolve(`education/${data.module.code.toLowerCase()}`)}
-							>{data.module.code}: {data.module.title}</a
 						>
+							{data.module.code}: {data.module.title}
+						</a>
 					</dd>
 				</div>{/if}
 		</dl>
