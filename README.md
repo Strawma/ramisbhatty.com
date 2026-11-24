@@ -12,9 +12,10 @@ Installed addons:
 
 Uses pnpm package manager.
 
-The `.node-version` file selects Node.js 24.22.0 for Cloudflare Pages and CI, and `packageManager`
-in `package.json` pins pnpm `12.23.0` across local development, CI, and Cloudflare Pages. Node.js
-22.17 or newer is required by SvelteKit 3.4. Use Unix-native tools in the development environment.
+The `.node-version` file selects Node.js 24.22.0 for Cloudflare Workers Builds and CI, and
+`packageManager` in `package.json` pins pnpm `12.23.0` across local development, CI, and
+Workers Builds. Node.js 22.17 or newer is required by SvelteKit 3.4. Use Unix-native tools in the
+development environment.
 
 ### Local development
 
@@ -41,18 +42,16 @@ The security override in `pnpm-workspace.yaml` raises Tailwind Typography's
 `postcss-selector-parser` dependency to 7.1.6 or newer. ESLint 10.15 and `typescript-eslint`
 8.73 now depend on `minimatch` 11 directly, so no `minimatch` override is needed. Recheck
 `pnpm why postcss-selector-parser` and `pnpm audit` when upgrading `@tailwindcss/typography`;
-remove the override once upstream no longer needs it. Wrangler 4.166.0 and
-`@cloudflare/vitest-plugin` 1.9.0 share Miniflare's patched `undici` 7.30.2; the test plugin also
-resolves to patched `zod` 4.6.6. Miniflare pins patched `sharp` itself, so these packages need no
-security overrides. Run `pnpm why undici` and `pnpm audit` after updates to check the resolved
-dependency tree.
+remove the override once upstream no longer needs it. Wrangler 4.166.0, `@cloudflare/vite-plugin` 1.70.1, and `@cloudflare/vitest-plugin` 1.9.0 pull
+patched `undici` 7.30.1 and 7.30.2, and the test plugin also resolves to patched `zod` 4.6.6.
+Miniflare pins patched `sharp` itself, so these packages need no security overrides. Run
+`pnpm why undici` and `pnpm audit` after updates to check the resolved dependency tree.
 
-The app uses stable SvelteKit 3 and Cloudflare adapter `8.0.2` (pinned below `8.0.3`, which breaks
-SvelteKit `error()`, `redirect()`, and `fail()` checks in `vite dev` via SSR module duplication,
-and below `9.0.0`, which removes Cloudflare Pages support in favour of Workers). Import Cloudflare
-bindings from `cloudflare:workers`; their shared types live in `Cloudflare.Env` in `src/app.d.ts`.
-Bindings are read when handling requests, and local development uses the adapter's platform proxy.
-The `#lib/*` import map uses explicit file extensions so Vite and TypeScript resolve the same files.
+The app uses stable SvelteKit 3 and Cloudflare adapter 9 targeting Cloudflare Workers with Static
+Assets. Import Cloudflare bindings from `cloudflare:workers`; their shared types live in
+`Cloudflare.Env` in `src/app.d.ts`. Bindings are read when handling requests, and local development
+uses the adapter's platform proxy. The `#lib/*` import map uses explicit file extensions so Vite and
+TypeScript resolve the same files.
 
 The Workers unit tests use Vitest 5 with `@cloudflare/vitest-plugin`. Their SvelteKit configuration
 omits the deployment adapter because the test plugin supplies native Workers bindings and an
@@ -304,22 +303,22 @@ database before deploying the corresponding application code:
 pnpm dlx wrangler d1 migrations apply ramis-bookclub --remote
 ```
 
-### Cloudflare Pages
+### Cloudflare Workers
 
-The site is deployed through Cloudflare Workers/Pages using SvelteKit and Cloudflare Build System
-v3. Pages reads `.node-version` before installing dependencies, selecting the tested Node.js 24.22.0
-release. CI reads the same file. The exact version also meets Corepack 0.36's Node.js 24.15 minimum;
-a major-only value can select an older patch release in the Pages build image.
+The site deploys to Cloudflare Workers with Static Assets using `@sveltejs/adapter-cloudflare` 9 and
+Workers Builds. `.node-version` selects the tested Node.js 24.22.0 release shared across CI and
+Workers Builds (Node.js 22.17 or newer is required by SvelteKit 3.4).
 
-- Leave the Pages `NODE_VERSION` override unset to use `.node-version`, or set it to `24.22.0` for both
-  production and preview builds. Node.js 22.16 cannot install SvelteKit 3.4 with engine checks enabled.
-- Leave `PNPM_VERSION` unset in Pages settings so Corepack uses `packageManager` (`pnpm@12.23.0`)
-  from `package.json`.
-- Use `pnpm run build` as the build command.
-- Keep `pnpm-lock.yaml` committed so the deployment installs the tested dependency tree.
-
-The Node.js major version is shared across development, CI, and Pages; other Cloudflare project
-settings remain separate from the Unix developer toolchain.
-The repository is already configured with `@sveltejs/adapter-cloudflare` `8.0.2` for Cloudflare
-Pages; `8.0.3` introduces a `vite dev` SSR module-duplication regression, and upgrading to `9.x`
-requires migrating the deployment to Cloudflare Workers.
+- Production build command: `pnpm run build` (generates `.svelte-kit/cloudflare/worker/wrangler.json`
+  and `.wrangler/deploy/config.json` automatically; `wrangler.jsonc` intentionally omits `main` and
+  `assets.directory`).
+- Production deploy command: `pnpm exec wrangler deploy` (deploys `ramisbhatty-com` with the
+  `BOOKCLUB_DB` D1 binding and `workers_dev: false` / `preview_urls: false`).
+- Preview build & deploy: `CLOUDFLARE_ENV=preview pnpm run build` followed by
+  `pnpm exec wrangler deploy` or `pnpm exec wrangler versions upload` (targets `ramisbhatty-com-preview`
+  without `BOOKCLUB_DB` so preview deployments stay isolated from production D1).
+- Local built-Worker preview: `pnpm build && pnpm exec wrangler dev`.
+- Store `TURNSTILE_SECRET_KEY` as an encrypted Worker secret on `ramisbhatty-com`.
+- Leave `NODE_VERSION` and `PNPM_VERSION` unset in Workers Builds so `.node-version` and
+  `packageManager` in `package.json` stay the single source of truth, and keep `pnpm-lock.yaml`
+  committed.

@@ -3,7 +3,8 @@
 	"name": "ramisbhatty-com",
 	"compatibility_date": "2026-07-14",
 	"compatibility_flags": ["nodejs_compat"],
-	"pages_build_output_dir": ".svelte-kit/cloudflare",
+	"workers_dev": false,
+	"preview_urls": false,
 	"vars": {
 		"TURNSTILE_SITE_KEY": "0x4AAAAAAD1P2yjd-DIq4C1i"
 	},
@@ -13,5 +14,14 @@
 			"database_name": "ramis-bookclub",
 			"database_id": "17f73704-9818-4f07-a92b-d52caab3ab53"
 		}
-	]
+	],
+	"env": {
+		"preview": {
+			"workers_dev": true,
+			"preview_urls": true,
+			"vars": {
+				"TURNSTILE_SITE_KEY": "0x4AAAAAAD1P2yjd-DIq4C1i"
+			}
+		}
+	}
 }
