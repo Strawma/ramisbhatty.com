@@ -12,9 +12,9 @@ Installed addons:
 
 Uses pnpm package manager.
 
-The `.node-version` file selects Node.js 24.22.0 for Cloudflare Pages and CI. Node.js 22.17 or newer
-is required by SvelteKit 3.4. Use Unix-native tools in the development environment. The repository
-does not pin a local pnpm version.
+The `.node-version` file selects Node.js 24.22.0 for Cloudflare Pages and CI, and `packageManager`
+in `package.json` pins pnpm `12.23.0` across local development, CI, and Cloudflare Pages. Node.js
+22.17 or newer is required by SvelteKit 3.4. Use Unix-native tools in the development environment.
 
 ### Local development
 
@@ -86,7 +86,8 @@ SvelteKit and the Cloudflare adapter are grouped separately and require manual r
 their APIs and Cloudflare binding access must stay compatible.
 
 CI uses `actions/checkout@v7`, `pnpm/action-setup@v6`, and `actions/setup-node@v7` on GitHub-hosted
-Ubuntu runners, with Node.js 24.22.0 and pnpm 12.18.0 for the project commands.
+Ubuntu runners, reading Node.js 24.22.0 from `.node-version` and pnpm 12.23.0 from
+`packageManager` in `package.json`.
 
 CI runs lint, type checks, unit tests, and a production build for pushes and pull requests targeting
 both `dev` and `main`. Browser suites remain separate commands for checking navigation and the
@@ -312,7 +313,8 @@ a major-only value can select an older patch release in the Pages build image.
 
 - Leave the Pages `NODE_VERSION` override unset to use `.node-version`, or set it to `24.22.0` for both
   production and preview builds. Node.js 22.16 cannot install SvelteKit 3.4 with engine checks enabled.
-- Use `PNPM_VERSION` in Pages settings when a specific pnpm release is needed.
+- Leave `PNPM_VERSION` unset in Pages settings so Corepack uses `packageManager` (`pnpm@12.23.0`)
+  from `package.json`.
 - Use `pnpm run build` as the build command.
 - Keep `pnpm-lock.yaml` committed so the deployment installs the tested dependency tree.
 
