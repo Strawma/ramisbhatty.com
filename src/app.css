@@ -82,13 +82,60 @@ html.dark .chart-figure {
 	filter: invert(0.96) hue-rotate(180deg);
 }
 
+/* Unified main-site link presentation across prose and components; scoped away from side rooms. */
+#main-content a {
+	text-decoration-line: underline;
+	text-decoration-thickness: 1px;
+	text-decoration-color: #a3a3a3;
+	text-underline-offset: 0.22em;
+	transition:
+		color 150ms ease,
+		text-decoration-color 150ms ease;
+}
+
+#main-content a:hover {
+	text-decoration-color: currentColor;
+}
+
+#main-content a:focus-visible {
+	border-radius: 2px;
+	outline: 2px solid currentColor;
+	outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	#main-content a {
+		transition: none;
+	}
+}
+
+@media not print {
+	#main-content a:visited {
+		color: #525252;
+	}
+
+	html.dark #main-content a {
+		text-decoration-color: #525252;
+	}
+
+	html.dark #main-content a:hover {
+		text-decoration-color: currentColor;
+	}
+
+	html.dark #main-content a:visited {
+		color: #a3a3a3;
+	}
+}
+
 @media print {
 	@page {
 		size: A4;
 		margin: 12mm;
 	}
 
-	a {
+	a,
+	#main-content a,
+	#main-content a:visited {
 		color: inherit;
 		text-decoration: none;
 	}

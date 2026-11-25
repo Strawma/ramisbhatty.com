@@ -17,16 +17,10 @@
 >
 	<h1 class="text-4xl font-semibold tracking-tight sm:text-5xl print:text-2xl">Ramis Bhatty</h1>
 	<p class="mt-5 flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm print:mt-2 print:text-xs">
-		<a class="underline underline-offset-4" href="mailto:{contact.email}">{contact.email}</a>
-		<a class="break-words underline underline-offset-4" href={contact.github} rel="external">
-			github.com/Strawma
-		</a>
-		<a class="break-words underline underline-offset-4" href={contact.linkedin} rel="external">
-			linkedin.com/in/ramis-bhatty
-		</a>
-		<a class="underline underline-offset-4 print:hidden" href={asset(documents.cv)} download>
-			Download PDF
-		</a>
+		<a href="mailto:{contact.email}">{contact.email}</a>
+		<a class="break-words" href={contact.github} rel="external"> github.com/Strawma </a>
+		<a class="break-words" href={contact.linkedin} rel="external"> linkedin.com/in/ramis-bhatty </a>
+		<a class="print:hidden" href={asset(documents.cv)} download> Download PDF </a>
 	</p>
 </header>
 

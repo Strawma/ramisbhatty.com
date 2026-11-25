@@ -24,10 +24,7 @@
 			<div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
 				<svelte:element this={`h${headingLevel}`} class="text-lg font-semibold">
 					{#if entry.href}
-						<a
-							class="underline decoration-neutral-400 underline-offset-4 hover:decoration-neutral-900 dark:decoration-neutral-600 dark:hover:decoration-neutral-100"
-							href={entry.href}
-						>
+						<a href={entry.href}>
 							{entry.title}
 						</a>
 					{:else}

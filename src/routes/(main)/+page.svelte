@@ -21,10 +21,10 @@
 		{data.page.introduction}
 	</p>
 	<p class="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-sm">
-		<a class="underline underline-offset-4" href={resolve(nav.cv)}>CV</a>
-		<a class="underline underline-offset-4" href={contact.github} rel="external">GitHub</a>
-		<a class="underline underline-offset-4" href={contact.linkedin} rel="external">LinkedIn</a>
-		<a class="underline underline-offset-4" href="mailto:{contact.email}">Email</a>
+		<a href={resolve(nav.cv)}>CV</a>
+		<a href={contact.github} rel="external">GitHub</a>
+		<a href={contact.linkedin} rel="external">LinkedIn</a>
+		<a href="mailto:{contact.email}">Email</a>
 	</p>
 </header>
 

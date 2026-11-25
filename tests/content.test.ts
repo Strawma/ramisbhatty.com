@@ -11,9 +11,14 @@ import {
 	visibleProjects
 } from '../src/lib/content';
 import {
+	createContentLinkGraph,
 	extractMarkdownInternalLinks,
+	extractMarkdownSelfOriginLinks,
+	extractMarkdownStaticAssets,
 	findBrokenInternalLinks,
 	getPageConnections,
+	getReferencedStaticAssets,
+	isSelfOriginUrl,
 	normalizeInternalPath
 } from '../src/lib/content-links';
 
@@ -160,5 +165,252 @@ Check \`\`[multi-tick](/work/ignored-multi)\`\` and [home](/).
 
 	it('validates that all internal links in main-site content resolve without draft leaks', () => {
 		expect(findBrokenInternalLinks()).toEqual([]);
+	});
+
+	it('ignores comments, escapes, and indented code while preserving list continuations and nested links', () => {
+		const markdown = `
+- Item one
+  [List continuation](/cv)
+
+Paragraph before code.
+
+    [Indented code](/work/ignored-indented)
+    [Still indented](/work/ignored-indented-2)
+
+<!-- [Commented link](/work/ignored-comment) -->
+
+Escaped \\[not a link\\](/work/ignored-escape) and !\\[not image\\](/images/ignored.png).
+
+Nested [Section [1]](/education/comp3200), balanced [Parens](/work/example(1)),
+and linked image [![Chart](/images/projects/cell-migration/dice-by-clip.svg)](/work/cell-migration-segmentation).
+
+<img src="/images/projects/extra.webp" alt="Extra" />
+<a href="/documents/go2-lidar-poster.pdf">Poster</a>
+`;
+
+		expect(extractMarkdownInternalLinks(markdown)).toEqual([
+			'/cv',
+			'/education/comp3200',
+			'/work/example(1)',
+			'/work/cell-migration-segmentation',
+			'/documents/go2-lidar-poster.pdf'
+		]);
+
+		expect(extractMarkdownStaticAssets(markdown)).toEqual([
+			'/images/projects/cell-migration/dice-by-clip.svg',
+			'/images/projects/extra.webp',
+			'/documents/go2-lidar-poster.pdf'
+		]);
+
+		const assetRefs = getReferencedStaticAssets();
+		expect(assetRefs).toContainEqual({
+			sourcePath: '/work/go2-lidar-perception',
+			target: '/documents/go2-lidar-poster.pdf'
+		});
+		expect(assetRefs).toContainEqual({
+			sourcePath: '/work/cell-migration-segmentation',
+			target: '/images/projects/cell-migration/dice-by-clip.svg'
+		});
+	});
+
+	it('detects absolute same-origin URLs', () => {
+		expect(isSelfOriginUrl('https://ramisbhatty.com/cv')).toBe(true);
+		expect(isSelfOriginUrl('http://WWW.RAMISBHATTY.COM/work/go2-lidar-perception')).toBe(true);
+		expect(isSelfOriginUrl('https://github.com/Strawma')).toBe(false);
+		expect(isSelfOriginUrl('/cv')).toBe(false);
+		expect(
+			extractMarkdownSelfOriginLinks(
+				'See [absolute](https://ramisbhatty.com/cv) and [ext](https://example.com).'
+			)
+		).toEqual(['https://ramisbhatty.com/cv']);
+	});
+
+	it('enforces link-graph invariants, related ordering, and broken-link diagnostics', () => {
+		const graph = createContentLinkGraph({
+			nodes: [
+				{
+					path: '/',
+					slug: 'home',
+					kind: 'page',
+					title: 'Home',
+					summary: 'Index',
+					status: 'published'
+				},
+				{
+					path: '/education',
+					slug: 'education',
+					kind: 'page',
+					title: 'Education',
+					summary: 'Study',
+					status: 'published'
+				},
+				{
+					path: '/work/alpha',
+					slug: 'alpha',
+					kind: 'project',
+					title: 'Alpha',
+					summary: 'Alpha summary',
+					status: 'published',
+					related: ['/work/beta', '/work/gamma-draft', '/work/beta']
+				},
+				{
+					path: '/work/beta',
+					slug: 'beta',
+					kind: 'project',
+					title: 'Beta',
+					summary: 'Beta summary',
+					status: 'published'
+				},
+				{
+					path: '/work/gamma-draft',
+					slug: 'gamma-draft',
+					kind: 'project',
+					title: 'Gamma',
+					summary: 'Draft project',
+					status: 'draft'
+				},
+				{
+					path: '/work/delta-draft',
+					slug: 'delta-draft',
+					kind: 'project',
+					title: 'Delta',
+					summary: 'Another draft project',
+					status: 'draft'
+				}
+			],
+			markdownSources: [
+				{
+					sourcePath: '/work/alpha',
+					rawMarkdown:
+						'Self [here](/work/alpha#top), [beta](/work/beta), [missing](/work/nope), and [abs](https://www.ramisbhatty.com/education).'
+				},
+				{
+					sourcePath: '/work/beta',
+					rawMarkdown: 'Back to [alpha](/work/alpha) and [draft](/work/gamma-draft).'
+				},
+				{
+					sourcePath: '/work/gamma-draft',
+					rawMarkdown: 'Draft links to [beta](/work/beta) and [alpha](/work/alpha).'
+				},
+				{
+					sourcePath: '/work/delta-draft',
+					rawMarkdown: 'Second draft links to [alpha](/work/alpha).'
+				},
+				{
+					sourcePath: '/education',
+					rawMarkdown: 'Fragment link to [alpha](/work/alpha).'
+				}
+			],
+			getHomeProjectPaths: () => []
+		});
+
+		const alphaProd = graph.getPageConnections('/work/alpha');
+		expect(alphaProd.related.map((item) => item.path)).toEqual(['/work/beta']);
+		expect(alphaProd.mentionedBy.map((item) => item.path)).toEqual(['/education']);
+
+		const alphaDev = graph.getPageConnections('/work/alpha', { includeDrafts: true });
+		expect(alphaDev.related.map((item) => item.path)).toEqual(['/work/beta', '/work/gamma-draft']);
+		expect(alphaDev.mentionedBy.map((item) => item.path)).toEqual([
+			'/work/delta-draft',
+			'/education'
+		]);
+
+		expect(graph.findBrokenInternalLinks()).toEqual([
+			{
+				sourcePath: '/work/alpha',
+				target: 'https://www.ramisbhatty.com/education',
+				reason: 'absolute-self-url'
+			},
+			{ sourcePath: '/work/alpha', target: '/work/nope', reason: 'unknown' },
+			{ sourcePath: '/work/beta', target: '/work/gamma-draft', reason: 'draft-target' },
+			{ sourcePath: '/work/alpha', target: '/work/gamma-draft', reason: 'draft-target' }
+		]);
+
+		expect(() =>
+			createContentLinkGraph({
+				nodes: [
+					{
+						path: '/work/a',
+						slug: 'a',
+						kind: 'project',
+						title: 'A',
+						summary: 'A',
+						status: 'published',
+						related: ['/work/missing']
+					}
+				],
+				markdownSources: [],
+				getHomeProjectPaths: () => []
+			})
+		).toThrow(/unknown related path/);
+
+		expect(() =>
+			createContentLinkGraph({
+				nodes: [
+					{
+						path: '/work/a',
+						slug: 'a',
+						kind: 'project',
+						title: 'A',
+						summary: 'A',
+						status: 'published',
+						related: ['https://example.com']
+					}
+				],
+				markdownSources: [],
+				getHomeProjectPaths: () => []
+			})
+		).toThrow(/unknown related path/);
+
+		expect(() =>
+			createContentLinkGraph({
+				nodes: [
+					{
+						path: '/work/a',
+						slug: 'a',
+						kind: 'project',
+						title: 'A',
+						summary: 'A',
+						status: 'published',
+						related: ['/work/a']
+					}
+				],
+				markdownSources: [],
+				getHomeProjectPaths: () => []
+			})
+		).toThrow(/cannot reference itself/);
+
+		expect(() =>
+			createContentLinkGraph({
+				nodes: [
+					{
+						path: '/work/a',
+						slug: 'a',
+						kind: 'project',
+						title: 'A',
+						summary: 'A',
+						status: 'published'
+					},
+					{
+						path: '/work/a',
+						slug: 'a',
+						kind: 'project',
+						title: 'A2',
+						summary: 'A2',
+						status: 'published'
+					}
+				],
+				markdownSources: [],
+				getHomeProjectPaths: () => []
+			})
+		).toThrow(/Duplicate content node path/);
+
+		expect(() =>
+			createContentLinkGraph({
+				nodes: [],
+				markdownSources: [{ sourcePath: '/work/unmapped', rawMarkdown: '' }],
+				getHomeProjectPaths: () => []
+			})
+		).toThrow(/Unmapped markdown source path/);
 	});
 });

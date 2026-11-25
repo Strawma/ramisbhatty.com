@@ -35,10 +35,7 @@
 			{#if data.module}<div>
 					<dt class="font-semibold">Related module</dt>
 					<dd>
-						<a
-							class="underline underline-offset-4"
-							href={resolve(`education/${data.module.code.toLowerCase()}`)}
-						>
+						<a href={resolve(`education/${data.module.code.toLowerCase()}`)}>
 							{data.module.code}: {data.module.title}
 						</a>
 					</dd>

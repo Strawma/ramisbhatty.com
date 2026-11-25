@@ -200,7 +200,8 @@ site's layouts and indexes.
 Detail pages under `/work` and `/education` also display automatic **Mentioned by** backlinks
 derived at build time from internal Markdown links and homepage project links, alongside any manual
 `related` paths declared in frontmatter. The content test suite checks that internal links in
-main-site Markdown resolve to valid targets without leaking draft routes into published pages.
+main-site Markdown resolve to valid targets without leaking draft routes or using absolute
+same-origin URLs, and the public browser suite verifies rendered links and static assets return 200.
 
 The Soorati Lab internship overview lives in `src/content/experience/research-internship.md`.
 Its companion case study is `src/content/projects/go2-lidar-perception.md`, published at

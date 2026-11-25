@@ -68,6 +68,7 @@ type ContentFiles = Record<string, MarkdownModule<MetadataRecord>>;
 interface LoadedContent<T> {
 	records: T[];
 	components: Record<string, Component>;
+	slugsByFile: Record<string, string>;
 }
 
 function slugFromPath(path: string): string {
@@ -201,25 +202,28 @@ function collectionMetadata(
 	};
 }
 
-function loadContent<T>(
+function loadContent<T extends { slug: string }>(
 	files: ContentFiles,
 	createRecord: (slug: string, metadata: MetadataRecord, source: string) => T,
 	sort: (left: T, right: T) => number
 ): LoadedContent<T> {
 	const records: T[] = [];
 	const components: Record<string, Component> = {};
+	const slugsByFile: Record<string, string> = {};
 
 	for (const [source, file] of Object.entries(files)) {
 		const slug = slugFromPath(source);
 		if (components[slug]) {
 			throw new Error(`Duplicate content slug: ${slug}`);
 		}
-		records.push(createRecord(slug, file.metadata, source));
+		const record = createRecord(slug, file.metadata, source);
+		records.push(record);
 		components[slug] = file.default;
+		slugsByFile[source.split('/').at(-1)!] = record.slug;
 	}
 
 	records.sort(sort);
-	return { records, components };
+	return { records, components, slugsByFile };
 }
 
 const byOrderThen = <T extends { order?: number }>(
@@ -301,6 +305,7 @@ const moduleDocuments = loadContent(
 );
 export const modules = moduleDocuments.records;
 export const moduleContent = moduleDocuments.components;
+export const moduleSlugsByFile = moduleDocuments.slugsByFile;
 
 function assertUnique(label: string, values: string[]): void {
 	const seen = new Set<string>();

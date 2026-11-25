@@ -31,19 +31,23 @@
 				return resolve('/(main)/work/experience/[slug]', { slug: item.slug });
 			case 'module':
 				return resolve('/(main)/education/[code]', { code: item.slug });
-			case 'page':
-				switch (item.path) {
-					case '/':
+			case 'page': {
+				const pageSlug = item.slug;
+				switch (pageSlug) {
+					case 'home':
 						return resolve('');
-					case '/cv':
+					case 'cv':
 						return resolve('cv');
-					case '/education':
+					case 'education':
 						return resolve('education');
-					case '/work/go2-lidar-perception/poster':
+					case 'go2-poster':
 						return resolve('/(main)/work/go2-lidar-perception/poster');
-					default:
-						throw new Error(`Unsupported page link target: ${item.path}`);
+					default: {
+						const unreachable: never = pageSlug;
+						return unreachable;
+					}
 				}
+			}
 		}
 	}
 </script>
@@ -63,10 +67,7 @@
 				<ul class="mt-3 space-y-2">
 					{#each related as item (item.path)}
 						<li>
-							<a
-								class="text-neutral-900 underline decoration-neutral-400 underline-offset-4 hover:decoration-neutral-900 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 dark:text-neutral-100 dark:decoration-neutral-600 dark:hover:decoration-neutral-100"
-								href={hrefFor(item)}
-							>
+							<a class="text-neutral-900 dark:text-neutral-100" href={hrefFor(item)}>
 								{item.title}
 							</a>
 							{#if item.status === 'draft'}
@@ -91,10 +92,7 @@
 				<ul class="mt-3 space-y-2">
 					{#each mentionedBy as item (item.path)}
 						<li class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-							<a
-								class="text-neutral-900 underline decoration-neutral-400 underline-offset-4 hover:decoration-neutral-900 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 dark:text-neutral-100 dark:decoration-neutral-600 dark:hover:decoration-neutral-100"
-								href={hrefFor(item)}
-							>
+							<a class="text-neutral-900 dark:text-neutral-100" href={hrefFor(item)}>
 								{item.title}
 							</a>
 							<span class="font-mono text-xs text-neutral-500 dark:text-neutral-400">
@@ -113,10 +111,7 @@
 
 		{#if parent}
 			<p>
-				<a
-					class="text-neutral-900 underline decoration-neutral-400 underline-offset-4 hover:decoration-neutral-900 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 dark:text-neutral-100 dark:decoration-neutral-600 dark:hover:decoration-neutral-100"
-					href={parent.href}
-				>
+				<a class="text-neutral-900 dark:text-neutral-100" href={parent.href}>
 					← {parent.label}
 				</a>
 			</p>

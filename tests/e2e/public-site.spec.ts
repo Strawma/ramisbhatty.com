@@ -768,6 +768,71 @@ test('detail pages show connected backlinks without duplicating structured links
 	);
 });
 
+test('all rendered internal links and static assets across main routes resolve with 200', async ({
+	page,
+	request
+}) => {
+	const checkedTargets = new Set<string>();
+	const routesToInspect = [
+		'/',
+		'/cv',
+		'/education',
+		'/work/go2-lidar-perception',
+		'/work/go2-lidar-perception/poster',
+		'/work/cell-migration-segmentation',
+		'/work/experience/research-internship',
+		'/education/comp3200'
+	];
+
+	for (const routePath of routesToInspect) {
+		await page.goto(routePath);
+		const targets = await page.evaluate(() => {
+			const origin = window.location.origin;
+			const urls = [
+				...Array.from(document.querySelectorAll<HTMLAnchorElement>('main a[href]')).map(
+					(el) => el.href
+				),
+				...Array.from(document.querySelectorAll<HTMLImageElement>('main img[src]')).map(
+					(el) => el.src
+				)
+			];
+			return urls
+				.filter((url) => url.startsWith(`${origin}/`))
+				.map((url) => {
+					const parsed = new URL(url);
+					return `${parsed.pathname}${parsed.search}`;
+				});
+		});
+
+		for (const target of targets) {
+			if (!target || checkedTargets.has(target)) continue;
+			checkedTargets.add(target);
+			const response = await request.get(target);
+			expect(response.status(), `${routePath} -> ${target}`).toBe(200);
+		}
+	}
+
+	expect(checkedTargets.has('/documents/ramis-bhatty-cv.pdf')).toBe(true);
+	expect(checkedTargets.has('/documents/go2-lidar-poster.pdf')).toBe(true);
+	expect(checkedTargets.has('/images/projects/cell-migration/dice-by-clip.svg')).toBe(true);
+});
+
+test('main-content links share underline and focus styles in screen mode and drop underlines in print', async ({
+	page
+}) => {
+	await page.goto('/');
+	const cvLink = page.locator('#main-content section a[href="/cv"]');
+	await expect(cvLink).toHaveCSS('text-decoration-line', 'underline');
+
+	await cvLink.focus();
+	await expect(cvLink).toBeFocused();
+	await expect(cvLink).toHaveCSS('outline-style', 'solid');
+	await expect(cvLink).toHaveCSS('outline-width', '2px');
+
+	await page.emulateMedia({ media: 'print' });
+	await expect(cvLink).toHaveCSS('text-decoration-line', 'none');
+});
+
 test('unknown authored records return not found', async ({ request }) => {
 	for (const path of ['/work/not-a-project', '/education/not-a-module']) {
 		const response = await request.get(path);
