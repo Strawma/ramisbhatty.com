@@ -1,0 +1,125 @@
+<script lang="ts">
+	import { resolve } from '$app/paths';
+	import type { ResolvedPathname } from '$app/types';
+	import type { ContentKind, ContentLink } from '#lib/content-links.ts';
+
+	interface ParentLink {
+		label: string;
+		href: ResolvedPathname;
+	}
+
+	interface Props {
+		related?: ContentLink[];
+		mentionedBy?: ContentLink[];
+		parent?: ParentLink;
+	}
+
+	let { related = [], mentionedBy = [], parent }: Props = $props();
+
+	const KIND_LABELS: Record<ContentKind, string> = {
+		project: 'Project',
+		experience: 'Experience',
+		module: 'Module',
+		page: 'Page'
+	};
+
+	function hrefFor(item: ContentLink): ResolvedPathname {
+		switch (item.kind) {
+			case 'project':
+				return resolve('/(main)/work/[slug]', { slug: item.slug });
+			case 'experience':
+				return resolve('/(main)/work/experience/[slug]', { slug: item.slug });
+			case 'module':
+				return resolve('/(main)/education/[code]', { code: item.slug });
+			case 'page':
+				switch (item.path) {
+					case '/':
+						return resolve('');
+					case '/cv':
+						return resolve('cv');
+					case '/education':
+						return resolve('education');
+					case '/work/go2-lidar-perception/poster':
+						return resolve('/(main)/work/go2-lidar-perception/poster');
+					default:
+						throw new Error(`Unsupported page link target: ${item.path}`);
+				}
+		}
+	}
+</script>
+
+{#if related.length || mentionedBy.length || parent}
+	<aside
+		aria-label="Connected pages"
+		class="not-prose mt-12 space-y-6 border-t border-neutral-300 pt-6 text-sm text-neutral-700 dark:border-neutral-800 dark:text-neutral-300 print:hidden"
+	>
+		{#if related.length}
+			<section>
+				<h2
+					class="font-mono text-xs tracking-wide text-neutral-500 uppercase dark:text-neutral-400"
+				>
+					Related
+				</h2>
+				<ul class="mt-3 space-y-2">
+					{#each related as item (item.path)}
+						<li>
+							<a
+								class="text-neutral-900 underline decoration-neutral-400 underline-offset-4 hover:decoration-neutral-900 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 dark:text-neutral-100 dark:decoration-neutral-600 dark:hover:decoration-neutral-100"
+								href={hrefFor(item)}
+							>
+								{item.title}
+							</a>
+							{#if item.status === 'draft'}
+								<span class="font-mono text-xs text-amber-800 dark:text-amber-300">
+									(local draft)
+								</span>
+							{/if}
+							— {item.summary}
+						</li>
+					{/each}
+				</ul>
+			</section>
+		{/if}
+
+		{#if mentionedBy.length}
+			<section>
+				<h2
+					class="font-mono text-xs tracking-wide text-neutral-500 uppercase dark:text-neutral-400"
+				>
+					Mentioned by
+				</h2>
+				<ul class="mt-3 space-y-2">
+					{#each mentionedBy as item (item.path)}
+						<li class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+							<a
+								class="text-neutral-900 underline decoration-neutral-400 underline-offset-4 hover:decoration-neutral-900 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 dark:text-neutral-100 dark:decoration-neutral-600 dark:hover:decoration-neutral-100"
+								href={hrefFor(item)}
+							>
+								{item.title}
+							</a>
+							<span class="font-mono text-xs text-neutral-500 dark:text-neutral-400">
+								{KIND_LABELS[item.kind]}
+							</span>
+							{#if item.status === 'draft'}
+								<span class="font-mono text-xs text-amber-800 dark:text-amber-300">
+									(local draft)
+								</span>
+							{/if}
+						</li>
+					{/each}
+				</ul>
+			</section>
+		{/if}
+
+		{#if parent}
+			<p>
+				<a
+					class="text-neutral-900 underline decoration-neutral-400 underline-offset-4 hover:decoration-neutral-900 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 dark:text-neutral-100 dark:decoration-neutral-600 dark:hover:decoration-neutral-100"
+					href={parent.href}
+				>
+					← {parent.label}
+				</a>
+			</p>
+		{/if}
+	</aside>
+{/if}

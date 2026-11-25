@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ModuleMark from '#lib/components/main/ModuleMark.svelte';
+	import PageConnections from '#lib/components/main/PageConnections.svelte';
 	import { moduleContent } from '#lib/content.ts';
 	import { resolve } from '$app/paths';
 	let { data } = $props();
@@ -65,4 +66,9 @@
 			</ul>
 		</section>
 	{/if}
+	<PageConnections
+		related={data.connections.related}
+		mentionedBy={data.connections.mentionedBy}
+		parent={{ label: 'Education', href: resolve('education') }}
+	/>
 </article>

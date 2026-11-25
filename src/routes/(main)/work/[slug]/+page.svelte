@@ -1,4 +1,5 @@
 <script lang="ts">
+	import PageConnections from '#lib/components/main/PageConnections.svelte';
 	import { projectContent } from '#lib/content.ts';
 	import { resolve } from '$app/paths';
 	let { data } = $props();
@@ -50,4 +51,5 @@
 			</p>{/if}
 	</header>
 	<div class="mt-8 space-y-8"><Content /></div>
+	<PageConnections related={data.connections.related} mentionedBy={data.connections.mentionedBy} />
 </article>

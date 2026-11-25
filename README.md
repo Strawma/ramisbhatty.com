@@ -197,6 +197,11 @@ The main site's editable copy lives in `src/content`. Markdown bodies hold the p
 frontmatter blocks provide titles, summaries, dates, and draft status used automatically by the
 site's layouts and indexes.
 
+Detail pages under `/work` and `/education` also display automatic **Mentioned by** backlinks
+derived at build time from internal Markdown links and homepage project links, alongside any manual
+`related` paths declared in frontmatter. The content test suite checks that internal links in
+main-site Markdown resolve to valid targets without leaking draft routes into published pages.
+
 The Soorati Lab internship overview lives in `src/content/experience/research-internship.md`.
 Its companion case study is `src/content/projects/go2-lidar-perception.md`, published at
 `/work/go2-lidar-perception` and featured automatically on the homepage. Keep experiment dates and

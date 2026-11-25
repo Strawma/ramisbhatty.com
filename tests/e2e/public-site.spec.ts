@@ -509,7 +509,9 @@ test('the internship and case study link to the poster PDF and its text equivale
 	for (const path of ['/work/experience/research-internship', '/work/go2-lidar-perception']) {
 		await page.goto(path);
 		await expect(page.locator('a[href="/documents/go2-lidar-poster.pdf"]')).toBeVisible();
-		await expect(page.locator('a[href="/work/go2-lidar-perception/poster"]')).toBeVisible();
+		await expect(
+			page.locator('article > div a[href="/work/go2-lidar-perception/poster"]')
+		).toBeVisible();
 	}
 
 	const pdf = await request.get('/documents/go2-lidar-poster.pdf');
@@ -725,6 +727,45 @@ test('the generated CV PDF is available as a download', async ({ request }) => {
 	expect(response.ok()).toBe(true);
 	expect(response.headers()['content-type']).toContain('application/pdf');
 	expect((await response.body()).subarray(0, 5).toString()).toBe('%PDF-');
+});
+
+test('detail pages show connected backlinks without duplicating structured links and hide them in print', async ({
+	page
+}) => {
+	await page.goto('/work/go2-lidar-perception');
+	const go2Connections = page.getByRole('complementary', { name: 'Connected pages' });
+	await expect(
+		go2Connections.getByRole('heading', { level: 2, name: 'Mentioned by' })
+	).toBeVisible();
+	await expect(
+		go2Connections.locator('a[href="/work/experience/research-internship"]')
+	).toBeVisible();
+	await expect(go2Connections.locator('a[href="/work/go2-lidar-perception/poster"]')).toBeVisible();
+	await expect(go2Connections.locator('a[href="/"]')).toBeVisible();
+
+	await page.emulateMedia({ media: 'print' });
+	await expect(go2Connections).toBeHidden();
+	await page.emulateMedia({ media: 'screen' });
+
+	await page.goto('/work/cell-migration-segmentation');
+	const cellConnections = page.getByRole('complementary', { name: 'Connected pages' });
+	await expect(cellConnections.locator('a[href="/cv"]')).toBeVisible();
+	await expect(cellConnections.locator('a[href="/"]')).toBeVisible();
+
+	await page.goto('/education/comp3200');
+	await expect(page.locator('a[href="/work/cell-migration-segmentation"]')).toHaveCount(1);
+	const comp3200Connections = page.getByRole('complementary', { name: 'Connected pages' });
+	await expect(comp3200Connections.getByRole('link', { name: '← Education' })).toHaveAttribute(
+		'href',
+		'/education'
+	);
+
+	await page.goto('/education/comp1201');
+	const comp1201Connections = page.getByRole('complementary', { name: 'Connected pages' });
+	await expect(comp1201Connections.getByRole('link', { name: '← Education' })).toHaveAttribute(
+		'href',
+		'/education'
+	);
 });
 
 test('unknown authored records return not found', async ({ request }) => {

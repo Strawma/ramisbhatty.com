@@ -7,6 +7,7 @@ export interface CollectionMetadata {
 	featured?: boolean;
 	order?: number;
 	updatedAt?: string;
+	related?: string[];
 }
 
 export interface Experience extends CollectionMetadata {
@@ -52,6 +53,7 @@ export interface PageIntroduction {
 	description: string;
 	introduction?: string;
 	academicYears?: AcademicYearDetails[];
+	related?: string[];
 }
 
 interface MarkdownModule<T> {
@@ -132,6 +134,19 @@ function stringList(metadata: MetadataRecord, field: string, source: string): st
 	return value;
 }
 
+function optionalStringList(
+	metadata: MetadataRecord,
+	field: string,
+	source: string
+): string[] | undefined {
+	const value = metadata[field];
+	if (value === undefined) return undefined;
+	if (!Array.isArray(value) || value.some((item) => typeof item !== 'string' || !item.trim())) {
+		throw new Error(`Invalid "${field}" in ${source}; expected a list of non-empty strings`);
+	}
+	return value;
+}
+
 function academicYears(
 	metadata: MetadataRecord,
 	source: string
@@ -181,7 +196,8 @@ function collectionMetadata(
 		status,
 		featured,
 		order,
-		updatedAt: optionalString(metadata, 'updatedAt', source)
+		updatedAt: optionalString(metadata, 'updatedAt', source),
+		related: optionalStringList(metadata, 'related', source)
 	};
 }
 
@@ -222,7 +238,8 @@ const pageDocuments = loadContent(
 		title: requireString(metadata, 'title', source),
 		description: requireString(metadata, 'description', source),
 		introduction: optionalString(metadata, 'introduction', source),
-		academicYears: academicYears(metadata, source)
+		academicYears: academicYears(metadata, source),
+		related: optionalStringList(metadata, 'related', source)
 	}),
 	(left, right) => left.slug.localeCompare(right.slug, 'en-GB')
 );
