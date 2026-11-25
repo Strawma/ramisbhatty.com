@@ -1,6 +1,8 @@
 import {
+	blogPosts,
 	experience,
 	featuredProjects,
+	hasPublishedBlogPosts,
 	modules,
 	moduleSlugsByFile,
 	pageIntroductions,
@@ -10,8 +12,8 @@ import {
 } from './content';
 import { site } from './data/config';
 
-export type ContentKind = 'page' | 'project' | 'experience' | 'module';
-export type MainPageSlug = 'home' | 'cv' | 'education' | 'go2-poster';
+export type ContentKind = 'page' | 'project' | 'experience' | 'blog' | 'module';
+export type MainPageSlug = 'home' | 'cv' | 'education' | 'blog' | 'go2-poster';
 
 interface ContentLinkBase {
 	path: string;
@@ -22,7 +24,7 @@ interface ContentLinkBase {
 
 export type ContentLink =
 	| (ContentLinkBase & { kind: 'page'; slug: MainPageSlug })
-	| (ContentLinkBase & { kind: 'project' | 'experience' | 'module'; slug: string });
+	| (ContentLinkBase & { kind: 'project' | 'experience' | 'blog' | 'module'; slug: string });
 
 export type ContentGraphNodeInput = ContentLink & {
 	related?: string[];
@@ -59,7 +61,7 @@ interface ContentNodeBase extends ContentLinkBase {
 
 type ContentNode =
 	| (ContentNodeBase & { kind: 'page'; slug: MainPageSlug })
-	| (ContentNodeBase & { kind: 'project' | 'experience' | 'module'; slug: string });
+	| (ContentNodeBase & { kind: 'project' | 'experience' | 'blog' | 'module'; slug: string });
 
 const KNOWN_NON_MAIN_ROUTES = new Set(['/silly', '/silly/legacy', '/silly/who-is-ramis-bhatty']);
 const STATIC_ASSET_PREFIXES = ['/documents/', '/images/'];
@@ -67,14 +69,16 @@ const STATIC_ASSET_PREFIXES = ['/documents/', '/images/'];
 const KIND_ORDER: Record<ContentKind, number> = {
 	project: 0,
 	experience: 1,
-	module: 2,
-	page: 3
+	blog: 2,
+	module: 3,
+	page: 4
 };
 
 const STANDALONE_PAGE_PATHS: Record<MainPageSlug, string> = {
 	home: '/',
 	cv: '/cv',
 	education: '/education',
+	blog: '/blog',
 	'go2-poster': '/work/go2-lidar-perception/poster'
 };
 
@@ -760,7 +764,8 @@ for (const [slug, path] of Object.entries(STANDALONE_PAGE_PATHS) as [MainPageSlu
 		kind: 'page',
 		title: slug === 'home' ? 'Home' : page.title,
 		summary: page.description,
-		status: 'published',
+		// Keep /blog treated as a draft target until at least one post is published.
+		status: slug === 'blog' && !hasPublishedBlogPosts() ? 'draft' : 'published',
 		related: page.related
 	});
 }
@@ -786,6 +791,18 @@ for (const entry of experience) {
 		summary: entry.summary,
 		status: entry.status,
 		related: entry.related
+	});
+}
+
+for (const post of blogPosts) {
+	siteNodes.push({
+		path: `/blog/${post.slug}`,
+		slug: post.slug,
+		kind: 'blog',
+		title: post.title,
+		summary: post.summary,
+		status: post.status,
+		related: post.related
 	});
 }
 
@@ -816,6 +833,11 @@ const rawExperience = import.meta.glob<string>('../content/experience/*.md', {
 	import: 'default',
 	eager: true
 });
+const rawBlog = import.meta.glob<string>('../content/blog/*.md', {
+	query: '?raw',
+	import: 'default',
+	eager: true
+});
 const rawModules = import.meta.glob<string>('../content/modules/*.md', {
 	query: '?raw',
 	import: 'default',
@@ -841,6 +863,13 @@ for (const [source, rawMarkdown] of Object.entries(rawProjects)) {
 for (const [source, rawMarkdown] of Object.entries(rawExperience)) {
 	markdownSources.push({
 		sourcePath: `/work/experience/${slugFromPath(source)}`,
+		rawMarkdown
+	});
+}
+
+for (const [source, rawMarkdown] of Object.entries(rawBlog)) {
+	markdownSources.push({
+		sourcePath: `/blog/${slugFromPath(source)}`,
 		rawMarkdown
 	});
 }

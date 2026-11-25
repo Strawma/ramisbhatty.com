@@ -1,11 +1,15 @@
 <!-- src/lib/components/prose/Nav.svelte -->
 <script lang="ts">
 	import ThemeToggle from '#lib/components/main/ThemeToggle.svelte';
+	import { hasPublishedBlogPosts } from '#lib/content.ts';
 	import { contact, nav } from '#lib/data/config.ts';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 
-	const links = [{ label: 'CV', href: nav.cv }];
+	const links = [
+		{ label: 'CV', href: nav.cv },
+		...(hasPublishedBlogPosts() ? [{ label: 'Blog', href: nav.blog }] : [])
+	];
 
 	// Navigation data stays slashless because SvelteKit's resolve() accepts route paths in that form.
 	// URL.pathname is absolute, so normalize before comparing it for active-link styling.

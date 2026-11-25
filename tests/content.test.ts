@@ -1,15 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import {
+	blogPosts,
 	experience,
+	findBlogPost,
 	findExperience,
 	findModule,
 	findProject,
+	formatIsoDate,
+	hasPublishedBlogPosts,
 	modules,
 	projects,
+	visibleBlogPosts,
 	visibleExperience,
 	visibleModules,
 	visibleProjects
 } from '../src/lib/content';
+import { buildBlogRssXml } from '../src/lib/blog-rss';
 import {
 	createContentLinkGraph,
 	extractMarkdownInternalLinks,
@@ -412,5 +418,119 @@ and linked image [![Chart](/images/projects/cell-migration/dice-by-clip.svg)](/w
 				getHomeProjectPaths: () => []
 			})
 		).toThrow(/Unmapped markdown source path/);
+	});
+});
+
+describe('blog framework and RSS feed', () => {
+	it('keeps blog posts hidden until published and formats ISO dates cleanly', () => {
+		expect(visibleBlogPosts()).toEqual(blogPosts.filter((post) => post.status === 'published'));
+		expect(hasPublishedBlogPosts()).toBe(visibleBlogPosts(false).length > 0);
+		expect(findBlogPost('non-existent-post', true)).toBeUndefined();
+		expect(formatIsoDate('2026-11-25')).toBe('25 November 2026');
+	});
+
+	it('builds valid RSS 2.0 XML from published posts sorted newest-first', () => {
+		const xml = buildBlogRssXml([
+			{
+				slug: 'older-post',
+				title: 'Older & Wiser <Note>',
+				summary: 'Summary with "quotes" & \'apostrophes\'.',
+				publishedAt: '2026-10-01',
+				topics: ['Systems', 'C++ & Rust'],
+				status: 'published'
+			},
+			{
+				slug: 'draft-post',
+				title: 'Secret Draft',
+				summary: 'Should not appear in RSS.',
+				publishedAt: '2026-12-01',
+				topics: ['Private'],
+				status: 'draft'
+			},
+			{
+				slug: 'newer-post',
+				title: 'Newer Post',
+				summary: 'Most recent post.',
+				publishedAt: '2026-11-25',
+				topics: ['SvelteKit'],
+				status: 'published'
+			}
+		]);
+
+		expect(xml).toContain('<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">');
+		expect(xml).toContain('<lastBuildDate>Wed, 25 Nov 2026 00:00:00 GMT</lastBuildDate>');
+		expect(xml).not.toContain('Secret Draft');
+		expect(xml).toContain('<title>Older &amp; Wiser &lt;Note&gt;</title>');
+		expect(xml).toContain(
+			'<description>Summary with &quot;quotes&quot; &amp; &apos;apostrophes&apos;.</description>'
+		);
+		expect(xml).toContain('<category>C++ &amp; Rust</category>');
+		expect(xml).toContain(
+			'<guid isPermaLink="true">https://ramisbhatty.com/blog/newer-post</guid>'
+		);
+
+		const newerIndex = xml.indexOf('https://ramisbhatty.com/blog/newer-post');
+		const olderIndex = xml.indexOf('https://ramisbhatty.com/blog/older-post');
+		expect(newerIndex).toBeGreaterThan(-1);
+		expect(olderIndex).toBeGreaterThan(newerIndex);
+
+		const emptyXml = buildBlogRssXml([]);
+		expect(emptyXml).toContain('<channel>');
+		expect(emptyXml).not.toContain('<item>');
+		expect(emptyXml).not.toContain('<lastBuildDate>');
+	});
+
+	it('connects blog nodes via backlinks and treats unpublished /blog as a draft target', () => {
+		const graph = createContentLinkGraph({
+			nodes: [
+				{
+					path: '/blog',
+					slug: 'blog',
+					kind: 'page',
+					title: 'Blog',
+					summary: 'Writing',
+					status: 'draft'
+				},
+				{
+					path: '/blog/workers-notes',
+					slug: 'workers-notes',
+					kind: 'blog',
+					title: 'Workers Notes',
+					summary: 'Notes on Workers',
+					status: 'published',
+					related: ['/work/site']
+				},
+				{
+					path: '/work/site',
+					slug: 'site',
+					kind: 'project',
+					title: 'Personal Site',
+					summary: 'Website project',
+					status: 'published'
+				}
+			],
+			markdownSources: [
+				{
+					sourcePath: '/work/site',
+					rawMarkdown: 'See [Workers Notes](/blog/workers-notes) and [Blog](/blog).'
+				},
+				{
+					sourcePath: '/blog/workers-notes',
+					rawMarkdown: 'Built for [Personal Site](/work/site).'
+				}
+			],
+			getHomeProjectPaths: () => []
+		});
+
+		const postConnections = graph.getPageConnections('/blog/workers-notes');
+		expect(postConnections.related.map((item) => item.path)).toEqual(['/work/site']);
+		expect(postConnections.mentionedBy).toEqual([]);
+
+		const siteConnections = graph.getPageConnections('/work/site');
+		expect(siteConnections.mentionedBy.map((item) => item.path)).toEqual(['/blog/workers-notes']);
+
+		expect(graph.findBrokenInternalLinks()).toEqual([
+			{ sourcePath: '/work/site', target: '/blog', reason: 'draft-target' }
+		]);
 	});
 });

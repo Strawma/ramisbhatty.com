@@ -203,6 +203,12 @@ derived at build time from internal Markdown links and homepage project links, a
 main-site Markdown resolve to valid targets without leaking draft routes or using absolute
 same-origin URLs, and the public browser suite verifies rendered links and static assets return 200.
 
+Blog posts live in `src/content/blog` as Markdown files with `publishedAt` dates and optional
+`topics`. While no post has `status: published`, `/blog` remains hidden from navigation,
+`sitemap.xml`, and production requests while remaining previewable locally in development. Publishing
+a post automatically enables `/blog`, `/blog/[slug]`, the `Blog` navigation link, sitemap entries,
+and the `/blog/rss.xml` feed.
+
 The Soorati Lab internship overview lives in `src/content/experience/research-internship.md`.
 Its companion case study is `src/content/projects/go2-lidar-perception.md`, published at
 `/work/go2-lidar-perception` and featured automatically on the homepage. Keep experiment dates and

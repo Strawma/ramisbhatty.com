@@ -67,6 +67,7 @@ test('primary navigation advertises only current destinations', async ({ page })
 	await expect(navigation.getByRole('link', { name: 'Education' })).toHaveCount(0);
 	await expect(navigation.getByRole('link', { name: 'About' })).toHaveCount(0);
 	await expect(navigation.getByRole('link', { name: 'Writing' })).toHaveCount(0);
+	await expect(navigation.getByRole('link', { name: 'Blog' })).toHaveCount(0);
 	await expect(navigation.getByRole('link', { name: 'Interests' })).toHaveCount(0);
 	await expect(navigation.getByRole('link', { name: /silly/i })).toHaveCount(0);
 
@@ -678,14 +679,7 @@ test('the streaming scene respects utility indexing and reduced-motion preferenc
 });
 
 test('removed sections are not served', async ({ request }) => {
-	for (const path of [
-		'/about',
-		'/work',
-		'/blog',
-		'/interests',
-		'/blog/first-post',
-		'/interests/games'
-	]) {
+	for (const path of ['/about', '/work', '/interests', '/interests/games']) {
 		const response = await request.get(path);
 		expect(response.status(), path).toBe(404);
 	}
@@ -833,8 +827,42 @@ test('main-content links share underline and focus styles in screen mode and dro
 	await expect(cvLink).toHaveCSS('text-decoration-line', 'none');
 });
 
+test('the unpublished blog index and RSS endpoint preview cleanly in local dev', async ({
+	page,
+	request
+}) => {
+	await page.setViewportSize({ width: 360, height: 740 });
+	const response = await page.goto('/blog', { waitUntil: 'networkidle' });
+	expect(response?.ok()).toBe(true);
+	await expect(page).toHaveTitle(/^Blog \| Ramis Bhatty$/);
+	await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex, follow');
+	await expect(page.getByRole('heading', { level: 1, name: 'Blog' })).toBeVisible();
+	await expect(page.getByText('LOCAL PREVIEW', { exact: true })).toBeVisible();
+
+	const dimensions = await page.evaluate(() => ({
+		scrollWidth: document.documentElement.scrollWidth,
+		clientWidth: document.documentElement.clientWidth
+	}));
+	expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
+
+	const lightAccessibility = await new AxeBuilder({ page }).analyze();
+	expect(lightAccessibility.violations).toEqual([]);
+
+	await page.emulateMedia({ colorScheme: 'dark' });
+	await page.goto('/blog', { waitUntil: 'networkidle' });
+	await expect(page.locator('html')).toHaveClass(/dark/);
+	const darkAccessibility = await new AxeBuilder({ page }).analyze();
+	expect(darkAccessibility.violations).toEqual([]);
+
+	const rss = await request.get('/blog/rss.xml');
+	expect(rss.ok()).toBe(true);
+	expect(rss.headers()['content-type']).toContain('application/rss+xml');
+	const rssBody = await rss.text();
+	expect(rssBody).toContain('<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">');
+});
+
 test('unknown authored records return not found', async ({ request }) => {
-	for (const path of ['/work/not-a-project', '/education/not-a-module']) {
+	for (const path of ['/work/not-a-project', '/education/not-a-module', '/blog/not-a-post']) {
 		const response = await request.get(path);
 		expect(response.status(), path).toBe(404);
 	}

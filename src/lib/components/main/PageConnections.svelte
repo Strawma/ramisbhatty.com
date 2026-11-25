@@ -19,6 +19,7 @@
 	const KIND_LABELS: Record<ContentKind, string> = {
 		project: 'Project',
 		experience: 'Experience',
+		blog: 'Blog',
 		module: 'Module',
 		page: 'Page'
 	};
@@ -29,6 +30,8 @@
 				return resolve('/(main)/work/[slug]', { slug: item.slug });
 			case 'experience':
 				return resolve('/(main)/work/experience/[slug]', { slug: item.slug });
+			case 'blog':
+				return resolve('/(main)/blog/[slug]', { slug: item.slug });
 			case 'module':
 				return resolve('/(main)/education/[code]', { code: item.slug });
 			case 'page': {
@@ -40,6 +43,8 @@
 						return resolve('cv');
 					case 'education':
 						return resolve('education');
+					case 'blog':
+						return resolve('blog');
 					case 'go2-poster':
 						return resolve('/(main)/work/go2-lidar-perception/poster');
 					default: {

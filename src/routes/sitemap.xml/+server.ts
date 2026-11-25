@@ -1,4 +1,9 @@
-import { visibleExperience, visibleModules, visibleProjects } from '#lib/content.ts';
+import {
+	visibleBlogPosts,
+	visibleExperience,
+	visibleModules,
+	visibleProjects
+} from '#lib/content.ts';
 import { site } from '#lib/data/config.ts';
 import type { RequestHandler } from './$types';
 
@@ -18,6 +23,7 @@ function absoluteUrl(path: string): string {
 export const GET: RequestHandler = () => {
 	// Keep the sitemap aligned with production visibility. Draft records and utility sections with
 	// `noindex` metadata are deliberately omitted so the discovery signal stays unambiguous.
+	const publishedPosts = visibleBlogPosts();
 	const paths = new Set([
 		'/',
 		'/work/go2-lidar-perception/poster',
@@ -26,6 +32,9 @@ export const GET: RequestHandler = () => {
 		'/silly',
 		'/silly/who-is-ramis-bhatty',
 		'/silly/legacy',
+		...(publishedPosts.length
+			? ['/blog', ...publishedPosts.map((post) => `/blog/${post.slug}`)]
+			: []),
 		...visibleExperience().map((entry) => `/work/experience/${entry.slug}`),
 		...visibleProjects().map((project) => `/work/${project.slug}`),
 		...visibleModules().map((module) => `/education/${module.slug}`)

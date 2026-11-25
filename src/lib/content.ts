@@ -46,6 +46,14 @@ export interface Project extends CollectionMetadata {
 	technologies: string[];
 }
 
+export interface BlogPost extends CollectionMetadata {
+	slug: string;
+	title: string;
+	summary: string;
+	publishedAt?: string;
+	topics: string[];
+}
+
 export interface PageIntroduction {
 	slug: string;
 	path: string;
@@ -124,6 +132,47 @@ function optionalPositiveNumber(
 		throw new Error(`Invalid "${field}" in ${source}; expected a positive number`);
 	}
 	return value;
+}
+
+const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+function optionalIsoDate(
+	metadata: MetadataRecord,
+	field: string,
+	source: string
+): string | undefined {
+	const value = optionalString(metadata, field, source);
+	if (value === undefined) return undefined;
+	const match = value.match(ISO_DATE_PATTERN);
+	if (!match) {
+		throw new Error(`Invalid "${field}" in ${source}; expected YYYY-MM-DD`);
+	}
+	const year = Number(match[1]);
+	const month = Number(match[2]);
+	const day = Number(match[3]);
+	const parsed = new Date(Date.UTC(year, month - 1, day));
+	if (
+		parsed.getUTCFullYear() !== year ||
+		parsed.getUTCMonth() !== month - 1 ||
+		parsed.getUTCDate() !== day
+	) {
+		throw new Error(`Invalid calendar date "${field}" in ${source}`);
+	}
+	return value;
+}
+
+const BLOG_DATE_FORMATTER = new Intl.DateTimeFormat('en-GB', {
+	day: 'numeric',
+	month: 'long',
+	year: 'numeric',
+	timeZone: 'UTC'
+});
+
+export function formatIsoDate(isoDate: string): string {
+	const match = isoDate.match(ISO_DATE_PATTERN);
+	if (!match) return isoDate;
+	const parsed = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+	return BLOG_DATE_FORMATTER.format(parsed);
 }
 
 function stringList(metadata: MetadataRecord, field: string, source: string): string[] {
@@ -307,6 +356,30 @@ export const modules = moduleDocuments.records;
 export const moduleContent = moduleDocuments.components;
 export const moduleSlugsByFile = moduleDocuments.slugsByFile;
 
+const blogDocuments = loadContent(
+	import.meta.glob<MarkdownModule<MetadataRecord>>('../content/blog/*.md', { eager: true }),
+	(slug, metadata, source): BlogPost => {
+		const meta = collectionMetadata(metadata, source);
+		const publishedAt = optionalIsoDate(metadata, 'publishedAt', source);
+		if (meta.status === 'published' && !publishedAt) {
+			throw new Error(`Missing "publishedAt" on published blog post in ${source}`);
+		}
+		return {
+			slug,
+			title: requireString(metadata, 'title', source),
+			summary: requireString(metadata, 'summary', source),
+			publishedAt,
+			topics: stringList(metadata, 'topics', source),
+			...meta
+		};
+	},
+	(left, right) =>
+		(right.publishedAt ?? '').localeCompare(left.publishedAt ?? '') ||
+		byOrderThen<BlogPost>((post) => post.title)(left, right)
+);
+export const blogPosts = blogDocuments.records;
+export const blogContent = blogDocuments.components;
+
 function assertUnique(label: string, values: string[]): void {
 	const seen = new Set<string>();
 	for (const value of values) {
@@ -347,6 +420,9 @@ export const visibleModules = (includeDrafts = false): AcademicModule[] =>
 	visible(modules, includeDrafts);
 export const visibleProjects = (includeDrafts = false): Project[] =>
 	visible(projects, includeDrafts);
+export const visibleBlogPosts = (includeDrafts = false): BlogPost[] =>
+	visible(blogPosts, includeDrafts);
+export const hasPublishedBlogPosts = (): boolean => visibleBlogPosts(false).length > 0;
 
 export const featuredProjects = (includeDrafts = false): Project[] =>
 	visibleProjects(includeDrafts).filter((project) => project.featured);
@@ -361,3 +437,5 @@ export const findProject = (slug: string, includeDrafts = false): Project | unde
 	visibleProjects(includeDrafts).find((project) => project.slug === slug);
 export const findExperience = (slug: string, includeDrafts = false): Experience | undefined =>
 	visibleExperience(includeDrafts).find((entry) => entry.slug === slug);
+export const findBlogPost = (slug: string, includeDrafts = false): BlogPost | undefined =>
+	visibleBlogPosts(includeDrafts).find((post) => post.slug === slug);
