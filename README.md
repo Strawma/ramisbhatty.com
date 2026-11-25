@@ -111,8 +111,9 @@ theme changes until an explicit preference is chosen. The navigation theme switc
 explicit `light` or `dark` choice in both `localStorage` and a `theme` cookie so server rendering
 applies the saved theme from the first byte without a flash on reload. Fixed-palette routes
 (`/silly`, `/bookclub`, and `/streaming`) stay in light mode across both full page loads and
-client-side navigation. Printed pages fall back to light styling, and the CV PDF is always
-generated in light mode.
+client-side navigation; `/silly` and `/silly/who-is-ramis-bhatty` also include an opt-in
+analogue-horror broadcast mode stored separately in `localStorage`. Printed pages fall back to
+light styling, and the CV PDF is always generated in light mode.
 
 ### Updating
 

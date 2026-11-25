@@ -8,9 +8,13 @@
 
 	let {
 		fps = 60,
+		speedMultiplier = 1,
+		canvasFilter = '',
 		children
 	}: {
 		fps?: number;
+		speedMultiplier?: number;
+		canvasFilter?: string;
 		children?: Snippet;
 	} = $props();
 
@@ -119,8 +123,8 @@
 
 			const r = getRadius(b);
 
-			b.x += b.vx;
-			b.y += b.vy;
+			b.x += b.vx * speedMultiplier;
+			b.y += b.vy * speedMultiplier;
 
 			if (b.x - r < 0) {
 				b.vx = Math.abs(b.vx);
@@ -234,7 +238,11 @@
 </script>
 
 <!-- Canvas sits between background and content -->
-<canvas bind:this={canvas} class="pointer-events-none fixed inset-0 z-10" aria-hidden="true"
+<canvas
+	bind:this={canvas}
+	class="pointer-events-none fixed inset-0 z-10"
+	style:filter={canvasFilter || undefined}
+	aria-hidden="true"
 ></canvas>
 
 <!-- Bouncer registrations (render nothing visible) -->

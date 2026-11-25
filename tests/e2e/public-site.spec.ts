@@ -621,6 +621,107 @@ test('the dubious biography is public, crawlable, and usable on mobile', async (
 	expect(runtimeErrors).toEqual([]);
 });
 
+test('the silly analogue-horror dark mode persists separately, works under reduced motion, and stays isolated from the main site', async ({
+	page
+}) => {
+	await page.route('https://uselessfacts.jsph.pl/**', (route) =>
+		route.fulfill({
+			status: 200,
+			contentType: 'application/json',
+			body: JSON.stringify({ text: 'A deterministic fact for testing.' })
+		})
+	);
+
+	await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'light' });
+	await page.setViewportSize({ width: 360, height: 740 });
+	const runtimeErrors = collectRuntimeErrors(page);
+
+	await page.goto('/silly', { waitUntil: 'networkidle' });
+	const main = page.locator('main');
+	const html = page.locator('html');
+
+	await expect(main).toHaveAttribute('data-silly-mode', 'normal');
+	await expect(
+		page.getByRole('heading', { level: 1, name: 'WELCOME TO MY WEBSITE!!!' })
+	).toBeVisible();
+	await expect(page.getByRole('heading', { level: 2, name: ': : MENU : :' })).toBeVisible();
+
+	const darkToggle = page.getByRole('button', { name: /DARK MODE/i });
+	await expect(darkToggle).toHaveAttribute('aria-pressed', 'false');
+	await darkToggle.click();
+
+	await expect(main).toHaveAttribute('data-silly-mode', 'horror');
+	await expect(page.getByRole('button', { name: /EXIT BROADCAST/i })).toHaveAttribute(
+		'aria-pressed',
+		'true'
+	);
+	await expect(page.getByRole('button', { name: /TAPE AUDIO: OFF/i })).toHaveAttribute(
+		'aria-pressed',
+		'false'
+	);
+	await expect(
+		page.getByRole('heading', { level: 1, name: 'THIS BROADCAST HAS ENDED' })
+	).toBeVisible();
+	await expect(page.getByRole('heading', { level: 2, name: ': : DOORS : :' })).toBeVisible();
+	await expect(
+		page.getByRole('heading', { level: 2, name: '< EMERGENCY ARCHIVE >' })
+	).toBeVisible();
+	await expect(html).not.toHaveClass(/dark/);
+	expect(await page.evaluate(() => localStorage.getItem('theme'))).toBeNull();
+	expect(await page.evaluate(() => localStorage.getItem('silly-horror-mode'))).toBe('1');
+
+	await page.getByRole('button', { name: 'DO NOT PRESS' }).click();
+	await expect(page.getByText('It heard that.')).toBeVisible();
+
+	const firstRecord = await page.locator('div[role="status"] p').first().textContent();
+	await page.getByRole('button', { name: 'RETRIEVE NEXT RECORD →' }).click();
+	const secondRecord = await page.locator('div[role="status"] p').first().textContent();
+	expect(secondRecord).not.toBe(firstRecord);
+
+	await page.reload({ waitUntil: 'networkidle' });
+	await expect(main).toHaveAttribute('data-silly-mode', 'horror');
+	await expect(
+		page.getByRole('heading', { level: 1, name: 'THIS BROADCAST HAS ENDED' })
+	).toBeVisible();
+
+	const sillyDimensions = await page.evaluate(() => ({
+		scrollWidth: document.documentElement.scrollWidth,
+		clientWidth: document.documentElement.clientWidth
+	}));
+	expect(sillyDimensions.scrollWidth).toBeLessThanOrEqual(sillyDimensions.clientWidth);
+
+	await page.getByRole('link', { name: '> About Me' }).click();
+	await page.waitForURL('**/silly/who-is-ramis-bhatty');
+	await expect(main).toHaveAttribute('data-silly-mode', 'horror');
+	await expect(page.getByText('CASE FILE 04 // SIGNAL RECOVERED')).toBeVisible();
+	await expect(html).not.toHaveClass(/dark/);
+
+	const bioDimensions = await page.evaluate(() => ({
+		scrollWidth: document.documentElement.scrollWidth,
+		clientWidth: document.documentElement.clientWidth
+	}));
+	expect(bioDimensions.scrollWidth).toBeLessThanOrEqual(bioDimensions.clientWidth);
+	const bioAxe = await new AxeBuilder({ page }).disableRules(['color-contrast']).analyze();
+	expect(bioAxe.violations).toEqual([]);
+
+	await page.getByRole('link', { name: 'Suspiciously normal website' }).click();
+	await page.waitForURL(`${new URL(page.url()).origin}/`);
+	await expect(html).not.toHaveClass(/dark/);
+
+	await page.goto('/silly', { waitUntil: 'networkidle' });
+	await expect(main).toHaveAttribute('data-silly-mode', 'horror');
+	await page.getByRole('button', { name: /EXIT BROADCAST/i }).click();
+	await expect(main).toHaveAttribute('data-silly-mode', 'normal');
+	await expect(
+		page.getByRole('heading', { level: 1, name: 'WELCOME TO MY WEBSITE!!!' })
+	).toBeVisible();
+	expect(await page.evaluate(() => localStorage.getItem('silly-horror-mode'))).toBe('0');
+
+	await page.reload({ waitUntil: 'networkidle' });
+	await expect(main).toHaveAttribute('data-silly-mode', 'normal');
+	expect(runtimeErrors).toEqual([]);
+});
+
 test('crawler discovery files advertise only indexable public routes', async ({ request }) => {
 	const robots = await request.get('/robots.txt');
 	expect(robots.ok()).toBe(true);

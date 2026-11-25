@@ -1,9 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	let { class: className = '' } = $props();
+	import { HORROR_ARCHIVE_RECORDS } from './silly-horror-data';
+
+	let { class: className = '', horror = false }: { class?: string; horror?: boolean } = $props();
 
 	let currentFact = $state('');
 	let isLoading = $state(false);
+	let horrorIndex = $state(0);
 
 	// The retro page intentionally uses the external facts service. Keep failure visible in the
 	// panel so the rest of the page remains usable when that service is unavailable.
@@ -35,34 +38,48 @@
 		}
 	}
 
+	function nextHorrorRecord() {
+		horrorIndex = (horrorIndex + 1) % HORROR_ARCHIVE_RECORDS.length;
+	}
+
 	onMount(() => {
 		generateFact();
 	});
 </script>
 
 <div
-	class="border-4 border-black bg-[#00ffff] p-4 text-center {className}"
-	style="box-shadow: 4px 4px 0 #000;"
+	class="p-4 text-center {horror
+		? 'silly-horror-panel'
+		: 'border-4 border-black bg-[#00ffff]'} {className}"
+	style={horror ? undefined : 'box-shadow: 4px 4px 0 #000;'}
 >
-	<h2 class="mb-4 text-center text-2xl font-bold underline">&lt; RANDOM FACT GENERATOR &gt;</h2>
+	<h2 class="mb-4 text-center text-2xl font-bold underline {horror ? 'text-red-400' : ''}">
+		{horror ? '< EMERGENCY ARCHIVE >' : '< RANDOM FACT GENERATOR >'}
+	</h2>
 	<div
-		class="mb-4 border-2 border-black bg-white p-4"
+		class="mb-4 border-2 p-4 {horror
+			? 'border-red-900 bg-black text-zinc-200'
+			: 'border-black bg-white'}"
 		role="status"
 		aria-live="polite"
-		aria-busy={isLoading}
+		aria-busy={horror ? false : isLoading}
 	>
-		{#if isLoading}
+		{#if horror}
+			<p class="min-h-23 text-xs italic">"{HORROR_ARCHIVE_RECORDS[horrorIndex]}"</p>
+		{:else if isLoading}
 			<p class="text-ls min-h-23 animate-pulse italic">Loading fact from the World Wide Web...</p>
 		{:else}
 			<p class="min-h-23 text-xs break-all italic">"{currentFact}"</p>
 		{/if}
 	</div>
 	<button
-		onclick={generateFact}
-		disabled={isLoading}
-		class="cursor-pointer border-4 border-black bg-linear-to-b from-[#c0c0c0] to-[#808080] px-5 py-2 font-bold hover:from-[#e0e0e0] focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-purple-800 disabled:cursor-wait disabled:opacity-70"
-		style="box-shadow: 2px 2px 0 #000;"
+		onclick={horror ? nextHorrorRecord : generateFact}
+		disabled={horror ? false : isLoading}
+		class="px-5 py-2 font-bold focus-visible:outline-4 focus-visible:outline-offset-2 {horror
+			? 'silly-horror-btn focus-visible:outline-red-400'
+			: 'cursor-pointer border-4 border-black bg-linear-to-b from-[#c0c0c0] to-[#808080] hover:from-[#e0e0e0] focus-visible:outline-purple-800 disabled:cursor-wait disabled:opacity-70'}"
+		style={horror ? undefined : 'box-shadow: 2px 2px 0 #000;'}
 	>
-		GENERATE NEW FACT →
+		{horror ? 'RETRIEVE NEXT RECORD →' : 'GENERATE NEW FACT →'}
 	</button>
 </div>

@@ -1,4 +1,6 @@
 <script lang="ts">
+	let { horror = false }: { horror?: boolean } = $props();
+
 	const badges: { label: string; href: string; color: string }[] = [
 		{
 			label: 'HTML 4.01',
@@ -25,21 +27,33 @@
 
 <footer class="mt-4 space-y-4">
 	<!-- Under construction -->
-	<div class="retro-panel bg-yellow-400 p-4 text-center">
+	<div
+		class="p-4 text-center {horror
+			? 'silly-horror-panel text-red-400'
+			: 'retro-panel bg-yellow-400'}"
+	>
 		<p class="animate-pulse text-2xl font-bold motion-reduce:animate-none">
-			!!! SITE UNDER CONSTRUCTION !!!
+			{horror ? '!!! DO NOT TURN OFF YOUR MONITOR !!!' : '!!! SITE UNDER CONSTRUCTION !!!'}
 		</p>
 	</div>
 
 	<!-- Browser badges -->
-	<div class="retro-panel bg-[#000080] p-4 text-center text-white">
-		<p class="mb-2">This page is optimized for Internet Explorer 6</p>
+	<div
+		class="p-4 text-center text-white {horror ? 'silly-horror-panel' : 'retro-panel bg-[#000080]'}"
+	>
+		<p class="mb-2 {horror ? 'text-zinc-300' : ''}">
+			{horror
+				? 'Broadcast Archive · Tape 04 · Signal integrity degraded'
+				: 'This page is optimized for Internet Explorer 6'}
+		</p>
 		<div class="flex flex-wrap items-center justify-center gap-4">
 			{#each badges as badge (badge.label)}
 				<a
 					href={badge.href}
 					rel="external"
-					class="{badge.color} border-2 border-white px-3 py-1 text-xs"
+					class="{horror
+						? 'border-2 border-red-900 bg-zinc-900 text-zinc-200 hover:border-red-500'
+						: `${badge.color} border-2 border-white`} px-3 py-1 text-xs"
 				>
 					{badge.label}
 				</a>
